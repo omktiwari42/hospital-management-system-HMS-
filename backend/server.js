@@ -1,4 +1,8 @@
 require("dotenv").config();
+const authenticateToken =
+  require(
+    "./middleware/auth"
+  );
 const pool = require("./db");
 const express = require("express");
 const cors = require("cors");
@@ -12,11 +16,12 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
+
 /* ===========================
    PATIENTS APIs
 =========================== */
 
-app.get("/api/patients", async (req, res) => {
+app.get("/api/patients", authenticateToken ,async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM patients ORDER BY id"
@@ -32,7 +37,7 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.post("/api/patients", async (req, res) => {
+app.post("/api/patients",authenticateToken ,async (req, res) => {
   try {
     const {
       name,
@@ -99,7 +104,7 @@ app.post("/api/patients", async (req, res) => {
   }
 });
 
-app.put("/api/patients/:id", async (req, res) => {
+app.put("/api/patients/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -164,7 +169,7 @@ app.put("/api/patients/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/patients/:id", async (req, res) => {
+app.delete("/api/patients/:id",authenticateToken ,async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -189,7 +194,7 @@ app.delete("/api/patients/:id", async (req, res) => {
    DOCTORS APIs
 =========================== */
 
-app.get("/api/doctors", async (req, res) => {
+app.get("/api/doctors", authenticateToken ,async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM doctors ORDER BY id"
@@ -205,7 +210,7 @@ app.get("/api/doctors", async (req, res) => {
   }
 });
 
-app.post("/api/doctors", async (req, res) => {
+app.post("/api/doctors", authenticateToken,async (req, res) => {
   try {
     const {
       name,
@@ -256,7 +261,7 @@ app.post("/api/doctors", async (req, res) => {
   }
 });
 
-app.put("/api/doctors/:id", async (req, res) => {
+app.put("/api/doctors/:id", authenticateToken,async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -306,7 +311,7 @@ app.put("/api/doctors/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/doctors/:id", async (req, res) => {
+app.delete("/api/doctors/:id",authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -331,7 +336,7 @@ app.delete("/api/doctors/:id", async (req, res) => {
    APPOINTMENTS APIs
 =========================== */
 
-app.get("/api/appointments", async (req, res) => {
+app.get("/api/appointments",authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM appointments ORDER BY id"
@@ -348,7 +353,7 @@ app.get("/api/appointments", async (req, res) => {
   }
 });
 
-app.post("/api/appointments", async (req, res) => {
+app.post("/api/appointments", authenticateToken,async (req, res) => {
   try {
     const { patientName, doctorName, date } = req.body;
 
@@ -370,7 +375,7 @@ app.post("/api/appointments", async (req, res) => {
   }
 });
 
-app.put("/api/appointments/:id", async (req, res) => {
+app.put("/api/appointments/:id",authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { patientName, doctorName, date } = req.body;
@@ -396,7 +401,7 @@ app.put("/api/appointments/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/appointments/:id", async (req, res) => {
+app.delete("/api/appointments/:id", authenticateToken,async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -422,7 +427,7 @@ app.delete("/api/appointments/:id", async (req, res) => {
    BILLING APIs
 =========================== */
 
-app.get("/api/bills", async (req, res) => {
+app.get("/api/bills", authenticateToken,async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM bills ORDER BY id"
@@ -439,7 +444,7 @@ app.get("/api/bills", async (req, res) => {
 });
 
 /* ADD THIS ROUTE */
-app.post("/api/bills", async (req, res) => {
+app.post("/api/bills", authenticateToken,async (req, res) => {
   try {
     const {
       patientName,
@@ -467,7 +472,7 @@ app.post("/api/bills", async (req, res) => {
   }
 });
 
-app.put("/api/bills/:id", async (req, res) => {
+app.put("/api/bills/:id", authenticateToken,async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -498,7 +503,7 @@ app.put("/api/bills/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/bills/:id", async (req, res) => {
+app.delete("/api/bills/:id", authenticateToken,async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -575,10 +580,13 @@ app.post("/api/verify-otp", (req, res) => {
   try {
     const { phone, otp } = req.body;
 
+    console.log("PHONE:", phone);
+    console.log("OTP RECEIVED:", otp);
+    console.log("OTP STORED:", otpStore[phone]);
+
     if (!phone || !otp) {
       return res.status(400).json({
-        message:
-          "Phone and OTP Required",
+        message: "Phone and OTP Required",
       });
     }
 
@@ -592,16 +600,13 @@ app.post("/api/verify-otp", (req, res) => {
 
     const token = jwt.sign(
       { phone },
-      "hospital_secret_key",
-      {
-        expiresIn: "1d",
-      }
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
     res.json({
       token,
-      message:
-        "Login Successful 🎉",
+      message: "Login Successful 🎉",
     });
   } catch (error) {
     console.log(error);
@@ -610,8 +615,8 @@ app.post("/api/verify-otp", (req, res) => {
       message: "Server Error",
     });
   }
-}); 
-app.post("/api/appointments", async (req, res) => {
+});
+app.post("/api/appointments",authenticateToken, async (req, res) => {
   try {
     const {
       patientName,
@@ -656,7 +661,7 @@ app.post("/api/appointments", async (req, res) => {
     });
   }
 });
-app.put("/api/appointments/:id", async (req, res) => {
+app.put("/api/appointments/:id",authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -703,7 +708,7 @@ app.put("/api/appointments/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/bills/:id", async (req, res) => {
+app.delete("/api/bills/:id", authenticateToken,async (req, res) => {
   try {
     const { id } = req.params;
 
