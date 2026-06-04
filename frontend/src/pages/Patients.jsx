@@ -3,6 +3,9 @@ import api from "../services/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 function Patients() {
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] =
@@ -215,6 +218,47 @@ function Patients() {
         .split("T")[0]}.pdf`
     );
   }
+  function downloadExcel() {
+    if (
+      filteredPatients.length === 0
+    ) {
+      alert(
+        "No patients available to export"
+      );
+      return;
+    }
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(
+        filteredPatients
+      );
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Patients"
+    );
+
+    const excelBuffer =
+      XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+    const fileData =
+      new Blob([excelBuffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+    saveAs(
+      fileData,
+      "patients-report.xlsx"
+    );
+  }
   // Download
   function editPatient(patient) {
     setName(patient.name);
@@ -325,6 +369,17 @@ function Patients() {
           className="pdf-btn"
         >
           📄 Export PDF
+        </button>
+        <br />
+        <br />
+        <button
+          onClick={downloadExcel}
+          disabled={
+            filteredPatients.length === 0
+          }
+          className="excel-btn"
+        >
+          📊 Export Excel
         </button>
       </div>
 

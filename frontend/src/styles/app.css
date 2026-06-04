@@ -818,3 +818,16 @@ input {
   transform: none;
   box-shadow: none;
 }
+
+.excel-btn {
+  background: linear-gradient(135deg,
+      #16a34a,
+      #15803d);
+
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
