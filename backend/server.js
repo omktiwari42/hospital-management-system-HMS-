@@ -3,6 +3,10 @@ const authenticateToken =
   require(
     "./middleware/auth"
   );
+const authorizeRole =
+  require(
+    "./middleware/authorizeRole"
+  );
 const pool = require("./db");
 const express = require("express");
 const cors = require("cors");
@@ -21,7 +25,7 @@ app.get("/", (req, res) => {
    PATIENTS APIs
 =========================== */
 
-app.get("/api/patients", authenticateToken ,async (req, res) => {
+app.get("/api/patients", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM patients ORDER BY id"
@@ -37,7 +41,7 @@ app.get("/api/patients", authenticateToken ,async (req, res) => {
   }
 });
 
-app.post("/api/patients",authenticateToken ,async (req, res) => {
+app.post("/api/patients", authenticateToken, async (req, res) => {
   try {
     const {
       name,
@@ -169,7 +173,7 @@ app.put("/api/patients/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.delete("/api/patients/:id",authenticateToken ,async (req, res) => {
+app.delete("/api/patients/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -194,7 +198,7 @@ app.delete("/api/patients/:id",authenticateToken ,async (req, res) => {
    DOCTORS APIs
 =========================== */
 
-app.get("/api/doctors", authenticateToken ,async (req, res) => {
+app.get("/api/doctors", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM doctors ORDER BY id"
@@ -210,7 +214,7 @@ app.get("/api/doctors", authenticateToken ,async (req, res) => {
   }
 });
 
-app.post("/api/doctors", authenticateToken,async (req, res) => {
+app.post("/api/doctors", authenticateToken, async (req, res) => {
   try {
     const {
       name,
@@ -261,7 +265,7 @@ app.post("/api/doctors", authenticateToken,async (req, res) => {
   }
 });
 
-app.put("/api/doctors/:id", authenticateToken,async (req, res) => {
+app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -311,7 +315,7 @@ app.put("/api/doctors/:id", authenticateToken,async (req, res) => {
   }
 });
 
-app.delete("/api/doctors/:id",authenticateToken, async (req, res) => {
+app.delete("/api/doctors/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -336,7 +340,7 @@ app.delete("/api/doctors/:id",authenticateToken, async (req, res) => {
    APPOINTMENTS APIs
 =========================== */
 
-app.get("/api/appointments",authenticateToken, async (req, res) => {
+app.get("/api/appointments", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM appointments ORDER BY id"
@@ -349,23 +353,46 @@ app.get("/api/appointments",authenticateToken, async (req, res) => {
     res.status(500).json({
       message: "Database Error",
     });
-    
   }
 });
 
-app.post("/api/appointments", authenticateToken,async (req, res) => {
+app.post("/api/appointments", authenticateToken, async (req, res) => {
   try {
-    const { patientName, doctorName, date } = req.body;
+    const {
+      patientName,
+      doctorName,
+      date,
+      time,
+      status,
+      reason,
+    } = req.body;
 
     const result = await pool.query(
       `INSERT INTO appointments
-      (patient_name, doctor_name, appointment_date)
-      VALUES ($1, $2, $3)
+      (
+        patient_name,
+        doctor_name,
+        appointment_date,
+        appointment_time,
+        status,
+        reason
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6)
       RETURNING *`,
-      [patientName, doctorName, date]
+      [
+        patientName,
+        doctorName,
+        date,
+        time,
+        status,
+        reason,
+      ]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(
+      result.rows[0]
+    );
   } catch (error) {
     console.log(error);
 
@@ -375,22 +402,43 @@ app.post("/api/appointments", authenticateToken,async (req, res) => {
   }
 });
 
-app.put("/api/appointments/:id",authenticateToken, async (req, res) => {
+app.put("/api/appointments/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { patientName, doctorName, date } = req.body;
+
+    const {
+      patientName,
+      doctorName,
+      date,
+      time,
+      status,
+      reason,
+    } = req.body;
 
     await pool.query(
       `UPDATE appointments
-       SET patient_name = $1,
-           doctor_name = $2,
-           appointment_date = $3
-       WHERE id = $4`,
-      [patientName, doctorName, date, id]
+       SET
+       patient_name = $1,
+       doctor_name = $2,
+       appointment_date = $3,
+       appointment_time = $4,
+       status = $5,
+       reason = $6
+       WHERE id = $7`,
+      [
+        patientName,
+        doctorName,
+        date,
+        time,
+        status,
+        reason,
+        id,
+      ]
     );
 
     res.json({
-      message: "Appointment updated successfully",
+      message:
+        "Appointment updated successfully",
     });
   } catch (error) {
     console.log(error);
@@ -401,7 +449,7 @@ app.put("/api/appointments/:id",authenticateToken, async (req, res) => {
   }
 });
 
-app.delete("/api/appointments/:id", authenticateToken,async (req, res) => {
+app.delete("/api/appointments/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -411,7 +459,8 @@ app.delete("/api/appointments/:id", authenticateToken,async (req, res) => {
     );
 
     res.json({
-      message: "Appointment deleted successfully",
+      message:
+        "Appointment deleted successfully",
     });
   } catch (error) {
     console.log(error);
@@ -421,13 +470,11 @@ app.delete("/api/appointments/:id", authenticateToken,async (req, res) => {
     });
   }
 });
-
-
 /* ===========================
    BILLING APIs
 =========================== */
 
-app.get("/api/bills", authenticateToken,async (req, res) => {
+app.get("/api/bills", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM bills ORDER BY id"
@@ -444,7 +491,7 @@ app.get("/api/bills", authenticateToken,async (req, res) => {
 });
 
 /* ADD THIS ROUTE */
-app.post("/api/bills", authenticateToken,async (req, res) => {
+app.post("/api/bills", authenticateToken, async (req, res) => {
   try {
     const {
       patientName,
@@ -472,7 +519,7 @@ app.post("/api/bills", authenticateToken,async (req, res) => {
   }
 });
 
-app.put("/api/bills/:id", authenticateToken,async (req, res) => {
+app.put("/api/bills/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -503,7 +550,7 @@ app.put("/api/bills/:id", authenticateToken,async (req, res) => {
   }
 });
 
-app.delete("/api/bills/:id", authenticateToken,async (req, res) => {
+app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -616,117 +663,92 @@ app.post("/api/verify-otp", (req, res) => {
     });
   }
 });
-app.post("/api/appointments",authenticateToken, async (req, res) => {
+
+app.get("/api/profile", authenticateToken, async (req, res) => {
   try {
-    const {
-      patientName,
-      doctorName,
-      date,
-      time,
-      status,
-      reason,
-    } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO appointments
-      (
-        patient_name,
-        doctor_name,
-        appointment_date,
-        appointment_time,
-        status,
-        reason
-      )
-      VALUES
-      ($1,$2,$3,$4,$5,$6)
-      RETURNING *`,
-      [
-        patientName,
-        doctorName,
-        date,
-        time,
-        status,
-        reason,
-      ]
-    );
-
-    res.status(201).json(
-      result.rows[0]
-    );
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-app.put("/api/appointments/:id",authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const {
-      patientName,
-      doctorName,
-      date,
-      time,
-      status,
-      reason,
-    } = req.body;
-
-    await pool.query(
-      `UPDATE appointments
-       SET
-       patient_name=$1,
-       doctor_name=$2,
-       appointment_date=$3,
-       appointment_time=$4,
-       status=$5,
-       reason=$6
-       WHERE id=$7`,
-      [
-        patientName,
-        doctorName,
-        date,
-        time,
-        status,
-        reason,
-        id,
-      ]
-    );
-
     res.json({
-      message:
-        "Appointment updated successfully",
+      phone: req.user.phone,
     });
   } catch (error) {
     console.log(error);
 
     res.status(500).json({
-      message: "Database Error",
+      message: "Server Error",
     });
   }
 });
+app.get(
+  "/api/recent-appointments",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result =
+        await pool.query(
+          `SELECT *
+           FROM appointments
+           ORDER BY id DESC
+           LIMIT 5`
+        );
 
-app.delete("/api/bills/:id", authenticateToken,async (req, res) => {
-  try {
-    const { id } = req.params;
+      res.json(result.rows);
+    } catch (error) {
+      console.log(error);
 
-    await pool.query(
-      "DELETE FROM bills WHERE id=$1",
-      [id]
-    );
-
-    res.json({
-      message: "Bill deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-    message: "Database Error",
-  });
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
   }
-});
+);
+app.get(
+  "/api/appointment-status",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result =
+        await pool.query(
+          `SELECT
+             status,
+             COUNT(*) as count
+           FROM appointments
+           GROUP BY status`
+        );
+
+      res.json(result.rows);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Database Error",
+      });
+    }
+  }
+);
+app.get(
+  "/api/revenue-chart",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result =
+        await pool.query(
+          `SELECT
+             bill_date,
+             amount
+           FROM bills
+           ORDER BY bill_date`
+        );
+
+      res.json(result.rows);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
+  }
+);
 app.listen(5000, () => {
   console.log("Server Running on Port 5000");
 });

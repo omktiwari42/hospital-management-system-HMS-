@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FaBars,
   FaMoon,
@@ -13,15 +14,30 @@ import {
 } from "react-icons/fa";
 
 function Navbar() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(true);
+
   const [darkMode, setDarkMode] =
     useState(false);
 
   const location = useLocation();
 
+  const token =
+    localStorage.getItem("token");
+
+
+  if (
+    !token ||
+    location.pathname === "/" ||
+    location.pathname === "/login"
+  ) {
+    return null;
+  }
+  console.log("Navbar Rendering");
   function logout() {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+
+    navigate("/login");
   }
 
   function toggleDarkMode() {
@@ -42,7 +58,9 @@ function Navbar() {
     >
       <button
         className="menu-btn"
-        onClick={() => setOpen(!open)}
+        onClick={() =>
+          setOpen(!open)
+        }
       >
         <FaBars />
       </button>
@@ -57,7 +75,7 @@ function Navbar() {
             to="/dashboard"
             className={
               location.pathname ===
-              "/dashboard"
+                "/dashboard"
                 ? "active-link"
                 : ""
             }
@@ -70,7 +88,7 @@ function Navbar() {
             to="/patients"
             className={
               location.pathname ===
-              "/patients"
+                "/patients"
                 ? "active-link"
                 : ""
             }
@@ -83,7 +101,7 @@ function Navbar() {
             to="/doctors"
             className={
               location.pathname ===
-              "/doctors"
+                "/doctors"
                 ? "active-link"
                 : ""
             }
@@ -96,7 +114,7 @@ function Navbar() {
             to="/appointments"
             className={
               location.pathname ===
-              "/appointments"
+                "/appointments"
                 ? "active-link"
                 : ""
             }
@@ -109,7 +127,7 @@ function Navbar() {
             to="/billing"
             className={
               location.pathname ===
-              "/billing"
+                "/billing"
                 ? "active-link"
                 : ""
             }
@@ -122,7 +140,7 @@ function Navbar() {
             to="/profile"
             className={
               location.pathname ===
-              "/profile"
+                "/profile"
                 ? "active-link"
                 : ""
             }
@@ -133,7 +151,9 @@ function Navbar() {
 
           <button
             className="theme-btn"
-            onClick={toggleDarkMode}
+            onClick={
+              toggleDarkMode
+            }
           >
             {darkMode ? (
               <FaSun />

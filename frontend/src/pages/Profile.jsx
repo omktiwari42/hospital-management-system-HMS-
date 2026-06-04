@@ -1,13 +1,53 @@
+import { useEffect, useState } from "react";
+import api from "../services/api";
+
 function Profile() {
+  const [profile, setProfile] =
+    useState({});
+
+  useEffect(() => {
+    getProfile();
+  }, []);
+
+  async function getProfile() {
+    try {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      const response =
+        await api.get(
+          "/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+      setProfile(
+        response.data
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
-    <div>
-      <h1>Admin Profile</h1>
+    <div className="page">
+      <div className="card">
+        <h2>
+          👤 My Profile
+        </h2>
 
-      <h3>Username: admin</h3>
-
-      <p>Hospital Management System</p>
-
-      <p>Logged In Successfully</p>
+        <p>
+          <strong>
+            Phone:
+          </strong>{" "}
+          {profile.phone}
+        </p>
+      </div>
     </div>
   );
 }

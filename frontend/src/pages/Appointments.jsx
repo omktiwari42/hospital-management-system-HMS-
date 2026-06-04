@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function Appointments() {
   const [appointments, setAppointments] =
@@ -16,7 +18,17 @@ function Appointments() {
   const [doctorName, setDoctorName] =
     useState("");
 
-  const [date, setDate] = useState("");
+  const [appointmentDate, setAppointmentDate] =
+    useState(new Date());
+
+  const [reason, setReason] =
+    useState("");
+
+  const [status, setStatus] =
+    useState("Scheduled");
+
+  const [loading, setLoading] =
+    useState(false);
 
   const [search, setSearch] =
     useState("");
@@ -39,6 +51,81 @@ function Appointments() {
         error
       );
     }
+  }
+  async function addAppointment() {
+    try {
+      setLoading(true);
+
+      const date =
+        appointmentDate
+          .toISOString()
+          .split("T")[0];
+
+      const time =
+        appointmentDate.toLocaleTimeString(
+          "en-US",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        );
+
+      await api.post(
+        "/appointments",
+        {
+          patientName,
+          doctorName,
+          date,
+          time,
+          reason,
+          status,
+        }
+      );
+
+      setPatientName("");
+      setDoctorName("");
+      setReason("");
+      setStatus("Scheduled");
+      setAppointmentDate(
+        new Date()
+      );
+
+      fetchAppointments();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+  function editAppointment(
+    appointment
+  ) {
+    setEditingId(
+      appointment.id
+    );
+
+    setPatientName(
+      appointment.patient_name
+    );
+
+    setDoctorName(
+      appointment.doctor_name
+    );
+
+    setReason(
+      appointment.reason || ""
+    );
+
+    setStatus(
+      appointment.status ||
+      "Scheduled"
+    );
+
+    setAppointmentDate(
+      new Date(
+        `${appointment.appointment_date}T${appointment.appointment_time}`
+      )
+    );
   }
 
   useEffect(() => {
@@ -64,65 +151,6 @@ function Appointments() {
     setFilteredAppointments(filtered);
   }, [search, appointments]);
 
-  async function addAppointment() {
-    if (
-      !patientName ||
-      !doctorName ||
-      !date
-    ) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    try {
-      await api.post(
-        "/appointments",
-        {
-          patientName,
-          doctorName,
-          date,
-        }
-      );
-
-      fetchAppointments();
-
-      setPatientName("");
-      setDoctorName("");
-      setDate("");
-    } catch (error) {
-      console.log(
-        "Error adding appointment:",
-        error
-      );
-    }
-  }
-
-  function editAppointment(
-    appointment
-  ) {
-    setPatientName(
-      appointment.patient_name
-    );
-
-    setDoctorName(
-      appointment.doctor_name
-    );
-
-    setDate(
-      appointment.appointment_date?.split(
-        "T"
-      )[0]
-    );
-
-    setEditingId(
-      appointment.id
-    );
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
 
   async function updateAppointment() {
     try {
@@ -132,6 +160,9 @@ function Appointments() {
           patientName,
           doctorName,
           date,
+          time,
+          reason,
+          status,
         }
       );
 
@@ -139,7 +170,9 @@ function Appointments() {
 
       setPatientName("");
       setDoctorName("");
-      setDate("");
+      setAppointmentDate(
+        new Date()
+      );
 
       setEditingId(null);
     } catch (error) {
@@ -212,40 +245,72 @@ function Appointments() {
             )
           }
         />
+        <br />
+        <br />
 
+        <DatePicker
+          selected={appointmentDate}
+          onChange={(date) =>
+            setAppointmentDate(date)
+          }
+          showTimeSelect
+          timeIntervals={15}
+          dateFormat="dd/MM/yyyy h:mm aa"
+          minDate={new Date()}
+          placeholderText="Select Date & Time"
+        />
         <br />
         <br />
 
         <input
-          type="date"
-          value={date}
+          type="text"
+          placeholder="Reason"
+          value={reason}
           onChange={(e) =>
-            setDate(
-              e.target.value
-            )
+            setReason(e.target.value)
           }
         />
 
         <br />
         <br />
 
+        <select
+          value={status}
+          onChange={(e) =>
+            setStatus(e.target.value)
+          }
+        >
+          <option value="Scheduled">
+            Scheduled
+          </option>
+
+          <option value="Completed">
+            Completed
+          </option>
+
+          <option value="Cancelled">
+            Cancelled
+          </option>
+        </select>
+
+        <br />
+        <br />
+
         {editingId ? (
           <button
-            onClick={
-              updateAppointment
-            }
+            onClick={updateAppointment}
           >
             Update Appointment
           </button>
         ) : (
           <button
-            onClick={
-              addAppointment
-            }
+            onClick={addAppointment}
           >
             Add Appointment
           </button>
         )}
+
+
       </div>
 
       <br />
