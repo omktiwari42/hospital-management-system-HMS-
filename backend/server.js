@@ -612,7 +612,7 @@ app.post("/api/send-otp", (req, res) => {
     res.json({
       message:
         "OTP Sent Successfully",
-      otp,
+
     });
   } catch (error) {
     console.log(error);
