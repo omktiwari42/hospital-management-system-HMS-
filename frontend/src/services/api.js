@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://bone-wheat-chester-foster.trycloudflare.com/api",
+  baseURL: "https://com-cartridges-surfing-marking.trycloudflare.com/api"
 });
 
 api.interceptors.request.use((config) => {
