@@ -3,16 +3,27 @@ const authenticateToken =
   require(
     "./middleware/auth"
   );
+
 const authorizeRole =
   require(
     "./middleware/authorizeRole"
   );
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 const pool = require("./db");
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const app = express();
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
 const otpStore = {};
 
 app.use(cors());
@@ -20,27 +31,105 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
+app.post(
+  "/api/create-order",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { amount } = req.body;
+
+      const options = {
+        amount: amount * 100,
+        currency: "INR",
+        receipt:
+          "receipt_" + Date.now(),
+      };
+
+      const order =
+        await razorpay.orders.create(
+          options
+        );
+
+      res.json(order);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Failed to create order",
+      });
+    }
+  }
+);
 
 /* ===========================
    PATIENTS APIs
 =========================== */
 
-app.get("/api/patients", authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM patients ORDER BY id"
-    );
+app.get(
+  "/api/patient-details/:name",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { name } = req.params;
 
-    res.json(result.rows);
-  } catch (error) {
-    console.log(error);
+      const patient =
+        await pool.query(
+          "SELECT * FROM patients WHERE name = $1",
+          [name]
+        );
 
-    res.status(500).json({
-      message: "Database Error",
-    });
+      const appointments =
+        await pool.query(
+          `SELECT *
+           FROM appointments
+           WHERE patient_name = $1`,
+          [name]
+        );
+
+      const bills =
+        await pool.query(
+          `SELECT *
+           FROM bills
+           WHERE patient_name = $1`,
+          [name]
+        );
+
+      res.json({
+        patient: patient.rows[0],
+        appointments:
+          appointments.rows,
+        bills: bills.rows,
+      });
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
   }
-});
+);
+app.get(
+  "/api/patients",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result =
+        await pool.query(
+          "SELECT * FROM patients ORDER BY id DESC"
+        );
 
+      res.json(result.rows);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
+  }
+);
 app.post("/api/patients", authenticateToken, async (req, res) => {
   try {
     const {
@@ -50,10 +139,7 @@ app.post("/api/patients", authenticateToken, async (req, res) => {
       gender,
       bloodGroup,
       address,
-      email,
       emergencyContact,
-      weight,
-      height,
       allergies,
       medicalHistory,
     } = req.body;
@@ -67,17 +153,17 @@ app.post("/api/patients", authenticateToken, async (req, res) => {
         gender,
         blood_group,
         address,
-        email,
+        
         emergency_contact,
-        weight,
-        height,
+        
+      
         allergies,
         medical_history
       )
       VALUES
       (
-        $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10, $11, $12
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9
       )
       RETURNING *`,
       [
@@ -87,10 +173,9 @@ app.post("/api/patients", authenticateToken, async (req, res) => {
         gender,
         bloodGroup,
         address,
-        email,
+
         emergencyContact,
-        weight,
-        height,
+
         allergies,
         medicalHistory,
       ]
@@ -119,10 +204,8 @@ app.put("/api/patients/:id", authenticateToken, async (req, res) => {
       gender,
       bloodGroup,
       address,
-      email,
       emergencyContact,
-      weight,
-      height,
+
       allergies,
       medicalHistory,
     } = req.body;
@@ -136,13 +219,10 @@ app.put("/api/patients/:id", authenticateToken, async (req, res) => {
          gender = $4,
          blood_group = $5,
          address = $6,
-         email = $7,
-         emergency_contact = $8,
-         weight = $9,
-         height = $10,
-         allergies = $11,
-         medical_history = $12
-       WHERE id = $13`,
+         emergency_contact = $7,
+         allergies = $8,
+         medical_history = $9
+       WHERE id = $10`,
       [
         name,
         age,
@@ -150,10 +230,8 @@ app.put("/api/patients/:id", authenticateToken, async (req, res) => {
         gender,
         bloodGroup,
         address,
-        email,
+
         emergencyContact,
-        weight,
-        height,
         allergies,
         medicalHistory,
         id,
@@ -213,13 +291,11 @@ app.get("/api/doctors", authenticateToken, async (req, res) => {
     });
   }
 });
-
 app.post("/api/doctors", authenticateToken, async (req, res) => {
   try {
     const {
       name,
       specialization,
-      experience,
       fees,
       phone,
       email,
@@ -227,11 +303,11 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
     } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO doctors
+      `
+      INSERT INTO doctors
       (
         name,
         specialization,
-        experience,
         fees,
         phone,
         email,
@@ -239,13 +315,13 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
       )
       VALUES
       (
-        $1,$2,$3,$4,$5,$6,$7
+        $1,$2,$3,$4,$5,$6
       )
-      RETURNING *`,
+      RETURNING *
+      `,
       [
         name,
         specialization,
-        experience,
         fees,
         phone,
         email,
@@ -253,9 +329,7 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
       ]
     );
 
-    res.status(201).json(
-      result.rows[0]
-    );
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.log(error);
 
@@ -264,7 +338,6 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
     });
   }
 });
-
 app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -272,7 +345,6 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
     const {
       name,
       specialization,
-      experience,
       fees,
       phone,
       email,
@@ -280,20 +352,20 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
     } = req.body;
 
     await pool.query(
-      `UPDATE doctors
-       SET
-       name=$1,
-       specialization=$2,
-       experience=$3,
-       fees=$4,
-       phone=$5,
-       email=$6,
-       availability=$7
-       WHERE id=$8`,
+      `
+      UPDATE doctors
+      SET
+      name=$1,
+      specialization=$2,
+      fees=$3,
+      phone=$4,
+      email=$5,
+      availability=$6
+      WHERE id=$7
+      `,
       [
         name,
         specialization,
-        experience,
         fees,
         phone,
         email,
@@ -303,8 +375,7 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
     );
 
     res.json({
-      message:
-        "Doctor updated successfully",
+      message: "Doctor updated successfully",
     });
   } catch (error) {
     console.log(error);
@@ -356,52 +427,119 @@ app.get("/api/appointments", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/api/appointments", authenticateToken, async (req, res) => {
-  try {
-    const {
-      patientName,
-      doctorName,
-      date,
-      time,
-      status,
-      reason,
-    } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO appointments
-      (
-        patient_name,
-        doctor_name,
-        appointment_date,
-        appointment_time,
-        status,
-        reason
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6)
-      RETURNING *`,
-      [
+app.post(
+  "/api/appointments",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const {
         patientName,
         doctorName,
         date,
         time,
         status,
         reason,
-      ]
-    );
+      } = req.body;
 
-    res.status(201).json(
-      result.rows[0]
-    );
-  } catch (error) {
-    console.log(error);
+      // Check if doctor is already booked
+      const existingAppointment =
+        await pool.query(
+          `
+          SELECT *
+          FROM appointments
+          WHERE doctor_name = $1
+          AND appointment_date = $2
+          AND appointment_time = $3
+          `,
+          [
+            doctorName,
+            date,
+            time,
+          ]
+        );
 
-    res.status(500).json({
-      message: "Database Error",
-    });
+      if (
+        existingAppointment.rows
+          .length > 0
+      ) {
+        return res.status(400).json({
+          message:
+            "Doctor already booked for this slot",
+        });
+      }
+
+      // Insert Appointment
+      const result =
+        await pool.query(
+          `
+          INSERT INTO appointments
+          (
+            patient_name,
+            doctor_name,
+            appointment_date,
+            appointment_time,
+            status,
+            reason
+          )
+          VALUES
+          (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6
+          )
+          RETURNING *
+          `,
+          [
+            patientName,
+            doctorName,
+            date,
+            time,
+            status,
+            reason,
+          ]
+        );
+      // Create Bill Automatically
+      await pool.query(
+        `
+        INSERT INTO bills
+        (
+          patient_name,
+          amount,
+          status,
+          payment_status
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4
+        )
+        `,
+        [
+          patientName,
+          500,
+          "Pending",
+          "Pending"
+        ]
+      );
+
+
+      res.status(201).json(
+        result.rows[0]
+      );
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
   }
-});
-
+);
 app.put("/api/appointments/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -519,36 +657,41 @@ app.post("/api/bills", authenticateToken, async (req, res) => {
   }
 });
 
-app.put("/api/bills/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      patientName,
-      amount,
-      status,
-    } = req.body;
+app.put(
+  "/api/bills/pay/:id",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    await pool.query(
-      `UPDATE bills
-       SET patient_name = $1,
-           amount = $2,
-           status = $3
-       WHERE id = $4`,
-      [patientName, amount, status, id]
-    );
+      const result = await pool.query(
+        `
+        UPDATE bills
+        SET
+          status = 'Paid',
+          payment_status = 'Paid',
+          payment_method = 'Online',
+          payment_date = NOW(),
+          transaction_id = $1
+        WHERE id = $2
+        RETURNING *
+        `,
+        [
+          "TXN" + Date.now(),
+          id,
+        ]
+      );
 
-    res.json({
-      message:
-        "Bill updated successfully",
-    });
-  } catch (error) {
-    console.log(error);
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.log(error);
 
-    res.status(500).json({
-      message: "Database Error",
-    });
+      res.status(500).json({
+        message: "Payment Failed",
+      });
+    }
   }
-});
+);
 
 app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
   try {
@@ -571,15 +714,13 @@ app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
     });
   }
 });
-/* ===========================
-   OTP AUTH APIs
-=========================== */
 
 /* ===========================
    OTP AUTH APIs
 =========================== */
 
 app.post("/api/send-otp", (req, res) => {
+  console.log("BUTTN CLICKED")
   try {
     const { phone } = req.body;
 
@@ -647,10 +788,9 @@ app.post("/api/verify-otp", (req, res) => {
 
     const token = jwt.sign(
       { phone },
-      process.env.JWT_SECRET,
+      "my_super_secret_key_123",
       { expiresIn: "1d" }
     );
-
     res.json({
       token,
       message: "Login Successful 🎉",
@@ -730,25 +870,94 @@ app.get(
   authenticateToken,
   async (req, res) => {
     try {
-      const result =
-        await pool.query(
-          `SELECT
-             bill_date,
-             amount
-           FROM bills
-           ORDER BY bill_date`
-        );
+      console.log(
+        "REVENUE ROUTE HIT"
+      );
 
-      res.json(result.rows);
+      const result =
+        await pool.query(`
+          SELECT *
+          FROM bills
+          LIMIT 5
+        `);
+
+      console.log(result.rows);
+
+      return res.json(
+        result.rows
+      );
     } catch (error) {
       console.log(error);
 
-      res.status(500).json({
-        message: "Database Error",
+      return res.status(500).json({
+        message:
+          "Database Error",
       });
     }
   }
 );
-app.listen(5000, () => {
-  console.log("Server Running on Port 5000");
+// pool.query(`
+//   SELECT column_name
+//   FROM information_schema.columns
+//   WHERE table_name = 'bills'
+// `)
+//   .then(res => {
+//     console.log("BILLS COLUMNS:");
+//     console.table(res.rows);
+//   })
+//   .catch(console.error);
+app.post("/api/prescriptions", async (req, res) => {
+  try {
+    const {
+      patient_id,
+      doctor_id,
+      medicines,
+      dosage,
+      duration,
+      notes,
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO prescriptions
+      (patient_id, doctor_id, medicines, dosage, duration, notes)
+      VALUES ($1,$2,$3,$4,$5,$6)
+      RETURNING *`,
+      [
+        patient_id,
+        doctor_id,
+        medicines,
+        dosage,
+        duration,
+        notes,
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Database Error",
+    });
+  }
+});
+app.get("/api/prescriptions", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM prescriptions ORDER BY id DESC"
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server Running on Port ${PORT}`);
 });

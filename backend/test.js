@@ -1,15 +1,11 @@
-const pool = require("./db");
+const express = require("express");
 
-async function testDB() {
-  try {
-    const result = await pool.query(
-      "SELECT NOW()"
-    );
+const app = express();
 
-    console.log(result.rows);
-  } catch (error) {
-    console.log(error);
-  }
-}
+app.get("/", (req, res) => {
+  res.send("hello");
+});
 
-testDB();
+app.listen(5000, () => {
+  console.log("running");
+});

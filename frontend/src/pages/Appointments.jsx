@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
+import { toast } from "react-toastify";
 function Appointments() {
   const [appointments, setAppointments] =
     useState([]);
@@ -11,7 +12,10 @@ function Appointments() {
     filteredAppointments,
     setFilteredAppointments,
   ] = useState([]);
-
+  const [doctors, setDoctors] =
+    useState([]);
+  const [patients, setPatients] =
+    useState([]);
   const [patientName, setPatientName] =
     useState("");
 
@@ -35,6 +39,7 @@ function Appointments() {
 
   const [editingId, setEditingId] =
     useState(null);
+  const navigate = useNavigate();
 
   async function fetchAppointments() {
     try {
@@ -48,6 +53,37 @@ function Appointments() {
     } catch (error) {
       console.log(
         "Error fetching appointments:",
+        error
+      );
+    }
+  }
+  async function fetchDoctors() {
+    try {
+      const response =
+        await api.get("/doctors");
+
+      console.log(
+        "DOCTORS FROM API:",
+        response.data
+      );
+
+      setDoctors(response.data);
+    } catch (error) {
+      console.log(
+        "Error fetching doctors:",
+        error
+      );
+    }
+  }
+  async function fetchPatients() {
+    try {
+      const response =
+        await api.get("/patients");
+
+      setPatients(response.data);
+    } catch (error) {
+      console.log(
+        "Error fetching patients:",
         error
       );
     }
@@ -69,7 +105,16 @@ function Appointments() {
             minute: "2-digit",
           }
         );
-
+      if (
+        !patientName.trim() ||
+        !doctorName.trim() ||
+        !reason.trim()
+      ) {
+        toast.error(
+          "⚠️ Please fill all fields"
+        );
+        return;
+      }
       await api.post(
         "/appointments",
         {
@@ -79,6 +124,13 @@ function Appointments() {
           time,
           reason,
           status,
+        }
+      );
+      toast.success(
+        "✅ Appointment Added Successfully",
+        {
+          position: "top-right",
+          autoClose: 2000,
         }
       );
 
@@ -93,6 +145,11 @@ function Appointments() {
       fetchAppointments();
     } catch (error) {
       console.log(error);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to create appointment"
+      );
     } finally {
       setLoading(false);
     }
@@ -130,6 +187,8 @@ function Appointments() {
 
   useEffect(() => {
     fetchAppointments();
+    fetchDoctors();
+    fetchPatients();
   }, []);
 
   useEffect(() => {
@@ -154,6 +213,29 @@ function Appointments() {
 
   async function updateAppointment() {
     try {
+      const date =
+        appointmentDate
+          .toISOString()
+          .split("T")[0];
+
+      const time =
+        appointmentDate.toLocaleTimeString(
+          "en-US",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        );
+      if (
+        !patientName.trim() ||
+        !doctorName.trim() ||
+        !reason.trim()
+      ) {
+        toast.error(
+          "⚠️ Please fill all fields"
+        );
+        return;
+      }
       await api.put(
         `/appointments/${editingId}`,
         {
@@ -166,48 +248,78 @@ function Appointments() {
         }
       );
 
+      toast.success(
+        "✏️ Appointment Updated Successfully",
+        {
+          position: "top-right",
+          autoClose: 2000,
+        }
+      );
+
       fetchAppointments();
 
       setPatientName("");
       setDoctorName("");
+      setReason("");
+      setStatus("Scheduled");
       setAppointmentDate(
         new Date()
       );
 
       setEditingId(null);
     } catch (error) {
-      console.log(
-        "Error updating appointment:",
-        error
+      console.log(error);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to update appointment"
       );
     }
   }
 
-  async function deleteAppointment(
-    id
-  ) {
-    if (
-      !window.confirm(
-        "Delete this appointment?"
-      )
-    ) {
-      return;
-    }
+  async function deleteAppointment(id) {
+    console.log("DELETE STARTED:", id);
 
     try {
-      await api.delete(
+      const response = await api.delete(
         `/appointments/${id}`
+      );
+
+      console.log(
+        "DELETE SUCCESS:",
+        response.data
+      );
+
+      toast.success(
+        "✅ Appointment Deleted Successfully"
       );
 
       fetchAppointments();
     } catch (error) {
       console.log(
-        "Error deleting appointment:",
+        "DELETE ERROR:",
         error
+      );
+
+      console.log(
+        "DELETE ERROR RESPONSE:",
+        error.response?.data
+      );
+
+      toast.error(
+        "❌ Delete Failed"
       );
     }
   }
-
+  function goToPayment(appointment) {
+    navigate("/payment", {
+      state: {
+        patientName: appointment.patient_name,
+        amount: 500,
+        appointmentId: appointment.id,
+      },
+    });
+  }
   return (
     <div className="page">
       <h1>
@@ -221,30 +333,56 @@ function Appointments() {
             : "Add Appointment"}
         </h3>
 
-        <input
-          type="text"
-          placeholder="Patient Name"
+        <select
           value={patientName}
           onChange={(e) =>
             setPatientName(
               e.target.value
             )
           }
-        />
+        >
+          <option value="">
+            Select Patient
+          </option>
+
+          {patients.map((patient) => (
+            <option
+              key={patient.id}
+              value={patient.name}
+            >
+              {patient.name}
+            </option>
+          ))}
+        </select>
 
         <br />
         <br />
 
-        <input
-          type="text"
-          placeholder="Doctor Name"
+        <select
           value={doctorName}
           onChange={(e) =>
             setDoctorName(
               e.target.value
             )
           }
-        />
+        >
+          <option value="">
+            Select Doctor
+          </option>
+
+          {doctors.map((doctor) => (
+            <option
+              key={doctor.id}
+              value={doctor.name}
+            >
+              {doctor.name}
+              {" - "}
+              {
+                doctor.specialization
+              }
+            </option>
+          ))}
+        </select>
         <br />
         <br />
 
@@ -305,8 +443,11 @@ function Appointments() {
         ) : (
           <button
             onClick={addAppointment}
+            disabled={loading}
           >
-            Add Appointment
+            {loading
+              ? "⏳ Adding..."
+              : "➕ Add Appointment"}
           </button>
         )}
 
@@ -338,8 +479,11 @@ function Appointments() {
               <th>Patient</th>
               <th>Doctor</th>
               <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
               <th>Edit</th>
               <th>Delete</th>
+              <th>Pay</th>
             </tr>
           </thead>
 
@@ -378,6 +522,18 @@ function Appointments() {
                   </td>
 
                   <td>
+                    {
+                      appointment.appointment_time
+                    }
+                  </td>
+
+                  <td>
+                    {
+                      appointment.status
+                    }
+                  </td>
+
+                  <td>
                     <button
                       className="edit-btn"
                       onClick={() =>
@@ -393,13 +549,27 @@ function Appointments() {
                   <td>
                     <button
                       className="delete-btn"
-                      onClick={() =>
+                      onClick={() => {
+                        console.log(
+                          "BUTTON PRESSED",
+                          appointment.id
+                        );
                         deleteAppointment(
                           appointment.id
-                        )
-                      }
+                        );
+                      }}
                     >
                       Delete
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      className="pay-btn"
+                      onClick={() =>
+                        goToPayment(appointment)
+                      }
+                    >
+                      Pay
                     </button>
                   </td>
                 </tr>

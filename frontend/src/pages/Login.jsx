@@ -1,48 +1,65 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { toast } from "react-toastify";
 
 function Login() {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [phone, setPhone] =
+    useState("");
+
+  const [otp, setOtp] =
+    useState("");
+
   const [countryCode, setCountryCode] =
     useState("+91");
+
+  const [loading, setLoading] =
+    useState(false);
 
   const navigate = useNavigate();
 
   async function sendOTP() {
     try {
+      setLoading(true);
+
       const fullPhone =
         countryCode + phone;
+
+      console.log(
+        "Sending OTP to:",
+        fullPhone
+      );
 
       const response =
         await api.post(
           "/send-otp",
-
           {
             phone: fullPhone,
           }
         );
 
-      setGeneratedOtp(
-        response.data.otp
+      console.log(
+        response.data
       );
 
-      alert(
+      toast.success(
         "OTP Sent Successfully"
       );
     } catch (error) {
       console.log(error);
 
-      alert(
+      toast.error(
         "Failed to Send OTP"
       );
+    } finally {
+      setLoading(false);
     }
   }
 
   async function verifyOTP() {
     try {
+      setLoading(true);
+
       const fullPhone =
         countryCode + phone;
 
@@ -60,22 +77,33 @@ function Login() {
         response.data.token
       );
 
-      alert(
+      toast.success(
         "Login Successful"
       );
 
-      navigate("/dashboard");
+      setTimeout(() => {
+        navigate("/dashboard");
+
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.log(error);
 
-      alert("Invalid OTP");
+      toast.error(
+        "Invalid OTP"
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1>🏥 Hospital Management System</h1>
+        <h1>
+          🏥 Hospital Management
+          System
+        </h1>
 
         <p className="login-subtitle">
           Secure OTP Login
@@ -120,7 +148,9 @@ function Login() {
             placeholder="Phone Number"
             value={phone}
             onChange={(e) =>
-              setPhone(e.target.value)
+              setPhone(
+                e.target.value
+              )
             }
           />
         </div>
@@ -128,18 +158,12 @@ function Login() {
         <button
           className="send-otp-btn"
           onClick={sendOTP}
+          disabled={loading}
         >
-          📩 Send OTP
+          {loading
+            ? "Sending..."
+            : "📩 Send OTP"}
         </button>
-
-        {generatedOtp && (
-          <div className="otp-box">
-            <strong>
-              OTP:
-            </strong>{" "}
-            {generatedOtp}
-          </div>
-        )}
 
         <label>
           Enter OTP
@@ -150,15 +174,20 @@ function Login() {
           placeholder="Enter OTP"
           value={otp}
           onChange={(e) =>
-            setOtp(e.target.value)
+            setOtp(
+              e.target.value
+            )
           }
         />
 
         <button
           className="verify-otp-btn"
           onClick={verifyOTP}
+          disabled={loading}
         >
-          🔓 Verify OTP
+          {loading
+            ? "Verifying..."
+            : "🔓 Verify OTP"}
         </button>
       </div>
     </div>

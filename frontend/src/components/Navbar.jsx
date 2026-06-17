@@ -15,6 +15,7 @@ import {
 
 function Navbar() {
   const navigate = useNavigate();
+
   const [open, setOpen] = useState(true);
 
   const [darkMode, setDarkMode] =
@@ -25,7 +26,6 @@ function Navbar() {
   const token =
     localStorage.getItem("token");
 
-
   if (
     !token ||
     location.pathname === "/" ||
@@ -33,10 +33,11 @@ function Navbar() {
   ) {
     return null;
   }
+
   console.log("Navbar Rendering");
+
   function logout() {
     localStorage.removeItem("token");
-
     navigate("/login");
   }
 
@@ -121,6 +122,19 @@ function Navbar() {
           >
             <FaCalendarCheck />
             Appointments
+          </Link>
+
+          {/* NEW PRESCRIPTIONS MENU */}
+          <Link
+            to="/prescriptions"
+            className={
+              location.pathname ===
+                "/prescriptions"
+                ? "active-link"
+                : ""
+            }
+          >
+            💊 Prescriptions
           </Link>
 
           <Link

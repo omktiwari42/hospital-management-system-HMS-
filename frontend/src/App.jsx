@@ -1,5 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import Navbar from "./components/Navbar";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -11,11 +14,17 @@ import Doctors from "./pages/Doctors";
 import Appointments from "./pages/Appointments";
 import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
+import Payment from "./pages/Payment";
 
 function App() {
+  const token =
+    localStorage.getItem(
+      "token"
+    );
+
   return (
     <div className="layout">
-      <Navbar />
+      {token && <Navbar />}
 
       <div className="content">
         <Routes>
@@ -81,6 +90,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute>
+                <Payment />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/profile"
@@ -92,6 +109,15 @@ function App() {
           />
         </Routes>
       </div>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
     </div>
   );
 }

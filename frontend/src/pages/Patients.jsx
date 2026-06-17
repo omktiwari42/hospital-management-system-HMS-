@@ -7,6 +7,8 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 function Patients() {
+  const [showForm, setShowForm] =
+    useState(false);
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] =
     useState([]);
@@ -21,6 +23,7 @@ function Patients() {
     useState("");
   const [email, setEmail] =
     useState("");
+
   const [
     emergencyContact,
     setEmergencyContact,
@@ -128,6 +131,7 @@ function Patients() {
     }
   }
   async function deletePatient(id) {
+
     if (
       !window.confirm(
         "Delete this patient?"
@@ -357,236 +361,245 @@ function Patients() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>
-          👨‍⚕️ Patients Management
-        </h1>
+        <h1>👨‍⚕️ Patients Management</h1>
 
+        <div className="header-actions">
+          <button
+            onClick={downloadPDF}
+            className="pdf-btn"
+          >
+            📄 Export PDF
+          </button>
+
+          <button
+            onClick={downloadExcel}
+            className="excel-btn"
+          >
+            📊 Export Excel
+          </button>
+        </div>
+      </div>
+      <div className="form-toggle">
         <button
-          onClick={downloadPDF}
-          disabled={
-            filteredPatients.length === 0
+          className="toggle-btn"
+          onClick={() =>
+            setShowForm(!showForm)
           }
-          className="pdf-btn"
         >
-          📄 Export PDF
-        </button>
-        <br />
-        <br />
-        <button
-          onClick={downloadExcel}
-          disabled={
-            filteredPatients.length === 0
-          }
-          className="excel-btn"
-        >
-          📊 Export Excel
+          {showForm
+            ? "▲ Hide Form"
+            : "➕ Add Patient"}
         </button>
       </div>
 
-      <div className="card">
-        <h3>
-          {editingId
-            ? "Update Patient"
-            : "Add Patient"}
-        </h3>
-        <input
-          type="text"
-          placeholder="Patient Name"
-          value={name}
-          onChange={(e) =>
-            setName(e.target.value)
-          }
-        />
+      {showForm && (
 
-        <br />
-        <br />
+        <div className="card">
 
-        <input
-          type="number"
-          placeholder="Age"
-          value={age}
-          onChange={(e) =>
-            setAge(e.target.value)
-          }
-        />
+          <h3>
+            {editingId
+              ? "Update Patient"
+              : "Add Patient"}
+          </h3>
+          <input
+            type="text"
+            placeholder="Patient Name"
+            value={name}
+            onChange={(e) =>
+              setName(e.target.value)
+            }
+          />
 
-        <br />
-        <br />
+          <br />
+          <br />
 
-        <input
-          type="text"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) =>
-            setPhone(e.target.value)
-          }
-        />
+          <input
+            type="number"
+            placeholder="Age"
+            value={age}
+            onChange={(e) =>
+              setAge(e.target.value)
+            }
+          />
 
-        <br />
-        <br />
+          <br />
+          <br />
 
-        <select
-          value={gender}
-          onChange={(e) =>
-            setGender(e.target.value)
-          }
-        >
-          <option value="">
-            Select Gender
-          </option>
-          <option value="Male">
-            Male
-          </option>
-          <option value="Female">
-            Female
-          </option>
-          <option value="Other">
-            Other
-          </option>
-        </select>
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={phone}
+            onChange={(e) =>
+              setPhone(e.target.value)
+            }
+          />
 
-        <br />
-        <br />
+          <br />
+          <br />
 
-        <select
-          value={bloodGroup}
-          onChange={(e) =>
-            setBloodGroup(
-              e.target.value
-            )
-          }
-        >
-          <option value="">
-            Blood Group
-          </option>
-          <option value="A+">
-            A+
-          </option>
-          <option value="A-">
-            A-
-          </option>
-          <option value="B+">
-            B+
-          </option>
-          <option value="B-">
-            B-
-          </option>
-          <option value="AB+">
-            AB+
-          </option>
-          <option value="AB-">
-            AB-
-          </option>
-          <option value="O+">
-            O+
-          </option>
-          <option value="O-">
-            O-
-          </option>
-        </select>
-
-        <br />
-        <br />
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
-        />
-
-        <br />
-        <br />
-
-        <input
-          type="text"
-          placeholder="Emergency Contact"
-          value={emergencyContact}
-          onChange={(e) =>
-            setEmergencyContact(
-              e.target.value
-            )
-          }
-        />
-
-        <br />
-        <br />
-
-        <input
-          type="number"
-          placeholder="Weight (kg)"
-          value={weight}
-          onChange={(e) =>
-            setWeight(e.target.value)
-          }
-        />
-
-        <br />
-        <br />
-
-        <input
-          type="number"
-          placeholder="Height (cm)"
-          value={height}
-          onChange={(e) =>
-            setHeight(e.target.value)
-          }
-        />
-
-        <br />
-        <br />
-
-        <textarea
-          placeholder="Address"
-          value={address}
-          onChange={(e) =>
-            setAddress(e.target.value)
-          }
-        />
-
-        <br />
-        <br />
-
-        <textarea
-          placeholder="Allergies"
-          value={allergies}
-          onChange={(e) =>
-            setAllergies(e.target.value)
-          }
-        />
-
-        <br />
-        <br />
-
-        <textarea
-          placeholder="Medical History"
-          value={medicalHistory}
-          onChange={(e) =>
-            setMedicalHistory(
-              e.target.value
-            )
-          }
-        />
-
-        <br />
-        <br />
-
-        {editingId ? (
-          <button
-            onClick={updatePatient}
+          <select
+            value={gender}
+            onChange={(e) =>
+              setGender(e.target.value)
+            }
           >
-            Update Patient
-          </button>
-        ) : (
-          <button
-            onClick={addPatient}
+            <option value="">
+              Select Gender
+            </option>
+            <option value="Male">
+              Male
+            </option>
+            <option value="Female">
+              Female
+            </option>
+            <option value="Other">
+              Other
+            </option>
+          </select>
+
+          <br />
+          <br />
+
+          <select
+            value={bloodGroup}
+            onChange={(e) =>
+              setBloodGroup(
+                e.target.value
+              )
+            }
           >
-            Add Patient
-          </button>
-        )}
-      </div>
+            <option value="">
+              Blood Group
+            </option>
+            <option value="A+">
+              A+
+            </option>
+            <option value="A-">
+              A-
+            </option>
+            <option value="B+">
+              B+
+            </option>
+            <option value="B-">
+              B-
+            </option>
+            <option value="AB+">
+              AB+
+            </option>
+            <option value="AB-">
+              AB-
+            </option>
+            <option value="O+">
+              O+
+            </option>
+            <option value="O-">
+              O-
+            </option>
+          </select>
+
+          <br />
+          <br />
+
+          {/* <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
+          /> */}
+
+          <br />
+          <br />
+
+          <input
+            type="text"
+            placeholder="Emergency Contact"
+            value={emergencyContact}
+            onChange={(e) =>
+              setEmergencyContact(
+                e.target.value
+              )
+            }
+          />
+
+          <br />
+          <br />
+
+          {/* <input
+            type="number"
+            placeholder="Weight (kg)"
+            value={weight}
+            onChange={(e) =>
+              setWeight(e.target.value)
+            }
+          />
+
+          <br />
+          <br />
+
+          <input
+            type="number"
+            placeholder="Height (cm)"
+            value={height}
+            onChange={(e) =>
+              setHeight(e.target.value)
+            }
+          /> */}
+
+          <br />
+          <br />
+
+          <textarea
+            placeholder="Address"
+            value={address}
+            onChange={(e) =>
+              setAddress(e.target.value)
+            }
+          />
+
+          <br />
+          <br />
+
+          <textarea
+            placeholder="Allergies"
+            value={allergies}
+            onChange={(e) =>
+              setAllergies(e.target.value)
+            }
+          />
+
+          <br />
+          <br />
+
+          <textarea
+            placeholder="Medical History"
+            value={medicalHistory}
+            onChange={(e) =>
+              setMedicalHistory(
+                e.target.value
+              )
+            }
+          />
+
+          <br />
+          <br />
+
+          {editingId ? (
+            <button
+              onClick={updatePatient}
+            >
+              Update Patient
+            </button>
+          ) : (
+            <button
+              onClick={addPatient}
+            >
+              Add Patient
+            </button>
+          )}
+        </div>
+      )}
 
       <br />
 

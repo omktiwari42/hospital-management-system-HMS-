@@ -1,5 +1,6 @@
 import {
   Link,
+  NavLink,
   useLocation,
 } from "react-router-dom";
 
@@ -46,6 +47,11 @@ function Sidebar() {
         <li>
           <Link to="/appointments">
             📅 Appointments
+          </Link>
+        </li>
+        <li>
+          <Link to="/prescriptions">
+            💊 Prescriptions
           </Link>
         </li>
 

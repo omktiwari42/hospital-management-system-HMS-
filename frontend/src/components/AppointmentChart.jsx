@@ -7,18 +7,20 @@ import {
     Tooltip,
     Legend,
     Cell,
+    ResponsiveContainer,
 } from "recharts";
 
-const COLORS = [
-    "#22c55e", // Completed - Green
-    "#f59e0b", // Pending - Orange
-    "#ef4444", // Cancelled - Red
-    "#3b82f6", // Extra - Blue
-];
+const COLORS = {
+    Completed: "#22c55e",
+    Scheduled: "#3b82f6",
+    Pending: "#f59e0b",
+    Cancelled: "#ef4444",
+};
 
 function AppointmentChart() {
-    const [data, setData] =
-        useState([]);
+    const [data, setData] = useState([]);
+    const [loading, setLoading] =
+        useState(true);
 
     useEffect(() => {
         getChartData();
@@ -35,15 +37,18 @@ function AppointmentChart() {
                 response.data.map(
                     (item) => ({
                         name: item.status,
-                        value: Number(
-                            item.count
-                        ),
+                        value: Number(item.count),
                     })
                 );
 
             setData(formatted);
         } catch (error) {
-            console.log(error);
+            console.log(
+                "Chart Error:",
+                error
+            );
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -53,58 +58,56 @@ function AppointmentChart() {
                 📊 Appointment Status
             </h2>
 
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent:
-                        "center",
-                    alignItems:
-                        "center",
-                }}
-            >
-                <PieChart
-                    width={500}
-                    height={350}
+            {loading ? (
+                <p>Loading Chart...</p>
+            ) : data.length === 0 ? (
+                <p>
+                    No Appointment Data Found
+                </p>
+            ) : (
+                <div
+                    style={{
+                        width: "100%",
+                        height: "400px",
+                    }}
                 >
-                    <Pie
-                        data={data}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={120}
-                        label
-                    >
-                        {data.map(
-                            (
-                                entry,
-                                index
-                            ) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={
-                                        entry.name ===
-                                            "Completed"
-                                            ? "#22c55e"
-                                            : entry.name ===
-                                                "Pending"
-                                                ? "#f59e0b"
-                                                : entry.name ===
-                                                    "Cancelled"
-                                                    ? "#ef4444"
-                                                    : COLORS[
-                                                    index %
-                                                    COLORS.length
-                                                    ]
-                                    }
-                                />
-                            )
-                        )}
-                    </Pie>
+                    <ResponsiveContainer>
+                        <PieChart>
+                            <Pie
+                                data={data}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={130}
+                                innerRadius={60}
+                                label
+                            >
+                                {data.map(
+                                    (entry, index) => (
+                                        <Cell
+                                            key={index}
+                                            fill={
+                                                COLORS[
+                                                entry.name
+                                                ] ||
+                                                "#6366f1"
+                                            }
+                                        />
+                                    )
+                                )}
+                            </Pie>
 
-                    <Tooltip />
+                            <Tooltip />
 
-                    <Legend />
-                </PieChart>
-            </div>
+                            <Legend
+                                verticalAlign="bottom"
+                                height={36}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 }

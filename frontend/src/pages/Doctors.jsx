@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { toast } from "react-toastify";
 
 function Doctors() {
   const [doctors, setDoctors] = useState([]);
@@ -9,20 +10,20 @@ function Doctors() {
   const [name, setName] = useState("");
   const [specialization, setSpecialization] =
     useState("");
-    const [experience, setExperience] =
+  const [experience, setExperience] =
     useState("");
 
-    const [fees, setFees] =
-      useState("");
+  const [fees, setFees] =
+    useState("");
 
-    const [phone, setPhone] =
-      useState("");
+  const [phone, setPhone] =
+    useState("");
 
-    const [email, setEmail] =
-      useState("");
+  const [email, setEmail] =
+    useState("");
 
-    const [availability, setAvailability] =
-      useState("");
+  const [availability, setAvailability] =
+    useState("");
 
   const [search, setSearch] = useState("");
 
@@ -63,47 +64,16 @@ function Doctors() {
   }, [search, doctors]);
 
   async function addDoctor() {
-  if (
-    !name.trim() ||
-    !specialization.trim()
-  ) {
-    alert("Please fill all fields");
-    return;
-  }
+    if (
+      !name.trim() ||
+      !specialization.trim()
+    ) {
+      alert("Please fill all fields");
+      return;
+    }
 
-  try {
-    await api.post("/doctors", {
-      name,
-      specialization,
-      experience,
-      fees,
-      phone,
-      email,
-      availability,
-    });
-
-    await fetchDoctors();
-
-    setName("");
-    setSpecialization("");
-    setExperience("");
-    setFees("");
-    setPhone("");
-    setEmail("");
-    setAvailability("");
-  } catch (error) {
-    console.log(
-      "Error adding doctor:",
-      error
-    );
-  }
-}
-
-  async function updateDoctor() {
-  try {
-    await api.put(
-      `/doctors/${editingId}`,
-      {
+    try {
+      await api.post("/doctors", {
         name,
         specialization,
         experience,
@@ -111,310 +81,348 @@ function Doctors() {
         phone,
         email,
         availability,
-      }
-    );
+      });
+      toast.success("✅ Doctor Added Successfully", {
+        position: "top-right",
+        autoClose: 2000,
+      });
 
-    await fetchDoctors();
+      await fetchDoctors();
 
-    setName("");
-    setSpecialization("");
-    setExperience("");
-    setFees("");
-    setPhone("");
-    setEmail("");
-    setAvailability("");
-
-    setEditingId(null);
-  } catch (error) {
-    console.log(
-      "Error updating doctor:",
-      error
-    );
-  }
-}
-
-  async function deleteDoctor(id) {
-    if (
-      !window.confirm(
-        "Delete this doctor?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await api.delete(
-        `/doctors/${id}`
-      );
-
-      fetchDoctors();
+      setName("");
+      setSpecialization("");
+      setExperience("");
+      setFees("");
+      setPhone("");
+      setEmail("");
+      setAvailability("");
     } catch (error) {
       console.log(
-        "Error deleting doctor:",
+        "Error adding doctor:",
         error
       );
     }
   }
+  async function updateDoctor() {
+    try {
+      await api.put(`/doctors/${editingId}`, {
+        name,
+        specialization,
+        experience,
+        fees,
+        phone,
+        email,
+        availability,
+      });
+
+      toast.success("✅ Doctor Updated Successfully", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+
+      await fetchDoctors();
+
+      setName("");
+      setSpecialization("");
+      setExperience("");
+      setFees("");
+      setPhone("");
+      setEmail("");
+      setAvailability("");
+
+      setEditingId(null);
+    } catch (error) {
+      console.log("Error updating doctor:", error);
+
+      toast.error("❌ Failed to Update Doctor", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    }
+  }
+  async function deleteDoctor(id) {
+    if (!window.confirm("Delete this doctor?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/doctors/${id}`);
+
+      toast.success("✅ Doctor Deleted Successfully", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+
+      await fetchDoctors();
+    } catch (error) {
+      console.log("Error deleting doctor:", error);
+
+      toast.error("❌ Failed to Delete Doctor", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    }
+  }
 
   function editDoctor(doctor) {
-  setName(doctor.name);
+    setName(doctor.name);
 
-  setSpecialization(
-    doctor.specialization
-  );
+    setSpecialization(
+      doctor.specialization
+    );
 
-  setExperience(
-    doctor.experience || ""
-  );
+    setExperience(
+      doctor.experience || ""
+    );
 
-  setFees(
-    doctor.fees || ""
-  );
+    setFees(
+      doctor.fees || ""
+    );
 
-  setPhone(
-    doctor.phone || ""
-  );
+    setPhone(
+      doctor.phone || ""
+    );
 
-  setEmail(
-    doctor.email || ""
-  );
+    setEmail(
+      doctor.email || ""
+    );
 
-  setAvailability(
-    doctor.availability || ""
-  );
+    setAvailability(
+      doctor.availability || ""
+    );
 
-  setEditingId(doctor.id);
+    setEditingId(doctor.id);
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-}
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
   return (
-  <div className="page">
-    <h1>🩺 Doctors Management</h1>
+    <div className="page">
+      <h1>🩺 Doctors Management</h1>
 
-    <div className="card">
-      <h3>
-        {editingId
-          ? "Update Doctor"
-          : "Add Doctor"}
-      </h3>
+      <div className="card">
+        <h3>
+          {editingId
+            ? "Update Doctor"
+            : "Add Doctor"}
+        </h3>
 
-      <input
-        type="text"
-        placeholder="Doctor Name"
-        value={name}
-        onChange={(e) =>
-          setName(e.target.value)
-        }
-      />
+        <input
+          type="text"
+          placeholder="Doctor Name"
+          value={name}
+          onChange={(e) =>
+            setName(e.target.value)
+          }
+        />
 
-      <br />
-      <br />
+        <br />
+        <br />
 
-      <input
-        type="text"
-        placeholder="Specialization"
-        value={specialization}
-        onChange={(e) =>
-          setSpecialization(
-            e.target.value
-          )
-        }
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="number"
-        placeholder="Experience (Years)"
-        value={experience}
-        onChange={(e) =>
-          setExperience(
-            e.target.value
-          )
-        }
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="number"
-        placeholder="Consultation Fee"
-        value={fees}
-        onChange={(e) =>
-          setFees(e.target.value)
-        }
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="text"
-        placeholder="Phone Number"
-        value={phone}
-        onChange={(e) =>
-          setPhone(e.target.value)
-        }
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) =>
-          setEmail(e.target.value)
-        }
-      />
-
-      <br />
-      <br />
-
-      <select
-        value={availability}
-        onChange={(e) =>
-          setAvailability(
-            e.target.value
-          )
-        }
-      >
-        <option value="">
-          Availability
-        </option>
-
-        <option value="Available">
-          Available
-        </option>
-
-        <option value="Busy">
-          Busy
-        </option>
-
-        <option value="On Leave">
-          On Leave
-        </option>
-      </select>
-
-      <br />
-      <br />
-
-      {editingId ? (
-        <button
-          onClick={updateDoctor}
-        >
-          Update Doctor
-        </button>
-      ) : (
-        <button
-          onClick={addDoctor}
-        >
-          Add Doctor
-        </button>
-      )}
-    </div>
-
-    <br />
-
-    <div className="card">
-      <input
-        type="text"
-        placeholder="🔍 Search Doctor"
-        value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-      />
-    </div>
-
-    <br />
-
-    <div className="card">
-      <table className="patient-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Specialization</th>
-            <th>Experience</th>
-            <th>Fee</th>
-            <th>Phone</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredDoctors.map(
-            (doctor) => (
-              <tr key={doctor.id}>
-                <td>{doctor.id}</td>
-
-                <td>{doctor.name}</td>
-
-                <td>
-                  {
-                    doctor.specialization
-                  }
-                </td>
-
-                <td>
-                  {doctor.experience}
-                </td>
-
-                <td>
-                  ₹{doctor.fees}
-                </td>
-
-                <td>
-                  {doctor.phone}
-                </td>
-
-                <td>
-                  {
-                    doctor.availability
-                  }
-                </td>
-
-                <td>
-                  <div className="action-buttons">
-                    <button
-                      className="edit-btn"
-                      onClick={() =>
-                        editDoctor(
-                          doctor
-                        )
-                      }
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="delete-btn"
-                      onClick={() =>
-                        deleteDoctor(
-                          doctor.id
-                        )
-                      }
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
+        <input
+          type="text"
+          placeholder="Specialization"
+          value={specialization}
+          onChange={(e) =>
+            setSpecialization(
+              e.target.value
             )
-          )}
-        </tbody>
-      </table>
+          }
+        />
+
+        <br />
+        <br />
+
+        <input
+          type="number"
+          placeholder="Experience (Years)"
+          value={experience}
+          onChange={(e) =>
+            setExperience(
+              e.target.value
+            )
+          }
+        />
+
+        <br />
+        <br />
+
+        <input
+          type="number"
+          placeholder="Consultation Fee"
+          value={fees}
+          onChange={(e) =>
+            setFees(e.target.value)
+          }
+        />
+
+        <br />
+        <br />
+
+        <input
+          type="text"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) =>
+            setPhone(e.target.value)
+          }
+        />
+
+        <br />
+        <br />
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
+        />
+
+        <br />
+        <br />
+
+        <select
+          value={availability}
+          onChange={(e) =>
+            setAvailability(
+              e.target.value
+            )
+          }
+        >
+          <option value="">
+            Availability
+          </option>
+
+          <option value="Available">
+            Available
+          </option>
+
+          <option value="Busy">
+            Busy
+          </option>
+
+          <option value="On Leave">
+            On Leave
+          </option>
+        </select>
+
+        <br />
+        <br />
+
+        {editingId ? (
+          <button
+            onClick={updateDoctor}
+          >
+            Update Doctor
+          </button>
+        ) : (
+          <button
+            onClick={addDoctor}
+          >
+            Add Doctor
+          </button>
+        )}
+      </div>
+
+      <br />
+
+      <div className="card">
+        <input
+          type="text"
+          placeholder="🔍 Search Doctor"
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+        />
+      </div>
+
+      <br />
+
+      <div className="card">
+        <table className="patient-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Specialization</th>
+              <th>Experience</th>
+              <th>Fee</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredDoctors.map(
+              (doctor) => (
+                <tr key={doctor.id}>
+                  <td>{doctor.id}</td>
+
+                  <td>{doctor.name}</td>
+
+                  <td>
+                    {
+                      doctor.specialization
+                    }
+                  </td>
+
+                  <td>
+                    {doctor.experience}
+                  </td>
+
+                  <td>
+                    ₹{doctor.fees}
+                  </td>
+
+                  <td>
+                    {doctor.phone}
+                  </td>
+
+                  <td>
+                    {
+                      doctor.availability
+                    }
+                  </td>
+
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="edit-btn"
+                        onClick={() =>
+                          editDoctor(
+                            doctor
+                          )
+                        }
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          deleteDoctor(
+                            doctor.id
+                          )
+                        }
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Doctors;

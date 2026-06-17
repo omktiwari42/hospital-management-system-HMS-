@@ -8,9 +8,16 @@ function authenticateToken(
   const authHeader =
     req.headers.authorization;
 
+  console.log(
+    "AUTH HEADER:",
+    authHeader
+  );
+
   const token =
     authHeader &&
     authHeader.split(" ")[1];
+
+  console.log("TOKEN:", token);
 
   if (!token) {
     return res.status(401).json({
@@ -23,12 +30,18 @@ function authenticateToken(
     process.env.JWT_SECRET,
     (err, user) => {
       if (err) {
+        console.log(
+          "JWT ERROR:",
+          err.message
+        );
+
         return res.status(403).json({
           message: "Invalid Token",
         });
       }
 
       req.user = user;
+
       next();
     }
   );
