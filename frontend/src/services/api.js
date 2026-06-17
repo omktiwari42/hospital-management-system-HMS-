@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://its-teach-belong-identification.trycloudflare.com/api"
+  baseURL: "https://deposit-broken-voltage-generators.trycloudflare.com/api"
 });
 
 api.interceptors.request.use((config) => {
