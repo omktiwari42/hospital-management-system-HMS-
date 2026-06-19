@@ -105,6 +105,7 @@ body {
 .layout {
   display: flex;
   min-height: 100vh;
+  overflow-x: auto;
 }
 
 .sidebar {
@@ -198,6 +199,7 @@ body {
 
 .content {
   flex: 1;
+  min-width: 0;
   padding: 20px;
 }
 
@@ -300,7 +302,15 @@ body {
 
 .patient-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
+}
+
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .patient-table th {
@@ -977,13 +987,19 @@ button:hover {
   }
 
   .sidebar {
-    width: 100%;
-    min-height: auto;
+    width: 70px;
     padding: 10px;
   }
 
   .sidebar.collapsed {
-    width: 100%;
+    width: 70px;
+  }
+
+  .logo,
+  .sidebar a span,
+  .theme-btn,
+  .logout-btn {
+    display: none;
   }
 
   .content {
@@ -1041,5 +1057,97 @@ button:hover {
 
   .phone-input-group select {
     width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  .content {
+    margin-left: 0;
+    padding: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+
+  .patient-table {
+    min-width: 900px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .pdf-btn,
+  .excel-btn {
+    width: 100%;
+  }
+}
+
+.patient-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media screen and (max-width: 768px) {
+  .patient-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.patient-form input,
+.patient-form select,
+.patient-form textarea {
+  width: 100%;
+}
+
+.patient-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.patient-form h3 {
+  grid-column: 1 / -1;
+}
+
+.patient-form button {
+  grid-column: 1 / -1;
+}
+
+.patient-form textarea {
+  grid-column: span 2;
+}
+
+@media screen and (max-width: 768px) {
+  .patient-form {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-form textarea {
+    grid-column: span 1;
   }
 }

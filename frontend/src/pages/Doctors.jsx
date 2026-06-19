@@ -344,82 +344,86 @@ function Doctors() {
       <br />
 
       <div className="card">
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Specialization</th>
-              <th>Experience</th>
-              <th>Fee</th>
-              <th>Phone</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Specialization</th>
+                <th>Experience</th>
+                <th>Fee</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {filteredDoctors.map(
-              (doctor) => (
-                <tr key={doctor.id}>
-                  <td>{doctor.id}</td>
+            <tbody>
+              {filteredDoctors.map(
+                (doctor) => (
+                  <tr key={doctor.id}>
+                    <td>{doctor.id}</td>
 
-                  <td>{doctor.name}</td>
+                    <td>{doctor.name}</td>
 
-                  <td>
-                    {
-                      doctor.specialization
-                    }
-                  </td>
+                    <td>
+                      {
+                        doctor.specialization
+                      }
+                    </td>
 
-                  <td>
-                    {doctor.experience}
-                  </td>
+                    <td>
+                      {doctor.experience}
+                    </td>
 
-                  <td>
-                    ₹{doctor.fees}
-                  </td>
+                    <td>
+                      ₹{doctor.fees}
+                    </td>
 
-                  <td>
-                    {doctor.phone}
-                  </td>
+                    <td>
+                      {doctor.phone}
+                    </td>
 
-                  <td>
-                    {
-                      doctor.availability
-                    }
-                  </td>
+                    <td>
+                      {
+                        doctor.availability
+                      }
+                    </td>
 
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="edit-btn"
-                        onClick={() =>
-                          editDoctor(
-                            doctor
-                          )
-                        }
-                      >
-                        Edit
-                      </button>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="edit-btn"
+                          onClick={() =>
+                            editDoctor(
+                              doctor
+                            )
+                          }
+                        >
+                          Edit
+                        </button>
 
-                      <button
-                        className="delete-btn"
-                        onClick={() =>
-                          deleteDoctor(
-                            doctor.id
-                          )
-                        }
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                        <button
+                          className="delete-btn"
+                          onClick={() =>
+                            deleteDoctor(
+                              doctor.id
+                            )
+                          }
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+
+        </div>
+
       </div>
     </div>
   );

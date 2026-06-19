@@ -72,7 +72,7 @@ function Login() {
           }
         );
 
-      localStorage.setItem(
+      sessionStorage.setItem(
         "token",
         response.data.token
       );
@@ -84,7 +84,6 @@ function Login() {
       setTimeout(() => {
         navigate("/dashboard");
 
-        window.location.reload();
       }, 1000);
     } catch (error) {
       console.log(error);

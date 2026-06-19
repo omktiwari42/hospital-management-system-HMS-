@@ -9,7 +9,7 @@ function Sidebar() {
     useLocation();
 
   const token =
-    localStorage.getItem(
+    sessionStorage.getItem(
       "token"
     );
 

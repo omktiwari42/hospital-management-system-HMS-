@@ -4,17 +4,17 @@ function PublicRoute({
     children,
 }) {
     const token =
-        localStorage.getItem(
+        sessionStorage.getItem(
             "token"
         );
 
-    return token
-        ? (
-            <Navigate
-                to="/dashboard"
-            />
-        )
-        : children;
+    return token ? (
+        <Navigate
+            to="/dashboard"
+        />
+    ) : (
+        children
+    );
 }
 
 export default PublicRoute;

@@ -67,7 +67,7 @@ function Dashboard() {
   async function getRecentAppointments() {
     try {
       const token =
-        localStorage.getItem(
+        sessionStorage.getItem(
           "token"
         );
 
@@ -156,59 +156,61 @@ function Dashboard() {
           📅 Recent Appointments
         </h2>
 
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {recentAppointments.map(
-              (appointment) => (
-                <tr
-                  key={
-                    appointment.id
-                  }
-                >
-                  <td>
-                    {
+            <tbody>
+              {recentAppointments.map(
+                (appointment) => (
+                  <tr
+                    key={
                       appointment.id
                     }
-                  </td>
+                  >
+                    <td>
+                      {
+                        appointment.id
+                      }
+                    </td>
 
-                  <td>
-                    {
-                      appointment.patient_name
-                    }
-                  </td>
+                    <td>
+                      {
+                        appointment.patient_name
+                      }
+                    </td>
 
-                  <td>
-                    {
-                      appointment.doctor_name
-                    }
-                  </td>
+                    <td>
+                      {
+                        appointment.doctor_name
+                      }
+                    </td>
 
-                  <td>
-                    {appointment.appointment_date?.split(
-                      "T"
-                    )[0]}
-                  </td>
+                    <td>
+                      {appointment.appointment_date?.split(
+                        "T"
+                      )[0]}
+                    </td>
 
-                  <td>
-                    {
-                      appointment.status
-                    }
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                    <td>
+                      {
+                        appointment.status
+                      }
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <br />
@@ -218,44 +220,46 @@ function Dashboard() {
           🧑 Recent Patients
         </h2>
 
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Blood Group</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Blood Group</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {recentPatients.map(
-              (patient) => (
-                <tr
-                  key={patient.id}
-                >
-                  <td>
-                    {patient.id}
-                  </td>
+            <tbody>
+              {recentPatients.map(
+                (patient) => (
+                  <tr
+                    key={patient.id}
+                  >
+                    <td>
+                      {patient.id}
+                    </td>
 
-                  <td>
-                    {patient.name}
-                  </td>
+                    <td>
+                      {patient.name}
+                    </td>
 
-                  <td>
-                    {patient.phone}
-                  </td>
+                    <td>
+                      {patient.phone}
+                    </td>
 
-                  <td>
-                    {
-                      patient.blood_group
-                    }
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                    <td>
+                      {
+                        patient.blood_group
+                      }
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

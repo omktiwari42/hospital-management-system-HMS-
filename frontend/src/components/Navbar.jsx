@@ -24,7 +24,7 @@ function Navbar() {
   const location = useLocation();
 
   const token =
-    localStorage.getItem("token");
+    sessionStorage.getItem("token");
 
   if (
     !token ||
@@ -37,7 +37,7 @@ function Navbar() {
   console.log("Navbar Rendering");
 
   function logout() {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     navigate("/login");
   }
 
@@ -82,7 +82,7 @@ function Navbar() {
             }
           >
             <FaTachometerAlt />
-            Dashboard
+
           </Link>
 
           <Link
@@ -95,7 +95,7 @@ function Navbar() {
             }
           >
             <FaUserInjured />
-            Patients
+            {open && <span>Patients</span>}
           </Link>
 
           <Link

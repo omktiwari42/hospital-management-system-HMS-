@@ -265,32 +265,20 @@ function Patients() {
   }
   // Download
   function editPatient(patient) {
+    setShowForm(true);   // ADD THIS LINE
+
     setName(patient.name);
     setAge(patient.age);
-
     setPhone(patient.phone || "");
     setGender(patient.gender || "");
-    setBloodGroup(
-      patient.blood_group || ""
-    );
-
+    setBloodGroup(patient.blood_group || "");
     setAddress(patient.address || "");
     setEmail(patient.email || "");
-
-    setEmergencyContact(
-      patient.emergency_contact || ""
-    );
-
+    setEmergencyContact(patient.emergency_contact || "");
     setWeight(patient.weight || "");
     setHeight(patient.height || "");
-
-    setAllergies(
-      patient.allergies || ""
-    );
-
-    setMedicalHistory(
-      patient.medical_history || ""
-    );
+    setAllergies(patient.allergies || "");
+    setMedicalHistory(patient.medical_history || "");
 
     setEditingId(patient.id);
 
@@ -348,10 +336,8 @@ function Patients() {
 
       setEditingId(null);
     } catch (error) {
-      console.log(
-        "Error updating patient:",
-        error
-      );
+      console.log("UPDATE ERROR:", error);
+      console.log("RESPONSE:", error.response?.data);
 
       toast.error(
         "Failed to update patient"
@@ -394,7 +380,7 @@ function Patients() {
 
       {showForm && (
 
-        <div className="card">
+        <div className="card patient-form">
 
           <h3>
             {editingId
@@ -410,8 +396,6 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
 
           <input
             type="number"
@@ -422,8 +406,7 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
+
 
           <input
             type="text"
@@ -434,8 +417,6 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
 
           <select
             value={gender}
@@ -457,8 +438,6 @@ function Patients() {
             </option>
           </select>
 
-          <br />
-          <br />
 
           <select
             value={bloodGroup}
@@ -497,8 +476,6 @@ function Patients() {
             </option>
           </select>
 
-          <br />
-          <br />
 
           {/* <input
             type="email"
@@ -509,8 +486,7 @@ function Patients() {
             }
           /> */}
 
-          <br />
-          <br />
+
 
           <input
             type="text"
@@ -523,8 +499,7 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
+
 
           {/* <input
             type="number"
@@ -535,8 +510,6 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
 
           <input
             type="number"
@@ -547,8 +520,7 @@ function Patients() {
             }
           /> */}
 
-          <br />
-          <br />
+
 
           <textarea
             placeholder="Address"
@@ -558,8 +530,7 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
+
 
           <textarea
             placeholder="Allergies"
@@ -569,8 +540,6 @@ function Patients() {
             }
           />
 
-          <br />
-          <br />
 
           <textarea
             placeholder="Medical History"
@@ -581,9 +550,6 @@ function Patients() {
               )
             }
           />
-
-          <br />
-          <br />
 
           {editingId ? (
             <button
@@ -601,7 +567,7 @@ function Patients() {
         </div>
       )}
 
-      <br />
+
 
       <div className="card">
         <input
@@ -614,68 +580,71 @@ function Patients() {
         />
       </div>
 
-      <br />
+
 
       <div className="card">
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Phone</th>
-              <th>Gender</th>
-              <th>Blood Group</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Phone</th>
+                <th>Gender</th>
+                <th>Blood Group</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {filteredPatients.map(
-              (patient) => (
-                <tr key={patient.id}>
-                  <td>{patient.id}</td>
+            <tbody>
+              {filteredPatients.map(
+                (patient) => (
+                  <tr key={patient.id}>
+                    <td>{patient.id}</td>
 
-                  <td>{patient.name}</td>
+                    <td>{patient.name}</td>
 
-                  <td>{patient.age}</td>
+                    <td>{patient.age}</td>
 
-                  <td>{patient.phone}</td>
+                    <td>{patient.phone}</td>
 
-                  <td>{patient.gender}</td>
+                    <td>{patient.gender}</td>
 
-                  <td>
-                    {patient.blood_group}
-                  </td>
+                    <td>
+                      {patient.blood_group}
+                    </td>
 
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="edit-btn"
-                        onClick={() =>
-                          editPatient(patient)
-                        }
-                      >
-                        Edit
-                      </button>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="edit-btn"
+                          onClick={() => {
+                            console.log("EDIT CLICKED");
+                            editPatient(patient);
+                          }}
+                        >
+                          Edit
+                        </button>
 
-                      <button
-                        className="delete-btn"
-                        onClick={() =>
-                          deletePatient(
-                            patient.id
-                          )
-                        }
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                        <button
+                          className="delete-btn"
+                          onClick={() =>
+                            deletePatient(
+                              patient.id
+                            )
+                          }
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

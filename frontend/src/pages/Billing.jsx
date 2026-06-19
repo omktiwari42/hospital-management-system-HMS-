@@ -240,68 +240,70 @@ function Billing() {
       <br />
 
       <div className="card">
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Patient</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Edit</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Patient</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Edit</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {filteredBills.map(
-              (bill) => (
-                <tr key={bill.id}>
-                  <td>{bill.id}</td>
+            <tbody>
+              {filteredBills.map(
+                (bill) => (
+                  <tr key={bill.id}>
+                    <td>{bill.id}</td>
 
-                  <td>
-                    {
-                      bill.patient_name
-                    }
-                  </td>
-
-                  <td>
-                    ₹{bill.amount}
-                  </td>
-
-                  <td>
-                    {bill.status}
-                  </td>
-
-                  <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() =>
-                        editBill(
-                          bill
-                        )
+                    <td>
+                      {
+                        bill.patient_name
                       }
-                    >
-                      Edit
-                    </button>
-                  </td>
+                    </td>
 
-                  <td>
-                    <button
-                      className="delete-btn"
-                      onClick={() =>
-                        deleteBill(
-                          bill.id
-                        )
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                    <td>
+                      ₹{bill.amount}
+                    </td>
+
+                    <td>
+                      {bill.status}
+                    </td>
+
+                    <td>
+                      <button
+                        className="edit-btn"
+                        onClick={() =>
+                          editBill(
+                            bill
+                          )
+                        }
+                      >
+                        Edit
+                      </button>
+                    </td>
+
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          deleteBill(
+                            bill.id
+                          )
+                        }
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

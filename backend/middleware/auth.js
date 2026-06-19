@@ -35,11 +35,16 @@ function authenticateToken(
           err.message
         );
 
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({
+            message: "Session Expired",
+          });
+        }
+
         return res.status(403).json({
           message: "Invalid Token",
         });
       }
-
       req.user = user;
 
       next();

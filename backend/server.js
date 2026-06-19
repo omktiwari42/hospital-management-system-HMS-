@@ -131,6 +131,7 @@ app.get(
   }
 );
 app.post("/api/patients", authenticateToken, async (req, res) => {
+  console.log("PATIENT DATA:", req.body);
   try {
     const {
       name,
@@ -836,6 +837,30 @@ app.get(
 
       res.status(500).json({
         message: "Database Error",
+      });
+    }
+  }
+);
+app.get(
+  "/api/recent-patients",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result =
+        await pool.query(`
+          SELECT *
+          FROM patients
+          ORDER BY id DESC
+          LIMIT 5
+        `);
+
+      res.json(result.rows);
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Error fetching recent patients",
       });
     }
   }

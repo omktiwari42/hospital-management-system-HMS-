@@ -178,10 +178,12 @@ function Appointments() {
       "Scheduled"
     );
 
+    console.log(appointment);
+
     setAppointmentDate(
-      new Date(
-        `${appointment.appointment_date}T${appointment.appointment_time}`
-      )
+      appointment.appointment_date
+        ? new Date(appointment.appointment_date)
+        : new Date()
     );
   }
 
@@ -472,111 +474,113 @@ function Appointments() {
       <br />
 
       <div className="card">
-        <table className="patient-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Status</th>
-              <th>Edit</th>
-              <th>Delete</th>
-              <th>Pay</th>
-            </tr>
-          </thead>
+        <div className="table-container">
+          <table className="patient-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Edit</th>
+                <th>Delete</th>
+                <th>Pay</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {filteredAppointments.map(
-              (
-                appointment
-              ) => (
-                <tr
-                  key={
-                    appointment.id
-                  }
-                >
-                  <td>
-                    {
+            <tbody>
+              {filteredAppointments.map(
+                (
+                  appointment
+                ) => (
+                  <tr
+                    key={
                       appointment.id
                     }
-                  </td>
-
-                  <td>
-                    {
-                      appointment.patient_name
-                    }
-                  </td>
-
-                  <td>
-                    {
-                      appointment.doctor_name
-                    }
-                  </td>
-
-                  <td>
-                    {appointment.appointment_date?.split(
-                      "T"
-                    )[0]}
-                  </td>
-
-                  <td>
-                    {
-                      appointment.appointment_time
-                    }
-                  </td>
-
-                  <td>
-                    {
-                      appointment.status
-                    }
-                  </td>
-
-                  <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() =>
-                        editAppointment(
-                          appointment
-                        )
+                  >
+                    <td>
+                      {
+                        appointment.id
                       }
-                    >
-                      Edit
-                    </button>
-                  </td>
+                    </td>
 
-                  <td>
-                    <button
-                      className="delete-btn"
-                      onClick={() => {
-                        console.log(
-                          "BUTTON PRESSED",
-                          appointment.id
-                        );
-                        deleteAppointment(
-                          appointment.id
-                        );
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      className="pay-btn"
-                      onClick={() =>
-                        goToPayment(appointment)
+                    <td>
+                      {
+                        appointment.patient_name
                       }
-                    >
-                      Pay
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                    </td>
+
+                    <td>
+                      {
+                        appointment.doctor_name
+                      }
+                    </td>
+
+                    <td>
+                      {appointment.appointment_date?.split(
+                        "T"
+                      )[0]}
+                    </td>
+
+                    <td>
+                      {
+                        appointment.appointment_time
+                      }
+                    </td>
+
+                    <td>
+                      {
+                        appointment.status
+                      }
+                    </td>
+
+                    <td>
+                      <button
+                        className="edit-btn"
+                        onClick={() =>
+                          editAppointment(
+                            appointment
+                          )
+                        }
+                      >
+                        Edit
+                      </button>
+                    </td>
+
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() => {
+                          console.log(
+                            "BUTTON PRESSED",
+                            appointment.id
+                          );
+                          deleteAppointment(
+                            appointment.id
+                          );
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        className="pay-btn"
+                        onClick={() =>
+                          goToPayment(appointment)
+                        }
+                      >
+                        Pay
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
