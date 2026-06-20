@@ -75,14 +75,13 @@ function Navbar() {
           <Link
             to="/dashboard"
             className={
-              location.pathname ===
-                "/dashboard"
+              location.pathname === "/dashboard"
                 ? "active-link"
                 : ""
             }
           >
             <FaTachometerAlt />
-
+            Dashboard
           </Link>
 
           <Link
