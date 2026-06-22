@@ -301,6 +301,7 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
       phone,
       email,
       availability,
+      experience,
     } = req.body;
 
     const result = await pool.query(
@@ -312,11 +313,12 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
         fees,
         phone,
         email,
-        availability
+        availability,
+        experience
       )
       VALUES
       (
-        $1,$2,$3,$4,$5,$6
+        $1,$2,$3,$4,$5,$6,$7
       )
       RETURNING *
       `,
@@ -327,6 +329,7 @@ app.post("/api/doctors", authenticateToken, async (req, res) => {
         phone,
         email,
         availability,
+        experience
       ]
     );
 
@@ -350,6 +353,7 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
       phone,
       email,
       availability,
+      experience
     } = req.body;
 
     await pool.query(
@@ -361,8 +365,9 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
       fees=$3,
       phone=$4,
       email=$5,
-      availability=$6
-      WHERE id=$7
+      availability=$6,
+      experience=$7
+      WHERE id=$8
       `,
       [
         name,
@@ -371,7 +376,8 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
         phone,
         email,
         availability,
-        id,
+        experience,
+        id
       ]
     );
 

@@ -6,29 +6,19 @@ import AppointmentChart from "../components/AppointmentChart";
 import RevenueChart from "../components/RevenueChart";
 
 function Dashboard() {
-  const [patients, setPatients] =
-    useState(0);
+  const [patients, setPatients] = useState(0);
 
-  const [doctors, setDoctors] =
-    useState(0);
+  const [doctors, setDoctors] = useState(0);
 
-  const [appointmentsCount, setAppointmentsCount] =
-    useState(0);
+  const [appointmentsCount, setAppointmentsCount] = useState(0);
 
-  const [bills, setBills] =
-    useState(0);
+  const [bills, setBills] = useState(0);
 
-  const [recentAppointments, setRecentAppointments] =
-    useState([]);
+  const [recentAppointments, setRecentAppointments] = useState([]);
 
-  const [recentPatients, setRecentPatients] =
-    useState([]);
+  const [recentPatients, setRecentPatients] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-    getRecentAppointments();
-    getRecentPatients();
-  }, []);
+  useEffect(() => { fetchData(); getRecentAppointments(); getRecentPatients(); }, []);
 
   async function fetchData() {
     try {
@@ -137,7 +127,8 @@ function Dashboard() {
           to="/billing"
           className="card bills-card"
         >
-          <h2>💳 Bills</h2>
+          <h2>💳
+            Bills</h2>
           <p>{bills}</p>
         </Link>
       </div>

@@ -72,14 +72,7 @@ function Navbar() {
             🏥 HMS
           </h2>
 
-          <Link
-            to="/dashboard"
-            className={
-              location.pathname === "/dashboard"
-                ? "active-link"
-                : ""
-            }
-          >
+          <Link to="/dashboard" className={location.pathname === "/dashboard" ? "active-link" : ""}>
             <FaTachometerAlt />
             Dashboard
           </Link>
@@ -124,7 +117,7 @@ function Navbar() {
           </Link>
 
           {/* NEW PRESCRIPTIONS MENU */}
-          <Link
+          {/* <Link
             to="/prescriptions"
             className={
               location.pathname ===
@@ -134,7 +127,7 @@ function Navbar() {
             }
           >
             💊 Prescriptions
-          </Link>
+          </Link> */}
 
           <Link
             to="/billing"

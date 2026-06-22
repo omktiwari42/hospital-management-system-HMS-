@@ -127,7 +127,7 @@ function Appointments() {
         }
       );
       toast.success(
-        "✅ Appointment Added Successfully",
+        "Appointment Added Successfully✅ ",
         {
           position: "top-right",
           autoClose: 2000,
@@ -234,7 +234,7 @@ function Appointments() {
         !reason.trim()
       ) {
         toast.error(
-          "⚠️ Please fill all fields"
+          "Please fill all fields⚠️ "
         );
         return;
       }
