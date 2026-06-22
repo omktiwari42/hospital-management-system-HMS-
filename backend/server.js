@@ -252,27 +252,31 @@ app.put("/api/patients/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.delete("/api/patients/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
+app.delete(
+  "/api/patients/:id",
+  authenticateToken,
+  authorizeRole("admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    await pool.query(
-      "DELETE FROM patients WHERE id = $1",
-      [id]
-    );
+      await pool.query(
+        "DELETE FROM patients WHERE id = $1",
+        [id]
+      );
 
-    res.json({
-      message:
-        "Patient deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
+      res.json({
+        message:
+          "Patient deleted successfully",
+      });
+    } catch (error) {
+      console.log(error);
 
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
+  });
 /* ===========================
    DOCTORS APIs
 =========================== */
@@ -393,27 +397,31 @@ app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.delete("/api/doctors/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
+app.delete(
+  "/api/doctors/:id",
+  authenticateToken,
+  authorizeRole("admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    await pool.query(
-      "DELETE FROM doctors WHERE id = $1",
-      [id]
-    );
+      await pool.query(
+        "DELETE FROM doctors WHERE id = $1",
+        [id]
+      );
 
-    res.json({
-      message:
-        "Doctor deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
+      res.json({
+        message:
+          "Doctor deleted successfully",
+      });
+    } catch (error) {
+      console.log(error);
 
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
+  });
 /* ===========================
    APPOINTMENTS APIs
 =========================== */
@@ -618,22 +626,25 @@ app.delete("/api/appointments/:id", authenticateToken, async (req, res) => {
 /* ===========================
    BILLING APIs
 =========================== */
+app.get(
+  "/api/bills",
+  authenticateToken,
+  authorizeRole("admin"),
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        "SELECT * FROM bills ORDER BY id"
+      );
 
-app.get("/api/bills", authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM bills ORDER BY id"
-    );
+      res.json(result.rows);
+    } catch (error) {
+      console.log(error);
 
-    res.json(result.rows);
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
+      res.status(500).json({
+        message: "Database Error",
+      });
+    }
+  });
 
 /* ADD THIS ROUTE */
 app.post("/api/bills", authenticateToken, async (req, res) => {
@@ -816,6 +827,7 @@ app.post("/api/verify-otp", (req, res) => {
 });
 
 app.get("/api/profile", authenticateToken, async (req, res) => {
+  console.log(req.user);
   try {
     res.json({
       phone: req.user.phone,
