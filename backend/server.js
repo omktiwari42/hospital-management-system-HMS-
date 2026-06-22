@@ -9,6 +9,21 @@ const authorizeRole =
     "./middleware/authorizeRole"
   );
 const Razorpay = require("razorpay");
+// MAIL TRANSPORTER
+const nodemailer =
+  require("nodemailer");
+
+const transporter =
+  nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user:
+        process.env.EMAIL_USER,
+      pass:
+        process.env.EMAIL_PASS,
+    },
+  });
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -543,6 +558,7 @@ app.post(
       );
 
 
+
       res.status(201).json(
         result.rows[0]
       );
@@ -662,7 +678,26 @@ app.post("/api/bills", authenticateToken, async (req, res) => {
        RETURNING *`,
       [patientName, amount, status]
     );
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // for testing
 
+      subject: "Appointment Confirmation",
+
+      html: `
+        <h2>Appointment Confirmed</h2>
+    
+        <p><b>Patient:</b> ${patientName}</p>
+    
+        <p><b>Doctor:</b> ${doctorName}</p>
+    
+        <p><b>Date:</b> ${date}</p>
+    
+        <p><b>Time:</b> ${time}</p>
+    
+        <p>Your appointment has been booked successfully.</p>
+      `
+    });
     res.status(201).json(
       result.rows[0]
     );
