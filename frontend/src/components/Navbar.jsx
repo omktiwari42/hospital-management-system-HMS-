@@ -26,6 +26,9 @@ function Navbar() {
   const token =
     sessionStorage.getItem("token");
 
+  const role =
+    sessionStorage.getItem("role");
+
   if (
     !token ||
     location.pathname === "/" ||
@@ -77,31 +80,34 @@ function Navbar() {
             Dashboard
           </Link>
 
-          <Link
-            to="/patients"
-            className={
-              location.pathname ===
-                "/patients"
-                ? "active-link"
-                : ""
-            }
-          >
-            <FaUserInjured />
-            {open && <span>Patients</span>}
-          </Link>
-
-          <Link
-            to="/doctors"
-            className={
-              location.pathname ===
-                "/doctors"
-                ? "active-link"
-                : ""
-            }
-          >
-            <FaUserMd />
-            Doctors
-          </Link>
+          {role === "admin" && (
+            <Link
+              to="/patients"
+              className={
+                location.pathname ===
+                  "/patients"
+                  ? "active-link"
+                  : ""
+              }
+            >
+              <FaUserInjured />
+              {open && <span>Patients</span>}
+            </Link>
+          )}
+          {role === "admin" && (
+            <Link
+              to="/doctors"
+              className={
+                location.pathname ===
+                  "/doctors"
+                  ? "active-link"
+                  : ""
+              }
+            >
+              <FaUserMd />
+              Doctors
+            </Link>
+          )}
 
           <Link
             to="/appointments"
@@ -129,18 +135,20 @@ function Navbar() {
             💊 Prescriptions
           </Link> */}
 
-          <Link
-            to="/billing"
-            className={
-              location.pathname ===
-                "/billing"
-                ? "active-link"
-                : ""
-            }
-          >
-            <FaMoneyBillWave />
-            Billing
-          </Link>
+          {role === "admin" && (
+            <Link
+              to="/billing"
+              className={
+                location.pathname ===
+                  "/billing"
+                  ? "active-link"
+                  : ""
+              }
+            >
+              <FaMoneyBillWave />
+              Billing
+            </Link>
+          )}
 
           <Link
             to="/profile"
