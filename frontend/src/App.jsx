@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import RoleRoute from "./components/RoleRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -59,7 +59,11 @@ function App() {
             path="/patients"
             element={
               <ProtectedRoute>
-                <Patients />
+                <RoleRoute
+                  roles={["admin"]}
+                >
+                  <Patients />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
@@ -68,7 +72,11 @@ function App() {
             path="/doctors"
             element={
               <ProtectedRoute>
-                <Doctors />
+                <RoleRoute
+                  roles={["admin"]}
+                >
+                  <Doctors />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
@@ -86,7 +94,11 @@ function App() {
             path="/billing"
             element={
               <ProtectedRoute>
-                <Billing />
+                <RoleRoute
+                  roles={["admin"]}
+                >
+                  <Billing />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
