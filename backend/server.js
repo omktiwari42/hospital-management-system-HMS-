@@ -794,12 +794,16 @@ app.post("/api/verify-otp", (req, res) => {
     delete otpStore[phone];
 
     const token = jwt.sign(
-      { phone },
-      "my_super_secret_key_123",
+      {
+        phone,
+        role: "admin"
+      },
+      process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
     res.json({
       token,
+      role='admin',
       message: "Login Successful 🎉",
     });
   } catch (error) {

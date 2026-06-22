@@ -77,6 +77,10 @@ function Login() {
         response.data.token
       );
 
+      sessionStorage.setItem(
+        "role",
+        response.data.role
+      );
       toast.success(
         "Login Successful"
       );
