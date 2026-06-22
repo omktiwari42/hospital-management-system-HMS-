@@ -814,7 +814,7 @@ app.post("/api/verify-otp", (req, res) => {
     );
     res.json({
       token,
-      role='admin',
+      role: "admin",
       message: "Login Successful 🎉",
     });
   } catch (error) {
