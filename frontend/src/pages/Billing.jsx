@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 function Billing() {
   const [bills, setBills] = useState([]);
   const [filteredBills, setFilteredBills] =
@@ -141,7 +142,65 @@ function Billing() {
       console.log(error);
     }
   }
+  function downloadInvoice(bill) {
+    const doc = new jsPDF();
 
+    doc.setFontSize(20);
+
+    doc.text(
+      "Hospital Management System",
+      20,
+      20
+    );
+
+    doc.setFontSize(14);
+
+    doc.text(
+      "Invoice Receipt",
+      20,
+      35
+    );
+
+    autoTable(doc, {
+      startY: 50,
+      body: [
+        [
+          "Invoice ID",
+          bill.id,
+        ],
+        [
+          "Patient Name",
+          bill.patient_name,
+        ],
+        [
+          "Amount",
+          `₹${bill.amount}`,
+        ],
+        [
+          "Status",
+          bill.status,
+        ],
+        [
+          "Payment Status",
+          bill.payment_status ||
+          "Pending",
+        ],
+        [
+          "Transaction ID",
+          bill.transaction_id ||
+          "N/A",
+        ],
+        [
+          "Date",
+          new Date().toLocaleDateString(),
+        ],
+      ],
+    });
+
+    doc.save(
+      `Invoice-${bill.id}.pdf`
+    );
+  }
   return (
     <div className="page">
       <h1>
@@ -248,45 +307,50 @@ function Billing() {
                 <th>Patient</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Edit</th>
-                <th>Delete</th>
+                <th>Payment Status</th>
+                <th>Transaction ID</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredBills.map(
-                (bill) => (
-                  <tr key={bill.id}>
-                    <td>{bill.id}</td>
+              {filteredBills.map((bill) => (
+                <tr key={bill.id}>
+                  <td>{bill.id}</td>
 
-                    <td>
-                      {
-                        bill.patient_name
-                      }
-                    </td>
+                  <td>{bill.patient_name}</td>
 
-                    <td>
-                      ₹{bill.amount}
-                    </td>
+                  <td>₹{bill.amount}</td>
 
-                    <td>
-                      {bill.status}
-                    </td>
+                  <td>{bill.status}</td>
 
-                    <td>
+                  <td>
+                    {bill.payment_status ||
+                      "Pending"}
+                  </td>
+
+                  <td>
+                    {bill.transaction_id ||
+                      "N/A"}
+                  </td>
+
+                  <td>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <button
                         className="edit-btn"
                         onClick={() =>
-                          editBill(
-                            bill
-                          )
+                          editBill(bill)
                         }
                       >
                         Edit
                       </button>
-                    </td>
 
-                    <td>
                       <button
                         className="delete-btn"
                         onClick={() =>
@@ -297,10 +361,20 @@ function Billing() {
                       >
                         Delete
                       </button>
-                    </td>
-                  </tr>
-                )
-              )}
+
+                      <button
+                        onClick={() =>
+                          downloadInvoice(
+                            bill
+                          )
+                        }
+                      >
+                        PDF
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
