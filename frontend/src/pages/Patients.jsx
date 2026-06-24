@@ -75,7 +75,28 @@ function Patients() {
 
     setFilteredPatients(filtered);
   }, [search, patients]);
+  async function uploadReport(patientId, file) {
+    const formData = new FormData();
 
+    formData.append("report", file);
+
+    try {
+      await api.post(
+        `/upload-report/${patientId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      alert("Report Uploaded Successfully");
+    } catch (error) {
+      console.log(error);
+      alert("Upload Failed");
+    }
+  }
   async function addPatient() {
     if (!name.trim() || !age) {
       toast.warning(
@@ -594,6 +615,7 @@ function Patients() {
                 <th>Gender</th>
                 <th>Blood Group</th>
                 <th>Actions</th>
+                <th>Report</th>
               </tr>
             </thead>
 
@@ -626,6 +648,31 @@ function Patients() {
                         >
                           Edit
                         </button>
+                        <td>
+                          <input
+                            type="file"
+                            id={`file-${patient.id}`}
+                            style={{ display: "none" }}
+                            onChange={(e) =>
+                              uploadReport(
+                                patient.id,
+                                e.target.files[0]
+                              )
+                            }
+                          />
+
+                          <button
+                            onClick={() =>
+                              document
+                                .getElementById(
+                                  `file-${patient.id}`
+                                )
+                                .click()
+                            }
+                          >
+                            Upload Report
+                          </button>
+                        </td>
 
                         <button
                           className="delete-btn"
