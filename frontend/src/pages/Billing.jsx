@@ -195,7 +195,7 @@ function Billing() {
           new Date().toLocaleDateString(),
         ],
       ],
-    });
+    }); pdf
 
     doc.save(
       `Invoice-${bill.id}.pdf`

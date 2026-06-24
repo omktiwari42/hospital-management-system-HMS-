@@ -394,7 +394,7 @@ function Appointments() {
             setAppointmentDate(date)
           }
           showTimeSelect
-          timeIntervals={15}
+          timeintervals={15}
           dateFormat="dd/MM/yyyy h:mm aa"
           minDate={new Date()}
           placeholderText="Select Date & Time"

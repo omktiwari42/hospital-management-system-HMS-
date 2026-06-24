@@ -1,4 +1,28 @@
+const multer = require("multer");
+const path = require("path");
 require("dotenv").config();
+
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() +
+      "-" +
+      file.originalname
+    );
+  },
+});
+
+const upload = multer({
+  storage,
+});
+
 const authenticateToken =
   require(
     "./middleware/auth"
@@ -43,6 +67,10 @@ const otpStore = {};
 
 app.use(cors());
 app.use(express.json());
+app.use(
+  "/uploads",
+  express.static("uploads")
+);
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
@@ -556,6 +584,27 @@ app.post(
           "Pending"
         ]
       );
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+
+        to: process.env.EMAIL_USER,
+
+        subject: "Appointment Confirmation",
+
+        html: `
+          <h2>🏥 Appointment Confirmed</h2>
+      
+          <p><b>Patient:</b> ${patientName}</p>
+      
+          <p><b>Doctor:</b> ${doctorName}</p>
+      
+          <p><b>Date:</b> ${date}</p>
+      
+          <p><b>Time:</b> ${time}</p>
+      
+          <p>Your appointment has been booked successfully.</p>
+        `
+      });
 
 
 
@@ -678,26 +727,6 @@ app.post("/api/bills", authenticateToken, async (req, res) => {
        RETURNING *`,
       [patientName, amount, status]
     );
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // for testing
-
-      subject: "Appointment Confirmation",
-
-      html: `
-        <h2>Appointment Confirmed</h2>
-    
-        <p><b>Patient:</b> ${patientName}</p>
-    
-        <p><b>Doctor:</b> ${doctorName}</p>
-    
-        <p><b>Date:</b> ${date}</p>
-    
-        <p><b>Time:</b> ${time}</p>
-    
-        <p>Your appointment has been booked successfully.</p>
-      `
-    });
     res.status(201).json(
       result.rows[0]
     );
@@ -1037,6 +1066,25 @@ app.get("/api/prescriptions", async (req, res) => {
     });
   }
 });
+app.post(
+  "/api/upload-report",
+  authenticateToken,
+  upload.single("report"),
+  async (req, res) => {
+    try {
+      res.json({
+        file: req.file.filename,
+      });
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Upload Failed",
+      });
+    }
+  }
+);
 
 const PORT = process.env.PORT || 5000;
 

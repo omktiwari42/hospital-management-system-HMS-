@@ -732,13 +732,13 @@ input {
 .send-otp-btn {
   background: linear-gradient(135deg,
       #10b981,
-      #059669);
+      #2f457a);
 }
 
 .verify-otp-btn {
   background: linear-gradient(135deg,
-      #2563eb,
-      #1d4ed8);
+      #5e3ba0,
+      #1973ae);
 }
 
 .send-otp-btn:hover,
