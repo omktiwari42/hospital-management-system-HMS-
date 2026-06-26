@@ -126,6 +126,7 @@ function Patients() {
       toast.success(
         "Patient Added Successfully"
       );
+      setShowForm(false);
 
       setName("");
       setAge("");
@@ -356,6 +357,7 @@ function Patients() {
       setMedicalHistory("");
 
       setEditingId(null);
+      setShowForm(false);
     } catch (error) {
       console.log("UPDATE ERROR:", error);
       console.log("RESPONSE:", error.response?.data);
@@ -620,75 +622,70 @@ function Patients() {
             </thead>
 
             <tbody>
-              {filteredPatients.map(
-                (patient) => (
-                  <tr key={patient.id}>
-                    <td>{patient.id}</td>
+              {filteredPatients.map((patient) => (
+                <tr key={patient.id}>
+                  <td>{patient.id}</td>
 
-                    <td>{patient.name}</td>
+                  <td>{patient.name}</td>
 
-                    <td>{patient.age}</td>
+                  <td>{patient.age}</td>
 
-                    <td>{patient.phone}</td>
+                  <td>{patient.phone}</td>
 
-                    <td>{patient.gender}</td>
+                  <td>{patient.gender}</td>
 
-                    <td>
-                      {patient.blood_group}
-                    </td>
+                  <td>{patient.blood_group}</td>
 
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="edit-btn"
-                          onClick={() => {
-                            console.log("EDIT CLICKED");
-                            editPatient(patient);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <td>
-                          <input
-                            type="file"
-                            id={`file-${patient.id}`}
-                            style={{ display: "none" }}
-                            onChange={(e) =>
-                              uploadReport(
-                                patient.id,
-                                e.target.files[0]
-                              )
-                            }
-                          />
+                  {/* ACTIONS */}
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="edit-btn"
+                        onClick={() => editPatient(patient)}
+                      >
+                        Edit
+                      </button>
 
-                          <button
-                            onClick={() =>
-                              document
-                                .getElementById(
-                                  `file-${patient.id}`
-                                )
-                                .click()
-                            }
-                          >
-                            Upload Report
-                          </button>
-                        </td>
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          deletePatient(patient.id)
+                        }
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
 
-                        <button
-                          className="delete-btn"
-                          onClick={() =>
-                            deletePatient(
-                              patient.id
-                            )
-                          }
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              )}
+                  {/* REPORT */}
+                  <td>
+                    <input
+                      type="file"
+                      id={`file-${patient.id}`}
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+
+                        if (file) {
+                          uploadReport(patient.id, file);
+                        }
+                      }}
+                    />
+
+                    <button
+                      onClick={() =>
+                        document
+                          .getElementById(
+                            `file-${patient.id}`
+                          )
+                          .click()
+                      }
+                    >
+                      Upload Report
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
