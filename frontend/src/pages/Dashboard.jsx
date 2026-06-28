@@ -1,3 +1,5 @@
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import axios from "axios";
@@ -9,7 +11,7 @@ function Dashboard() {
   const [patients, setPatients] = useState(0);
 
   const [doctors, setDoctors] = useState(0);
-
+  const [loading, setLoading] = useState(true);
   const [appointmentsCount, setAppointmentsCount] = useState(0);
 
   const [bills, setBills] = useState(0);
@@ -18,10 +20,38 @@ function Dashboard() {
 
   const [recentPatients, setRecentPatients] = useState([]);
 
-  useEffect(() => { fetchData(); getRecentAppointments(); getRecentPatients(); }, []);
+  useEffect(() => {
+    //   async function loadDashboard() {
+    //     setLoading(true);
+
+    //     await Promise.all([
+    //       fetchData(),
+    //       getRecentAppointments(),
+    //       getRecentPatients(),
+    //     ]);
+
+    //     setLoading(false);
+    //   }
+    async function loadDashboard() {
+      setLoading(true);
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      await Promise.all([
+        fetchData(),
+        getRecentAppointments(),
+        getRecentPatients(),
+      ]);
+
+      setLoading(false);
+    }
+
+    loadDashboard();
+  }, []);
 
   async function fetchData() {
     try {
+
       const patientsRes =
         await api.get("/patients");
 
@@ -52,6 +82,7 @@ function Dashboard() {
     } catch (error) {
       console.log(error);
     }
+
   }
 
   async function getRecentAppointments() {
@@ -103,7 +134,9 @@ function Dashboard() {
           className="card patients-card"
         >
           <h2>👨‍⚕️ Patients</h2>
-          <p>{patients}</p>
+          <p>
+            {loading ? <Skeleton width={60} height={35} /> : patients}
+          </p>
         </Link>
 
         <Link
@@ -111,7 +144,9 @@ function Dashboard() {
           className="card doctors-card"
         >
           <h2>🩺 Doctors</h2>
-          <p>{doctors}</p>
+          <p>
+            {loading ? <Skeleton width={60} height={35} /> : doctors}
+          </p>
         </Link>
 
         <Link
@@ -119,7 +154,9 @@ function Dashboard() {
           className="card appointments-card"
         >
           <h2>📅 Appointments</h2>
-          <p>{appointmentsCount}</p>
+          <p>
+            {loading ? <Skeleton width={60} height={35} /> : appointmentsCount}
+          </p>
         </Link>
 
         <Link
@@ -128,17 +165,27 @@ function Dashboard() {
         >
           <h2>💳
             Bills</h2>
-          <p>{bills}</p>
+          <p>
+            {loading ? <Skeleton width={60} height={35} /> : bills}
+          </p>
         </Link>
       </div>
 
       <br />
 
-      <AppointmentChart />
+      {loading ? (
+        <Skeleton height={300} />
+      ) : (
+        <AppointmentChart />
+      )}
+
       <br />
-      <RevenueChart>
-        <br />
-      </RevenueChart>
+
+      {loading ? (
+        <Skeleton height={300} />
+      ) : (
+        <RevenueChart />
+      )}
 
       <div className="card">
 
@@ -157,46 +204,27 @@ function Dashboard() {
                 <th>Status</th>
               </tr>
             </thead>
-
             <tbody>
-              {recentAppointments.map(
-                (appointment) => (
-                  <tr
-                    key={
-                      appointment.id
-                    }
-                  >
-                    <td>
-                      {
-                        appointment.id
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        appointment.patient_name
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        appointment.doctor_name
-                      }
-                    </td>
-
-                    <td>
-                      {appointment.appointment_date?.split(
-                        "T"
-                      )[0]}
-                    </td>
-
-                    <td>
-                      {
-                        appointment.status
-                      }
-                    </td>
+              {loading ? (
+                [...Array(5)].map((_, index) => (
+                  <tr key={index}>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
                   </tr>
-                )
+                ))
+              ) : (
+                recentAppointments.map((appointment) => (
+                  <tr key={appointment.id}>
+                    <td>{appointment.id}</td>
+                    <td>{appointment.patient_name}</td>
+                    <td>{appointment.doctor_name}</td>
+                    <td>{appointment.appointment_date?.split("T")[0]}</td>
+                    <td>{appointment.status}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -222,30 +250,24 @@ function Dashboard() {
             </thead>
 
             <tbody>
-              {recentPatients.map(
-                (patient) => (
-                  <tr
-                    key={patient.id}
-                  >
-                    <td>
-                      {patient.id}
-                    </td>
-
-                    <td>
-                      {patient.name}
-                    </td>
-
-                    <td>
-                      {patient.phone}
-                    </td>
-
-                    <td>
-                      {
-                        patient.blood_group
-                      }
-                    </td>
+              {loading ? (
+                [...Array(5)].map((_, index) => (
+                  <tr key={index}>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
+                    <td><Skeleton /></td>
                   </tr>
-                )
+                ))
+              ) : (
+                recentPatients.map((patient) => (
+                  <tr key={patient.id}>
+                    <td>{patient.id}</td>
+                    <td>{patient.name}</td>
+                    <td>{patient.phone}</td>
+                    <td>{patient.blood_group}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
