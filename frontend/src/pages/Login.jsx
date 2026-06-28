@@ -129,7 +129,7 @@ function Login() {
               🇮🇳 +91
             </option>
 
-            {/* <option value="+1">
+            <option value="+1">
               🇺🇸 +1
             </option>
 
@@ -143,7 +143,7 @@ function Login() {
 
             <option value="+971">
               🇦🇪 +971
-            </option> */}
+            </option>
           </select>
 
           <input
