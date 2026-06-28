@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -17,17 +18,17 @@ import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 
 function App() {
-  const token =
-    localStorage.getItem(
-      "token"
-    );
+  const token = sessionStorage.getItem("token");
 
   return (
     <div className="layout">
+
       {token && <Navbar />}
 
       <div className="content">
+
         <Routes>
+
           <Route
             path="/"
             element={
@@ -59,9 +60,7 @@ function App() {
             path="/patients"
             element={
               <ProtectedRoute>
-                <RoleRoute
-                  roles={["admin"]}
-                >
+                <RoleRoute roles={["admin"]}>
                   <Patients />
                 </RoleRoute>
               </ProtectedRoute>
@@ -72,9 +71,7 @@ function App() {
             path="/doctors"
             element={
               <ProtectedRoute>
-                <RoleRoute
-                  roles={["admin"]}
-                >
+                <RoleRoute roles={["admin"]}>
                   <Doctors />
                 </RoleRoute>
               </ProtectedRoute>
@@ -94,14 +91,13 @@ function App() {
             path="/billing"
             element={
               <ProtectedRoute>
-                <RoleRoute
-                  roles={["admin"]}
-                >
+                <RoleRoute roles={["admin"]}>
                   <Billing />
                 </RoleRoute>
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/payment"
             element={
@@ -119,7 +115,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
         </Routes>
+
       </div>
 
       <ToastContainer
@@ -130,6 +128,7 @@ function App() {
         pauseOnHover
         theme="colored"
       />
+
     </div>
   );
 }

@@ -1,72 +1,25 @@
-import {
-  Link,
-  NavLink,
-  useLocation,
-} from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Sidebar() {
-  const location =
-    useLocation();
+  const location = useLocation();
 
-  const token =
-    sessionStorage.getItem(
-      "token"
-    );
+  const token = sessionStorage.getItem("token");
 
-  if (
-    !token ||
-    location.pathname ===
-    "/login"
-  ) {
+  if (!token || location.pathname === "/login") {
     return null;
   }
 
   return (
-    <div>
-      <h2>🏥 HMS</h2>
+    <div className="sidebar">
+      <h2 className="logo">🏥 HMS</h2>
 
-      <ul>
-        <li>
-          <Link to="/dashboard">
-            📊 Dashboard
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/patients">
-            👨‍⚕️ Patients
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/doctors">
-            🩺 Doctors
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/appointments">
-            📅 Appointments
-          </Link>
-        </li>
-        <li>
-          <Link to="/prescriptions">
-            💊 Prescriptions
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/billing">
-            💳 Billing
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/profile">
-            👤 Profile
-          </Link>
-        </li>
-      </ul>
+      <Link to="/dashboard">📊 Dashboard</Link>
+      <Link to="/patients">👨‍⚕️ Patients</Link>
+      <Link to="/doctors">🩺 Doctors</Link>
+      <Link to="/appointments">📅 Appointments</Link>
+      <Link to="/prescriptions">💊 Prescriptions</Link>
+      <Link to="/billing">💳 Billing</Link>
+      <Link to="/profile">👤 Profile</Link>
     </div>
   );
 }
