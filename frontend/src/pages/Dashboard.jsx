@@ -35,7 +35,7 @@ function Dashboard() {
     async function loadDashboard() {
       setLoading(true);
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       await Promise.all([
         fetchData(),
