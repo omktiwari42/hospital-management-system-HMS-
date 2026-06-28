@@ -21,21 +21,8 @@ function Dashboard() {
   const [recentPatients, setRecentPatients] = useState([]);
 
   useEffect(() => {
-    //   async function loadDashboard() {
-    //     setLoading(true);
-
-    //     await Promise.all([
-    //       fetchData(),
-    //       getRecentAppointments(),
-    //       getRecentPatients(),
-    //     ]);
-
-    //     setLoading(false);
-    //   }
     async function loadDashboard() {
       setLoading(true);
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       await Promise.all([
         fetchData(),
@@ -45,6 +32,19 @@ function Dashboard() {
 
       setLoading(false);
     }
+    // async function loadDashboard() {
+    //   setLoading(true);
+
+    //   await new Promise(resolve => setTimeout(resolve, 1000));
+
+    //   await Promise.all([
+    //     fetchData(),
+    //     getRecentAppointments(),
+    //     getRecentPatients(),
+    //   ]);
+
+    //   setLoading(false);
+    // }
 
     loadDashboard();
   }, []);
