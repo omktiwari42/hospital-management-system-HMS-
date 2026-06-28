@@ -61,15 +61,14 @@ function Dashboard() {
           "token"
         );
 
-      const response =
-        await axios.get(
-          "http://localhost:5000/api/recent-appointments",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const response = await axios.get(
+        "https://hospital-backend-8pek.onrender.com/api/recent-appointments",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setRecentAppointments(
         response.data
