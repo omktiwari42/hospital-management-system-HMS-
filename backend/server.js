@@ -19,6 +19,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "application/pdf",
+    ];
+
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPG, PNG and PDF allowed"));
+    }
+  },
 });
 const path = require("path");
 require("dotenv").config();
@@ -1068,20 +1082,38 @@ app.get("/api/prescriptions", async (req, res) => {
   }
 });
 app.post(
-  "/api/upload-report",
+  "/api/upload-report/:id",
   authenticateToken,
   upload.single("report"),
   async (req, res) => {
     try {
+      const { id } = req.params;
+
+      console.log("Patient ID:", id);
+      console.log("File:", req.file);
+
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+        });
+      }
+
+      await pool.query(
+        `UPDATE patients
+         SET report = $1
+         WHERE id = $2`,
+        [req.file.filename, id]
+      );
+
       res.json({
+        message: "Report uploaded successfully",
         file: req.file.filename,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
 
       res.status(500).json({
-        message:
-          "Upload Failed",
+        message: error.message,
       });
     }
   }

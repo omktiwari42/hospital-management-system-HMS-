@@ -683,6 +683,24 @@ function Patients() {
                     >
                       Upload Report
                     </button>
+                    {patient.report && (
+                      <>
+                        <a
+                          href={`https://hospital-backend-8pek.onrender.com/uploads/${patient.report}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <button>View</button>
+                        </a>
+
+                        <a
+                          href={`https://hospital-backend-8pek.onrender.com/uploads/${patient.report}`}
+                          download
+                        >
+                          <button>Download</button>
+                        </a>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
