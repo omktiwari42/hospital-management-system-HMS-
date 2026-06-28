@@ -698,6 +698,7 @@ function Patients() {
                           download
                         >
                           <button>Download</button>
+
                         </a>
                       </>
                     )}
