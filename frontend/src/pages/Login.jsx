@@ -149,7 +149,7 @@ function Login() {
       );
 
       setShowOTP(true);
-      setTimer(30);
+      setTimer(60);
       setCanResend(false);
 
     } catch (err) {
