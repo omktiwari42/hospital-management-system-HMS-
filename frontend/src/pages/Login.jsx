@@ -171,12 +171,10 @@ function Login() {
   // VERIFY OTP
   // ---------------------------
 
-  async function verifyOTP() {
+  async function verifyOTP(code = otp.join("")) {
 
-    const otpCode = otp.join("");
+    if (code.length !== 6) {
 
-    if (otpCode.length !== 6) {
-      toast.error("Enter Complete OTP");
       return;
     }
 
@@ -184,51 +182,31 @@ function Login() {
 
       setVerifying(true);
 
-      const response = await api.post(
-        "/verify-otp",
-        {
-          phone: "+91" + phone,
-          otp: otpCode,
-        }
-      );
+      const response = await api.post("/verify-otp", {
+        phone: "+91" + phone,
+        otp: code,
+      });
 
-      sessionStorage.setItem(
-        "token",
-        response.data.token
-      );
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("role", response.data.role);
 
-      sessionStorage.setItem(
-        "role",
-        response.data.role
-      );
-
-      // OTP merge animation
       setMergeOTP(true);
 
-      // Show success screen
-
-
-      // Mark verified
       setTimeout(() => {
         setVerified(true);
       }, 1000);
 
       toast.success("Login Successful");
 
-      // Redirect
       setTimeout(() => {
         navigate("/dashboard");
       }, 2500);
 
     } catch (err) {
 
-      console.log(err);
-
       setShake(true);
 
-      setTimeout(() => {
-        setShake(false);
-      }, 500);
+      setTimeout(() => setShake(false), 500);
 
       toast.error("Invalid OTP");
 
@@ -254,6 +232,7 @@ function Login() {
       setTimer((prev) => prev - 1);
 
     }, 1000);
+
 
     return () => clearInterval(interval);
 
@@ -405,48 +384,21 @@ function Login() {
                       maxLength={1}
                       value={digit}
                       onChange={(e) => {
+                        const value = e.target.value;
 
-                        handleOTP(
-                          e.target.value,
-                          index
-                        );
+                        handleOTP(value, index);
 
-                        const value = [
-                          ...otp
-                        ];
+                        const newOtp = [...otp];
+                        newOtp[index] = value;
 
-                        value[index] =
-                          e.target.value;
-
-                        if (
-                          value.join("").length === 6
-                        ) {
-
-                          setTimeout(() => {
-                            verifyOTP();
-                          }, 250);
-
+                        if (newOtp.every(digit => digit !== "") && !verifying) {
+                          verifyOTP(newOtp.join(""));
                         }
-
                       }}
                     />
 
                   ))}
 
-                </div>
-                <div className="otp-timer">
-                  {canResend ? (
-                    <button
-                      className="resend-btn"
-                      onClick={resendOTP}
-                    >
-                      Resend OTP
-                    </button>
-                  ) : (
-                    <p>
-                      Resend OTP in <b>{timer}s</b>
-                    </p>
-                  )}
                 </div>
 
 

@@ -1566,22 +1566,7 @@ button:hover {
 
 }
 
-.floating-input {
-  position: relative;
-  margin-bottom: 20px;
-}
 
-.floating-input label {
-  position: absolute;
-  left: 18px;
-  top: -10px;
-  background: white;
-  padding: 0 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2563eb;
-  z-index: 2;
-}
 
 .login-logo {
   margin-bottom: 35px;
@@ -1762,4 +1747,73 @@ button:hover {
 
 .change-number-btn:hover {
   background: #e5e7eb;
+}
+
+.floating-input {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.floating-input label {
+  position: absolute;
+  left: 18px;
+  top: -10px;
+  background: white;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.change-number-btn {
+  margin-top: 12px !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  color: #ef4444 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+
+  cursor: pointer;
+  width: auto !important;
+  padding: 0 !important;
+}
+
+.change-number-btn:hover {
+  background: transparent !important;
+  color: #dc2626 !important;
+  text-decoration: underline;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.change-number-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #ef4444 !important;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 10px;
+  width: auto !important;
+}
+
+.change-number-btn:hover {
+  background: transparent !important;
+  color: #dc2626 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  text-decoration: underline;
+}
+
+.otp-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
 }
