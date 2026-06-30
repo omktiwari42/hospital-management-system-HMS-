@@ -26,7 +26,7 @@ function Login() {
 
   const [mergeOTP, setMergeOTP] = useState(false);
   const [timer, setTimer] =
-    useState(30);
+    useState(60);
 
   const [canResend, setCanResend] =
     useState(false);
