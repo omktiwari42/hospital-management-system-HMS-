@@ -11,19 +11,19 @@ import Prescriptions from "../pages/Prescriptions";
 import Payment from "../pages/Payment";
 
 function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/patients" element={<Patients />} />
-      <Route path="/doctors" element={<Doctors />} />
-      <Route path="/appointments" element={<Appointments />} />
-      <Route path="/billing" element={<Billing />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/prescriptions" element={<Prescriptions />} />
-      <Route path="/payment" element={<Payment />} />
-    </Routes>
-  );
+    return (
+        <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/doctors" element={<Doctors />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/prescriptions" element={<Prescriptions />} />
+            <Route path="/payment" element={<Payment />} />
+        </Routes>
+    );
 }
 
 export default AppRoutes;
