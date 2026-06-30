@@ -449,54 +449,33 @@ function Login() {
                   )}
                 </div>
 
-                <button
-                  className={`verify-otp-btn ${verifying ? "loading-btn" : ""
-                    }`}
-                  onClick={verifyOTP}
-                  disabled={verifying}
-                >
-                  {verifying
-                    ? "Verifying..."
-                    : "Verify OTP"}
-                </button>
-                <div className="otp-actions">
 
+                <div className="otp-timer">
                   {!canResend ? (
-
-                    <p className="timer">
-                      Resend OTP in {timer}s
+                    <p>
+                      Resend OTP in <b>{timer}s</b>
                     </p>
-
                   ) : (
-
                     <button
                       className="resend-btn"
                       onClick={resendOTP}
                     >
                       Resend OTP
                     </button>
-
                   )}
 
                   <button
                     className="change-number-btn"
                     onClick={() => {
-
                       setShowOTP(false);
-
                       setOtp(["", "", "", "", "", ""]);
-
                       setPhone("");
-
                       setTimer(30);
-
                       setCanResend(false);
-
                     }}
                   >
                     Change Number
                   </button>
-
                 </div>
 
               </>
