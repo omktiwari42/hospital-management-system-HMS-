@@ -253,7 +253,7 @@ function Login() {
         "OTP Sent Again"
       );
 
-      setTimer(30);
+      setTimer(60);
 
       setCanResend(false);
 
