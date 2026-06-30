@@ -422,7 +422,7 @@ function Login() {
                       setShowOTP(false);
                       setOtp(["", "", "", "", "", ""]);
                       setPhone("");
-                      setTimer(30);
+                      setTimer(60);
                       setCanResend(false);
                     }}
                   >
