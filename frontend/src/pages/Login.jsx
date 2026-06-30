@@ -1,76 +1,196 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
 
 function Login() {
-  const [phone, setPhone] =
-    useState("");
+  const navigate = useNavigate();
 
-  const [otp, setOtp] =
-    useState("");
+  const [phone, setPhone] = useState("");
 
-  const [countryCode, setCountryCode] =
-    useState("+91");
+  const [otp, setOtp] = useState([
+    "", "", "", "", "", ""
+  ]);
+
+  const [showOTP, setShowOTP] =
+    useState(false);
 
   const [loading, setLoading] =
     useState(false);
 
-  const navigate = useNavigate();
+  const [verifying, setVerifying] =
+    useState(false);
+
+  const [verified, setVerified] =
+    useState(false);
+
+  const [mergeOTP, setMergeOTP] = useState(false);
+  const [timer, setTimer] =
+    useState(30);
+
+  const [canResend, setCanResend] =
+    useState(false);
+
+  const inputRefs = useRef([]);
+  const [shake, setShake] =
+    useState(false);
+
+  // ---------------------------
+  // Only allow Indian 10 digits
+  // ---------------------------
+
+  function handlePhone(e) {
+
+    const value =
+      e.target.value.replace(/\D/g, "");
+
+    if (/^\d*$/.test(value) && value.length <= 10) {
+      setPhone(value);
+    }
+  }
+
+  // ---------------------------
+  // OTP BOX CHANGE
+  // ---------------------------
+
+  function handleOTP(value, index) {
+
+    if (!/^\d?$/.test(value))
+      return;
+
+    const newOTP = [...otp];
+
+    newOTP[index] = value;
+
+    setOtp(newOTP);
+
+    if (
+      value &&
+      index < 5
+    ) {
+      inputRefs.current[index + 1].focus();
+    }
+  }
+
+  // ---------------------------
+  // BACKSPACE
+  // ---------------------------
+
+  function handleKeyDown(e, index) {
+
+    if (
+      e.key === "Backspace" &&
+      !otp[index] &&
+      index > 0
+    ) {
+      inputRefs.current[index - 1].focus();
+    }
+  }
+
+  // ---------------------------
+  // PASTE OTP
+  // ---------------------------
+
+  function handlePaste(e) {
+
+    const pasted =
+      e.clipboardData
+        .getData("text")
+        .replace(/\D/g, "")
+        .slice(0, 6);
+
+    if (pasted.length === 6) {
+
+      const arr =
+        pasted.split("");
+
+      setOtp(arr);
+
+      arr.forEach((v, i) => {
+        if (inputRefs.current[i]) {
+          inputRefs.current[i].value = v;
+        }
+      });
+
+      inputRefs.current[5].focus();
+    }
+
+    e.preventDefault();
+  }
+
+  // ---------------------------
+  // SEND OTP
+  // ---------------------------
 
   async function sendOTP() {
-    try {
-      setLoading(true);
 
-      const fullPhone =
-        countryCode + phone;
+    if (phone.length !== 10) {
 
-      console.log(
-        "Sending OTP to:",
-        fullPhone
+      toast.error(
+        "Enter valid 10 digit mobile number"
       );
 
-      const response =
-        await api.post(
-          "/send-otp",
-          {
-            phone: fullPhone,
-          }
-        );
+      return;
+    }
 
-      console.log(
-        response.data
+    try {
+
+      setLoading(true);
+
+      await api.post(
+        "/send-otp",
+        {
+          phone: "+91" + phone,
+        }
       );
 
       toast.success(
         "OTP Sent Successfully"
       );
-    } catch (error) {
-      console.log(error);
+
+      setShowOTP(true);
+      setTimer(30);
+      setCanResend(false);
+
+    } catch (err) {
+
+      console.log(err);
 
       toast.error(
         "Failed to Send OTP"
       );
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
+  // ---------------------------
+  // VERIFY OTP
+  // ---------------------------
+
   async function verifyOTP() {
+
+    const otpCode = otp.join("");
+
+    if (otpCode.length !== 6) {
+      toast.error("Enter Complete OTP");
+      return;
+    }
+
     try {
-      setLoading(true);
 
-      const fullPhone =
-        countryCode + phone;
+      setVerifying(true);
 
-      const response =
-        await api.post(
-          "/verify-otp",
-          {
-            phone: fullPhone,
-            otp,
-          }
-        );
+      const response = await api.post(
+        "/verify-otp",
+        {
+          phone: "+91" + phone,
+          otp: otpCode,
+        }
+      );
 
       sessionStorage.setItem(
         "token",
@@ -81,120 +201,339 @@ function Login() {
         "role",
         response.data.role
       );
-      toast.success(
-        "Login Successful"
-      );
 
+      // OTP merge animation
+      setMergeOTP(true);
+
+      // Show success screen
+
+
+      // Mark verified
+      setTimeout(() => {
+        setVerified(true);
+      }, 1000);
+
+      toast.success("Login Successful");
+
+      // Redirect
       setTimeout(() => {
         navigate("/dashboard");
+      }, 2500);
 
-      }, 1000);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
 
-      toast.error(
-        "Invalid OTP"
-      );
+      console.log(err);
+
+      setShake(true);
+
+      setTimeout(() => {
+        setShake(false);
+      }, 500);
+
+      toast.error("Invalid OTP");
+
     } finally {
-      setLoading(false);
+
+      setVerifying(false);
+
     }
   }
+  useEffect(() => {
 
+    if (!showOTP || canResend) return;
+
+    if (timer === 0) {
+
+      setCanResend(true);
+      return;
+
+    }
+
+    const interval = setInterval(() => {
+
+      setTimer((prev) => prev - 1);
+
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, [timer, showOTP, canResend]);
+
+  async function resendOTP() {
+
+    try {
+
+      await api.post(
+        "/send-otp",
+        {
+          phone: "+91" + phone,
+        }
+      );
+
+      toast.success(
+        "OTP Sent Again"
+      );
+
+      setTimer(30);
+
+      setCanResend(false);
+
+    } catch {
+
+      toast.error(
+        "Failed to resend OTP"
+      );
+
+    }
+
+  }
   return (
     <div className="login-page">
+
+      <div className="background-animation">
+
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+
+      </div>
       <div className="login-card">
-        <h1>
-          🏥 Hospital Management
-          System
-        </h1>
 
-        <p className="login-subtitle">
-          Secure OTP Login
-        </p>
+        <div className="login-logo">
+          <div className="logo-circle">
+            🏥
+          </div>
 
-        <label>
-          Phone Number
-        </label>
+          <h1>Hospital Management System</h1>
 
-        <div className="phone-input-group">
-          <select
-            value={countryCode}
-            onChange={(e) =>
-              setCountryCode(
-                e.target.value
-              )
-            }
-          >
-            <option value="+91">
-              🇮🇳 +91
-            </option>
-
-            <option value="+1">
-              🇺🇸 +1
-            </option>
-
-            <option value="+44">
-              🇬🇧 +44
-            </option>
-
-            <option value="+61">
-              🇦🇺 +61
-            </option>
-
-            <option value="+971">
-              🇦🇪 +971
-            </option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Phone Number"
-            value={phone}
-            onChange={(e) =>
-              setPhone(
-                e.target.value
-              )
-            }
-          />
+          <p className="login-subtitle">
+            Secure OTP Login
+          </p>
         </div>
 
-        <button
-          className="send-otp-btn"
-          onClick={sendOTP}
-          disabled={loading}
-        >
-          {loading
-            ? "Sending..."
-            : "📩 Send OTP"}
-        </button>
 
-        <label>
-          Enter OTP
-        </label>
 
-        <input
-          type="text"
-          placeholder="Enter OTP"
-          value={otp}
-          onChange={(e) =>
-            setOtp(
-              e.target.value
-            )
-          }
-        />
+        {!verified ? (
+          <>
+            <div className="floating-input">
 
-        <button
-          className="verify-otp-btn"
-          onClick={verifyOTP}
-          disabled={loading}
-        >
-          {loading
-            ? "Verifying..."
-            : "🔓 Verify OTP"}
-        </button>
+              <label>Mobile Number</label>
+
+              <div className="phone-input-group">
+                <span className="country-code">
+                  🇮🇳 +91
+                </span>
+
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="tel"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      sendOTP();
+                    }
+                  }}
+                  placeholder="Enter 10 digit mobile number"
+                  value={phone}
+                  onChange={handlePhone}
+                  maxLength={10}
+                  disabled={showOTP || loading}
+                />
+              </div>
+            </div>
+
+
+            {!showOTP && (
+              <button
+                className={`send-otp-btn ${loading ? "loading-btn" : ""
+                  }`}
+                onClick={sendOTP}
+                disabled={loading}
+              >
+                {loading
+                  ? "Sending OTP..."
+                  : "Send OTP"}
+              </button>
+            )}
+
+            {showOTP && (
+              <>
+
+                <label className="otp-title">
+                  Enter 6 Digit OTP
+                </label>
+
+                <div
+                  className={`otp-container ${mergeOTP ? "merge" : ""} ${shake ? "shake" : ""
+                    }`}
+                  onPaste={handlePaste}
+                >
+
+                  {otp.map((digit, index) => (
+
+                    <input
+                      onKeyDown={(e) => {
+                        handleKeyDown(e, index);
+
+                        if (e.key === "Enter") {
+                          verifyOTP();
+                        }
+                      }}
+
+                      style={{
+                        animation:
+                          digit
+                            ? "pop .25s"
+                            : ""
+                      }}
+                      key={index}
+                      ref={(el) =>
+                        (inputRefs.current[index] = el)
+                      }
+                      className={`otp-input ${verified ? "verified" : ""}`}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete={
+                        index === 0
+                          ? "one-time-code"
+                          : "off"
+                      }
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => {
+
+                        handleOTP(
+                          e.target.value,
+                          index
+                        );
+
+                        const value = [
+                          ...otp
+                        ];
+
+                        value[index] =
+                          e.target.value;
+
+                        if (
+                          value.join("").length === 6
+                        ) {
+
+                          setTimeout(() => {
+                            verifyOTP();
+                          }, 250);
+
+                        }
+
+                      }}
+                    />
+
+                  ))}
+
+                </div>
+                <div className="otp-timer">
+                  {canResend ? (
+                    <button
+                      className="resend-btn"
+                      onClick={resendOTP}
+                    >
+                      Resend OTP
+                    </button>
+                  ) : (
+                    <p>
+                      Resend OTP in <b>{timer}s</b>
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  className={`verify-otp-btn ${verifying ? "loading-btn" : ""
+                    }`}
+                  onClick={verifyOTP}
+                  disabled={verifying}
+                >
+                  {verifying
+                    ? "Verifying..."
+                    : "Verify OTP"}
+                </button>
+                <div className="otp-actions">
+
+                  {!canResend ? (
+
+                    <p className="timer">
+                      Resend OTP in {timer}s
+                    </p>
+
+                  ) : (
+
+                    <button
+                      className="resend-btn"
+                      onClick={resendOTP}
+                    >
+                      Resend OTP
+                    </button>
+
+                  )}
+
+                  <button
+                    className="change-number-btn"
+                    onClick={() => {
+
+                      setShowOTP(false);
+
+                      setOtp(["", "", "", "", "", ""]);
+
+                      setPhone("");
+
+                      setTimer(30);
+
+                      setCanResend(false);
+
+                    }}
+                  >
+                    Change Number
+                  </button>
+
+                </div>
+
+              </>
+            )}
+
+          </>
+
+        ) : (
+
+          <div className="success-box fade-success">
+
+            <div className="success-circle">
+
+              ✓
+
+            </div>
+
+            <h2>
+              OTP Verified
+            </h2>
+
+            <p>
+              OTP Verified Successfully
+            </p>
+
+            <h4 className="logging-text">
+              Logging you in...
+            </h4>
+
+            <div className="success-loader"></div>
+
+          </div>
+
+        )}
+
       </div>
     </div>
   );
 }
-
 export default Login;
