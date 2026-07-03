@@ -265,6 +265,8 @@ function Billing() {
           color: "#2563eb",
         },
       };
+      console.log(options);
+      console.log(import.meta.env.VITE_RAZORPAY_KEY_ID);
 
       const razorpay =
         new window.Razorpay(options);
