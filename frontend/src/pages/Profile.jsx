@@ -1,6 +1,35 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
+const navigate = useNavigate();
+
+<div className="page-header">
+  <button onClick={() => navigate("/dashboard")}>
+    🏠 Dashboard
+  </button>
+</div>
+import { useNavigate } from "react-router-dom";
+
+function Patients() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="page">
+
+      <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
+      {/* Rest of your page */}
+    </div>
+  );
+}
+
+export default Patients;
 function Profile() {
   const [profile, setProfile] =
     useState({});
