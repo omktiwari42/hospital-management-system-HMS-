@@ -209,81 +209,6 @@ function Billing() {
       `Invoice-${bill.id}.pdf`
     );
   }
-  async function payBill(bill) {
-    try {
-      const { data: order } = await api.post(
-        "/create-order",
-        {
-          amount: bill.amount,
-        }
-      );
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-
-        amount: order.amount,
-
-        currency: order.currency,
-
-        name: "Hospital Management System",
-
-        description: `Bill #${bill.id}`,
-
-        order_id: order.id,
-
-        handler: async function (response) {
-          try {
-            await api.post("/verify-payment", {
-              razorpay_order_id:
-                response.razorpay_order_id,
-
-              razorpay_payment_id:
-                response.razorpay_payment_id,
-
-              razorpay_signature:
-                response.razorpay_signature,
-
-              billId: bill.id,
-            });
-
-            alert("✅ Payment Successful");
-
-            fetchBills();
-          } catch (error) {
-            console.log(error);
-
-            alert("Payment verification failed");
-          }
-        },
-
-        prefill: {
-          name: bill.patient_name,
-        },
-
-        theme: {
-          color: "#2563eb",
-        },
-      };
-
-      const razorpay =
-        new window.Razorpay(options);
-
-      razorpay.on(
-        "payment.failed",
-        function (response) {
-          alert(
-            response.error.description
-          );
-        }
-      );
-
-      razorpay.open();
-    } catch (error) {
-      console.log(error);
-
-      alert("Unable to create order");
-    }
-  }
   if (loading) {
     return <AppointmentsSkeleton />
   }
@@ -459,29 +384,11 @@ function Billing() {
                       </button>
 
                       <button
-                        className="pdf-btn"
+                        className="edit-btn"
                         onClick={() => downloadInvoice(bill)}
                       >
-                        📄 PDF
+                        PDF
                       </button>
-
-                      {bill.payment_status !== "Paid" && (
-                        <button
-                          className="pay-btn"
-                          onClick={() => payBill(bill)}
-                        >
-                          💳 Pay
-                        </button>
-                      )}
-
-                      {bill.payment_status !== "Paid" && (
-                        <button
-                          className="pay-btn"
-                          onClick={() => payBill(bill)}
-                        >
-                          💳 Pay Now
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>

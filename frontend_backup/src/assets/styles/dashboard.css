@@ -1,0 +1,28 @@
+
+.dashboard-container {
+  display: flex;
+  gap: 20px;
+}
+
+.sidebar {
+  width: 220px;
+  padding: 20px;
+  border-right: 1px solid gray;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.cards {
+  display: flex;
+  gap: 20px;
+}
+
+.card {
+  border: 1px solid gray;
+  padding: 20px;
+  min-width: 180px;
+  border-radius: 8px;
+}

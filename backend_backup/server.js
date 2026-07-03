@@ -47,7 +47,6 @@ const authorizeRole =
     "./middleware/authorizeRole"
   );
 const Razorpay = require("razorpay");
-const crypto = require("crypto");
 // MAIL TRANSPORTER
 const nodemailer =
   require("nodemailer");
@@ -116,69 +115,6 @@ app.post(
       res.status(500).json({
         message:
           "Failed to create order",
-      });
-    }
-  }
-);
-app.post(
-  "/api/verify-payment",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const {
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        billId,
-      } = req.body;
-
-      const generatedSignature =
-        crypto
-          .createHmac(
-            "sha256",
-            process.env.RAZORPAY_KEY_SECRET
-          )
-          .update(
-            razorpay_order_id +
-            "|" +
-            razorpay_payment_id
-          )
-          .digest("hex");
-
-      if (
-        generatedSignature !==
-        razorpay_signature
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid payment signature",
-        });
-      }
-
-      await pool.query(
-        `UPDATE bills
-         SET payment_status = $1,
-             transaction_id = $2
-         WHERE id = $3`,
-        [
-          "Paid",
-          razorpay_payment_id,
-          billId,
-        ]
-      );
-
-      res.json({
-        success: true,
-        message:
-          "Payment verified successfully",
-      });
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message:
-          "Payment verification failed",
       });
     }
   }
