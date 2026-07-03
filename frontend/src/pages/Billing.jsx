@@ -474,7 +474,7 @@ function Billing() {
                           className="pay-btn"
                           onClick={() => payBill(bill)}
                         >
-                          💳 Pay Now
+                          Pay Now
                         </button>
                       )}
                     </div>
