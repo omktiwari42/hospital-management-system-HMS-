@@ -182,11 +182,14 @@ app.post(
 
       await pool.query(
         `UPDATE bills
-         SET payment_status = $1,
-             transaction_id = $2
-         WHERE id = $3`,
+          SET
+          status = 'Paid',
+          payment_status = 'Paid',
+          payment_method = 'Online',
+          payment_date = NOW(),
+          transaction_id = $1
+          WHERE id = $2`,
         [
-          "Paid",
           razorpay_payment_id,
           billId,
         ]
