@@ -1,38 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const navigate = useNavigate();
-
-<div className="page-header">
-  <button onClick={() => navigate("/dashboard")}>
-    🏠 Dashboard
-  </button>
-</div>
-import { useNavigate } from "react-router-dom";
-
-function Patients() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="page">
-
-      <button
-        className="back-btn"
-        onClick={() => navigate(-1)}
-      >
-        ← Back
-      </button>
-
-      {/* Rest of your page */}
-    </div>
-  );
-}
-
-
 import api from "../services/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 function Billing() {
+  const navigate = useNavigate();
   const [bills, setBills] = useState([]);
   const [filteredBills, setFilteredBills] =
     useState([]);
@@ -225,7 +197,7 @@ function Billing() {
           new Date().toLocaleDateString(),
         ],
       ],
-    }); pdf
+    });
 
     doc.save(
       `Invoice-${bill.id}.pdf`
@@ -233,10 +205,24 @@ function Billing() {
   }
   return (
     <div className="page">
-      <h1>
-        💳 Billing Management
-      </h1>
 
+      <div className="page-header">
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+
+        <button
+          className="dashboard-btn"
+          onClick={() => navigate("/dashboard")}
+        >
+          🏠 Dashboard
+        </button>
+      </div>
+
+      <h1>💳 Billing Management</h1>
       <div className="card">
         <h3>
           {editingId

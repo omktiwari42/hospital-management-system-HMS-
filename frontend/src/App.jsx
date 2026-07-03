@@ -23,7 +23,7 @@ function App() {
   return (
     <div className="layout">
 
-      {token && <Navbar />}
+      {/* {token && <Navbar />} */}
 
       <div className="content">
 

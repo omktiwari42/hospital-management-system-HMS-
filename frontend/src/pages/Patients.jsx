@@ -2,32 +2,9 @@ import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-const navigate = useNavigate();
 
-<div className="page-header">
-  <button onClick={() => navigate("/dashboard")}>
-    🏠 Dashboard
-  </button>
-</div>
-import { useNavigate } from "react-router-dom";
 
-function Patients() {
-  const navigate = useNavigate();
 
-  return (
-    <div className="page">
-
-      <button
-        className="back-btn"
-        onClick={() => navigate(-1)}
-      >
-        ← Back
-      </button>
-
-      {/* Rest of your page */}
-    </div>
-  );
-}
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -36,6 +13,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 function Patients() {
+  const navigate = useNavigate();
   const [showForm, setShowForm] =
     useState(false);
   const [patients, setPatients] = useState([]);
@@ -398,6 +376,22 @@ function Patients() {
   }
   return (
     <div className="page">
+
+      <div className="page-header">
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+
+        <button
+          className="dashboard-btn"
+          onClick={() => navigate("/dashboard")}
+        >
+          🏠 Dashboard
+        </button>
+      </div>
       <div className="page-header">
         <h1>👨‍⚕️ Patients Management</h1>
 

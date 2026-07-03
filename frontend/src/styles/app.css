@@ -1879,3 +1879,17 @@ button:hover {
     width: 100%;
   }
 }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.back-btn,
+.dashboard-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

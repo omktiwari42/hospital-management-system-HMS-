@@ -3,35 +3,9 @@ import api from "../services/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const navigate = useNavigate();
-
-<div className="page-header">
-  <button onClick={() => navigate("/dashboard")}>
-    🏠 Dashboard
-  </button>
-</div>
-import { useNavigate } from "react-router-dom";
-
-function Patients() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="page">
-
-      <button
-        className="back-btn"
-        onClick={() => navigate(-1)}
-      >
-        ← Back
-      </button>
-
-      {/* Rest of your page */}
-    </div>
-  );
-}
-
 
 function Doctors() {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] =
     useState([]);
@@ -229,6 +203,22 @@ function Doctors() {
   }
   return (
     <div className="page">
+
+      <div className="page-header">
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+
+        <button
+          className="dashboard-btn"
+          onClick={() => navigate("/dashboard")}
+        >
+          🏠 Dashboard
+        </button>
+      </div>
       <h1>🩺 Doctors Management</h1>
 
       <div className="card">
