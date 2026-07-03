@@ -90,39 +90,61 @@ app.use(
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
-app.post(
-  "/api/create-order",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const { amount } = req.body;
+// app.post(
+//   "/api/create-order",
+//   authenticateToken,
+//   async (req, res) => {
+//     try {
+//       const { amount } = req.body;
 
-      const options = {
-        amount: amount * 100,
-        currency: "INR",
-        receipt:
-          "receipt_" + Date.now(),
-      };
+//       const options = {
+//         amount: amount * 100,
+//         currency: "INR",
+//         receipt:
+//           "receipt_" + Date.now(),
+//       };
 
-      const order =
-        await razorpay.orders.create(
-          options
-        );
+//       const order =
+//         await razorpay.orders.create(
+//           options
+//         );
 
-      res.json(order);
-    } catch (error) {
-      console.error("========== RAZORPAY ERROR ==========");
-      console.error(error);
-      console.error(error.error);
-      console.error(error.statusCode);
+//       res.json(order);
+//     } catch (error) {
+//       console.error("========== RAZORPAY ERROR ==========");
+//       console.error(error);
+//       console.error(error.error);
+//       console.error(error.statusCode);
 
-      res.status(500).json({
-        message: error.message,
-        error: error.error,
-      });
-    }
+//       res.status(500).json({
+//         message: error.message,
+//         error: error.error,
+//       });
+//     }
+//   }
+// );
+app.post("/api/create-order", authenticateToken, async (req, res) => {
+  try {
+    const options = {
+      amount: 50000,
+      currency: "INR",
+      receipt: "receipt_" + Date.now(),
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    console.log(order);
+
+    res.json(order);
+  } catch (err) {
+    console.log(err);
+    console.log(err.error);
+    console.log(err.statusCode);
+    console.log(err.response);
+
+    res.status(500).json(err);
   }
-);
+});
 app.post(
   "/api/verify-payment",
   authenticateToken,
