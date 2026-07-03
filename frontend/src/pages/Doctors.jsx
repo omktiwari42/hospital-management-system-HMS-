@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../services/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
+import DoctorsSkeleton from "../components/skeletons/DoctorsSkeleton";
 
 function Doctors() {
   const navigate = useNavigate();
@@ -32,19 +32,19 @@ function Doctors() {
 
   const [editingId, setEditingId] =
     useState(null);
-
+  const [loading, setLoading] = useState(true);
   async function fetchDoctors() {
     try {
-      const response =
-        await api.get("/doctors");
+      setLoading(true);
+
+      const response = await api.get("/doctors");
 
       setDoctors(response.data);
       setFilteredDoctors(response.data);
     } catch (error) {
-      console.log(
-        "Error fetching doctors:",
-        error
-      );
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -200,6 +200,9 @@ function Doctors() {
       top: 0,
       behavior: "smooth",
     });
+  }
+  if (loading) {
+    return <DoctorsSkeleton />
   }
   return (
     <div className="page">
