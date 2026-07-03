@@ -1917,25 +1917,25 @@ button:hover {
 }
 
 /* PDF BUTTON AND DELETE BUTTON AND EDIT */
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-}
-
-.edit-btn,
-.delete-btn,
-.pdf-btn {
+.action-btn {
   width: 90px;
-  height: 38px;
+  height: 40px;
+  padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  color: white;
   cursor: pointer;
-  font-size: 14px;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 .pdf-btn {
-  background: #2563eb;
-  color: white;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
