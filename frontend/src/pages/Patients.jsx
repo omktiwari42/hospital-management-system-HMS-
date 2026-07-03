@@ -29,7 +29,6 @@ function Patients() {
   );
 }
 
-export default Patients;
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-toastify";

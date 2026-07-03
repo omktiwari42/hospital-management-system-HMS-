@@ -32,7 +32,7 @@ function Patients() {
   );
 }
 
-export default Patients;
+
 import { toast } from "react-toastify";
 function Appointments() {
   const [appointments, setAppointments] =

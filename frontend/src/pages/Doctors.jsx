@@ -30,7 +30,7 @@ function Patients() {
   );
 }
 
-export default Patients;
+
 function Doctors() {
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] =

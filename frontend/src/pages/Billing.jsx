@@ -28,7 +28,7 @@ function Patients() {
   );
 }
 
-export default Patients;
+
 import api from "../services/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
