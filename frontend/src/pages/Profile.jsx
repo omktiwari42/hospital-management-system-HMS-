@@ -29,7 +29,7 @@ function Patients() {
   );
 }
 
-export default Patients;
+
 function Profile() {
   const [profile, setProfile] =
     useState({});
