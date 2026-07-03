@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-
+import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
 import { toast } from "react-toastify";
 function Appointments() {
   const [appointments, setAppointments] =
@@ -45,18 +45,16 @@ function Appointments() {
 
   async function fetchAppointments() {
     try {
-      const response =
-        await api.get("/appointments");
+      setLoading(true);
+
+      const response = await api.get("/appointments");
 
       setAppointments(response.data);
-      setFilteredAppointments(
-        response.data
-      );
+      setFilteredAppointments(response.data);
     } catch (error) {
-      console.log(
-        "Error fetching appointments:",
-        error
-      );
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   }
   async function fetchDoctors() {
@@ -323,6 +321,9 @@ function Appointments() {
         appointmentId: appointment.id,
       },
     });
+  }
+  if (loading) {
+    return <AppointmentsSkeleton />
   }
   return (
     <div className="page">

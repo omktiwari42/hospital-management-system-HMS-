@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import PatientsSkeleton from "../components/skeletons/PatientsSkeleton";
 
 
 
-
-
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-toastify";
@@ -51,18 +52,20 @@ function Patients() {
   const [editingId, setEditingId] =
     useState(null);
 
+  const [loading, setLoading] = useState(true);
+
   async function fetchPatients() {
     try {
-      const response =
-        await api.get("/patients");
+      setLoading(true);
+
+      const response = await api.get("/patients");
 
       setPatients(response.data);
       setFilteredPatients(response.data);
     } catch (error) {
-      console.log(
-        "Error fetching patients:",
-        error
-      );
+      console.log("Error fetching patients:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -373,6 +376,9 @@ function Patients() {
         "Failed to update patient"
       );
     }
+  }
+  if (loading) {
+    return <PatientsSkeleton />
   }
   return (
     <div className="page">

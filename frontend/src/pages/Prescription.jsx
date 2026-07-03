@@ -1,7 +1,7 @@
 // import { useState } from "react";
 // import api from "../services/api";
 // import { toast } from "react-toastify";
-
+//import PrescriptionSkeleton from "../components/skeletons/PrescriptionSkeleton";
 // function Prescriptions() {
 //     const [patientId, setPatientId] =
 //         useState("");
@@ -19,7 +19,9 @@
 //         useState("");
 
 //     const [notes, setNotes] =
+
 //         useState("");
+//const [loading,setLoading]=useState(true);
 
 //     async function savePrescription() {
 //         try {

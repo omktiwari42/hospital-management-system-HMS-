@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import BillingSkeleton from "../components/skeletons/BillingSkeleton";
+import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
 function Billing() {
   const navigate = useNavigate();
   const [bills, setBills] = useState([]);
@@ -23,16 +25,20 @@ function Billing() {
 
   const [editingId, setEditingId] =
     useState(null);
+  const [loading, setLoading] = useState(true);
 
   async function fetchBills() {
     try {
-      const response =
-        await api.get("/bills");
+      setLoading(true);
+
+      const response = await api.get("/bills");
 
       setBills(response.data);
       setFilteredBills(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -202,6 +208,9 @@ function Billing() {
     doc.save(
       `Invoice-${bill.id}.pdf`
     );
+  }
+  if (loading) {
+    return <AppointmentsSkeleton />
   }
   return (
     <div className="page">

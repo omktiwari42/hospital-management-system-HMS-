@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-
+import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
 function Profile() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getProfile();
@@ -13,7 +14,9 @@ function Profile() {
 
   async function getProfile() {
     try {
-      const token = sessionStorage.getItem("token");
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
 
       const response = await api.get("/profile", {
         headers: {
@@ -24,7 +27,12 @@ function Profile() {
       setProfile(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
+  }
+  if (loading) {
+    return <ProfileSkeleton />
   }
 
   return (
