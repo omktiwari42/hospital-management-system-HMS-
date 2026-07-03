@@ -1939,18 +1939,3 @@ button:hover {
 .pdf-btn {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
-
-.pay-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-  width: 90px;
-  height: 40px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.pay-btn:hover {
-  transform: translateY(-2px);
-}
