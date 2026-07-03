@@ -1917,15 +1917,26 @@ button:hover {
 }
 
 /* PDF BUTTON AND DELETE BUTTON AND EDIT */
-.action-btn {
-  width: 90px;
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-btn,
+.delete-btn,
+.pdf-btn,
+.pay-btn {
+  min-width: 90px;
   height: 40px;
-  padding: 0;
   border: none;
   border-radius: 10px;
-  color: white;
-  cursor: pointer;
+  color: #fff;
   font-weight: 600;
+  cursor: pointer;
+  transition: .3s;
 }
 
 .edit-btn {
@@ -1938,4 +1949,16 @@ button:hover {
 
 .pdf-btn {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.pay-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.edit-btn:hover,
+.delete-btn:hover,
+.pdf-btn:hover,
+.pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
 }
