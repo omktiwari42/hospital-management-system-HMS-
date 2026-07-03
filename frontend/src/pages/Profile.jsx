@@ -1,38 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { useNavigate } from "react-router-dom";
-
-const navigate = useNavigate();
-
-<div className="page-header">
-  <button onClick={() => navigate("/dashboard")}>
-    🏠 Dashboard
-  </button>
-</div>
-import { useNavigate } from "react-router-dom";
-
-function Patients() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="page">
-
-      <button
-        className="back-btn"
-        onClick={() => navigate(-1)}
-      >
-        ← Back
-      </button>
-
-      {/* Rest of your page */}
-    </div>
-  );
-}
-
 
 function Profile() {
-  const [profile, setProfile] =
-    useState({});
+  const navigate = useNavigate();
+
+  const [profile, setProfile] = useState({});
 
   useEffect(() => {
     getProfile();
@@ -40,24 +13,15 @@ function Profile() {
 
   async function getProfile() {
     try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+      const token = sessionStorage.getItem("token");
 
-      const response =
-        await api.get(
-          "/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const response = await api.get("/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      setProfile(
-        response.data
-      );
+      setProfile(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -65,16 +29,20 @@ function Profile() {
 
   return (
     <div className="page">
+      <div className="page-header">
+        <button
+          className="back-btn"
+          onClick={() => navigate("/dashboard")}
+        >
+          🏠 Dashboard
+        </button>
+      </div>
+
       <div className="card">
-        <h2>
-          👤 My Profile
-        </h2>
+        <h2>👤 My Profile</h2>
 
         <p>
-          <strong>
-            Phone:
-          </strong>{" "}
-          {profile.phone}
+          <strong>Phone:</strong> {profile.phone}
         </p>
       </div>
     </div>
