@@ -10,7 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { FaMoon, FaSun } from "react-icons/fa";
 function Dashboard() {
   const [patients, setPatients] = useState(0);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,15 @@ function Dashboard() {
 
     loadDashboard();
   }, []);
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   async function fetchData() {
     try {
@@ -108,8 +119,7 @@ function Dashboard() {
   }
 
   const toggleDarkMode = () => {
-    document.body.classList.toggle("dark-mode");
-    setDarkMode(!darkMode);
+    setDarkMode((prev) => !prev);
   };
 
   const handleLogout = () => {
