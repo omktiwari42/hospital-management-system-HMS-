@@ -210,6 +210,7 @@ function Billing() {
     );
   }
   async function payBill(bill) {
+    console.log("PAY BUTTON CLICKED", bill);
     try {
       const { data: order } = await api.post(
         "/create-order",
@@ -279,9 +280,11 @@ function Billing() {
 
       razorpay.open();
     } catch (error) {
-      console.log(error);
+      console.log("FULL ERROR:", error);
+      console.log("RESPONSE:", error.response);
+      console.log("DATA:", error.response?.data);
 
-      alert("Unable to create order");
+      alert(error.response?.data?.message || error.message);
     }
   }
   if (loading) {

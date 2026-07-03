@@ -111,11 +111,14 @@ app.post(
 
       res.json(order);
     } catch (error) {
-      console.log(error);
+      console.error("========== RAZORPAY ERROR ==========");
+      console.error(error);
+      console.error(error.error);
+      console.error(error.statusCode);
 
       res.status(500).json({
-        message:
-          "Failed to create order",
+        message: error.message,
+        error: error.error,
       });
     }
   }
