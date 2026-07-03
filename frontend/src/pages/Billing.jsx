@@ -220,7 +220,7 @@ function Billing() {
       );
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: "rzp_test_T99nYTP866jEID",
 
         amount: order.amount,
 
