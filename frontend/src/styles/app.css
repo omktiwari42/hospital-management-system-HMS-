@@ -1893,3 +1893,25 @@ button:hover {
   border-radius: 8px;
   cursor: pointer;
 }
+
+.dashboard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dark-btn,
+.logout-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.dark-btn:hover,
+.logout-btn:hover {
+  opacity: 0.9;
+}

@@ -6,10 +6,12 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import AppointmentChart from "../components/AppointmentChart";
 import RevenueChart from "../components/RevenueChart";
-
+import { useNavigate } from "react-router-dom";
+import { FaMoon, FaSun } from "react-icons/fa";
 function Dashboard() {
   const [patients, setPatients] = useState(0);
-
+  const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState(0);
   const [loading, setLoading] = useState(true);
   const [appointmentsCount, setAppointmentsCount] = useState(0);
@@ -98,21 +100,43 @@ function Dashboard() {
 
   async function getRecentPatients() {
     try {
-      const response =
-        await api.get(
-          "/recent-patients"
-        );
-
-      setRecentPatients(
-        response.data
-      );
+      const response = await api.get("/recent-patients");
+      setRecentPatients(response.data);
     } catch (error) {
       console.log(error);
     }
   }
 
+  const toggleDarkMode = () => {
+    document.body.classList.toggle("dark-mode");
+    setDarkMode(!darkMode);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("token");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <div className="page">
+
+      <div className="dashboard-actions">
+        <button
+          className="dark-btn"
+          onClick={toggleDarkMode}
+        >
+          {darkMode ? <FaSun /> : <FaMoon />}
+        </button>
+
+        <button
+          className="logout-btn"
+          onClick={handleLogout}
+        >
+          🚪 Logout
+        </button>
+      </div>
+
       <h1>🏥 Hospital Management System</h1>
 
       <div className="dashboard-grid">
