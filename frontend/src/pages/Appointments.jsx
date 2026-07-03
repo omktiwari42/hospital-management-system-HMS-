@@ -314,11 +314,12 @@ function Appointments() {
     }
   }
   function goToPayment(appointment) {
-    navigate("/payment", {
+    navigate("/billing", {
       state: {
+        appointmentId: appointment.id,
         patientName: appointment.patient_name,
         amount: 500,
-        appointmentId: appointment.id,
+        autoPay: true,
       },
     });
   }

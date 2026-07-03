@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -7,12 +7,21 @@ import BillingSkeleton from "../components/skeletons/BillingSkeleton";
 import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
 function Billing() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const {
+    appointmentId,
+    patientName: paymentPatientName,
+    amount: paymentAmount,
+    autoPay,
+  } = location.state || {};
   const [bills, setBills] = useState([]);
   const [filteredBills, setFilteredBills] =
     useState([]);
 
   const [patientName, setPatientName] =
     useState("");
+  const [selectedBill, setSelectedBill] = useState(null);
+
 
   const [amount, setAmount] =
     useState("");
@@ -41,6 +50,17 @@ function Billing() {
       setLoading(false);
     }
   }
+  useEffect(() => {
+    if (!appointmentId || bills.length === 0) return;
+
+    const bill = bills.find(
+      (b) => Number(b.appointment_id) === Number(appointmentId)
+    );
+
+    if (bill && autoPay) {
+      payBill(bill);
+    }
+  }, [appointmentId, bills, autoPay]);
 
   useEffect(() => {
     fetchBills();

@@ -664,24 +664,29 @@ app.post(
           ]
         );
       // Create Bill Automatically
+      const appointmentId = result.rows[0].id;
+
       await pool.query(
         `
-        INSERT INTO bills
-        (
-          patient_name,
-          amount,
-          status,
-          payment_status
-        )
-        VALUES
-        (
-          $1,
-          $2,
-          $3,
-          $4
-        )
-        `,
+  INSERT INTO bills
+  (
+    appointment_id,
+    patient_name,
+    amount,
+    status,
+    payment_status
+  )
+  VALUES
+  (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
+  )
+  `,
         [
+          appointmentId,
           patientName,
           500,
           "Pending",
@@ -842,7 +847,31 @@ app.post("/api/bills", authenticateToken, async (req, res) => {
     });
   }
 });
+app.put("/api/bills/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { patientName, amount, status } = req.body;
 
+    const result = await pool.query(
+      `UPDATE bills
+       SET
+         patient_name = $1,
+         amount = $2,
+         status = $3
+       WHERE id = $4
+       RETURNING *`,
+      [patientName, amount, status, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+  }
+});
 app.put(
   "/api/bills/pay/:id",
   authenticateToken,
