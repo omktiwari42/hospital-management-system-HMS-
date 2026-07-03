@@ -361,38 +361,31 @@ function Billing() {
 
                   <td>
                     <div
+                      className="action-buttons"
                       style={{
                         display: "flex",
+                        flexDirection: "column",
                         gap: "8px",
-                        flexWrap: "wrap",
+                        alignItems: "center",
                       }}
                     >
                       <button
                         className="edit-btn"
-                        onClick={() =>
-                          editBill(bill)
-                        }
+                        onClick={() => editBill(bill)}
                       >
                         Edit
                       </button>
 
                       <button
                         className="delete-btn"
-                        onClick={() =>
-                          deleteBill(
-                            bill.id
-                          )
-                        }
+                        onClick={() => deleteBill(bill.id)}
                       >
                         Delete
                       </button>
 
                       <button
-                        onClick={() =>
-                          downloadInvoice(
-                            bill
-                          )
-                        }
+                        className="edit-btn"
+                        onClick={() => downloadInvoice(bill)}
                       >
                         PDF
                       </button>

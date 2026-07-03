@@ -1915,3 +1915,27 @@ button:hover {
 .logout-btn:hover {
   opacity: 0.9;
 }
+
+/* PDF BUTTON AND DELETE BUTTON AND EDIT */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-btn,
+.delete-btn,
+.pdf-btn {
+  width: 90px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pdf-btn {
+  background: #2563eb;
+  color: white;
+}
