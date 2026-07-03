@@ -143,7 +143,7 @@ function Dashboard() {
           className="logout-btn"
           onClick={handleLogout}
         >
-          🚪 Logout
+          LOGOUT
         </button>
       </div>
 
