@@ -465,14 +465,6 @@ function Billing() {
                         📄 PDF
                       </button>
 
-                      {bill.payment_status !== "Paid" && (
-                        <button
-                          className="pay-btn"
-                          onClick={() => payBill(bill)}
-                        >
-                          💳 Pay
-                        </button>
-                      )}
 
                       {bill.payment_status !== "Paid" && (
                         <button
