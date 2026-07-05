@@ -2152,6 +2152,7 @@ app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
     });
   }
 });
+
 app.post("/api/patient/book-appointment", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;

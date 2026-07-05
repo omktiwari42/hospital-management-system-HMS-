@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import DashboardLayout from "../layouts/DashboardLayout";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkeleton";
 
 export default function BookAppointment() {
@@ -11,11 +13,11 @@ export default function BookAppointment() {
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
 
+    const [appointmentDateTime, setAppointmentDateTime] = useState(new Date());
+
     const [form, setForm] = useState({
         doctor_name: "",
         department: "",
-        appointment_date: "",
-        appointment_time: "",
         reason: "",
     });
 
@@ -78,14 +80,32 @@ export default function BookAppointment() {
         setBooking(true);
 
         try {
+            const appointment_date =
+                appointmentDateTime.toISOString().split("T")[0];
+
+            const appointment_time =
+                appointmentDateTime.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                });
+
             const response = await api.post(
                 "/patient/book-appointment",
-                form
+                {
+                    doctor_name: form.doctor_name,
+                    department: form.department,
+                    appointment_date,
+                    appointment_time,
+                    reason: form.reason,
+                }
             );
 
             alert(response.data.message);
 
             clearForm();
+            setAppointmentDateTime(new Date());
+
         } catch (error) {
             console.log(error);
 
@@ -194,26 +214,16 @@ export default function BookAppointment() {
                     </div>
 
                     <div className="form-group">
-                        <label>📅 Appointment Date</label>
+                        <label>📅 Date & Time</label>
 
-                        <input
-                            type="date"
-                            name="appointment_date"
-                            value={form.appointment_date}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>⏰ Appointment Time</label>
-
-                        <input
-                            type="time"
-                            name="appointment_time"
-                            value={form.appointment_time}
-                            onChange={handleChange}
-                            required
+                        <DatePicker
+                            selected={appointmentDateTime}
+                            onChange={(date) => setAppointmentDateTime(date)}
+                            showTimeSelect
+                            timeIntervals={15}
+                            dateFormat="dd/MM/yyyy h:mm aa"
+                            minDate={new Date()}
+                            className="form-control"
                         />
                     </div>
 
