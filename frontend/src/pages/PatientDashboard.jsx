@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../services/api";
 
 export default function PatientDashboard() {
     const [patient, setPatient] = useState(null);
@@ -10,16 +10,7 @@ export default function PatientDashboard() {
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
-                const token = sessionStorage.getItem("token");
-
-                const response = await axios.get(
-                    "http://localhost:5000/api/patient-dashboard",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                const response = await api.get("/patient-dashboard");
 
                 setPatient(response.data.patient);
                 setAppointments(response.data.appointments);
