@@ -2050,6 +2050,58 @@ app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
     });
   }
 });
+app.post("/api/patient/book-appointment", authenticateToken, async (req, res) => {
+  try {
+    const phone = req.user.phone;
+
+    const {
+      doctor_name,
+      department,
+      appointment_date,
+      appointment_time,
+      reason,
+    } = req.body;
+
+    const patientResult = await pool.query(
+      "SELECT name FROM patients WHERE phone = $1",
+      [phone]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Patient not found",
+      });
+    }
+
+    const patientName = patientResult.rows[0].name;
+
+    await pool.query(
+      `INSERT INTO appointments
+      (patient_name, doctor_name, department, appointment_date, appointment_time, reason, status)
+      VALUES ($1,$2,$3,$4,$5,$6,'Pending')`,
+      [
+        patientName,
+        doctor_name,
+        department,
+        appointment_date,
+        appointment_time,
+        reason,
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: "Appointment booked successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
 app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;
