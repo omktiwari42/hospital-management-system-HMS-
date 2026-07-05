@@ -189,6 +189,7 @@ function Login() {
 
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("role", response.data.role);
+      sessionStorage.setItem("full_name", response.data.full_name);
 
       setMergeOTP(true);
 
@@ -199,7 +200,19 @@ function Login() {
       toast.success("Login Successful");
 
       setTimeout(() => {
-        navigate("/dashboard");
+        const role = response.data.role;
+
+        if (role === "admin") {
+          navigate("/dashboard");
+        } else if (role === "doctor") {
+          navigate("/doctor-dashboard");
+        } else if (role === "receptionist") {
+          navigate("/reception-dashboard");
+        } else if (role === "patient") {
+          navigate("/patient-dashboard");
+        } else {
+          navigate("/");
+        }
       }, 2500);
 
     } catch (err) {
