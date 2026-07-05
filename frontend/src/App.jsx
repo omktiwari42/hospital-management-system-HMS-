@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// import Navbar from "./components/Navbar";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
@@ -17,14 +16,17 @@ import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 
+import DoctorDashboard from "./pages/DoctorDashboard";
+import ReceptionDashboard from "./pages/ReceptionDashboard";
+import PharmacistDashboard from "./pages/PharmacistDashboard";
+import LabDashboard from "./pages/LabDashboard";
+import PatientDashboard from "./pages/PatientDashboard";
+
 function App() {
   const token = sessionStorage.getItem("token");
 
   return (
     <div className="layout">
-
-      {/* {token && <Navbar />} */}
-
       <div className="content">
 
         <Routes>
@@ -116,6 +118,53 @@ function App() {
             }
           />
 
+          {/* Role Dashboards */}
+
+          <Route
+            path="/doctor-dashboard"
+            element={
+              <ProtectedRoute>
+                <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reception-dashboard"
+            element={
+              <ProtectedRoute>
+                <ReceptionDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/pharmacist-dashboard"
+            element={
+              <ProtectedRoute>
+                <PharmacistDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lab-dashboard"
+            element={
+              <ProtectedRoute>
+                <LabDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/patient-dashboard"
+            element={
+              <ProtectedRoute>
+                <PatientDashboard />
+              </ProtectedRoute>
+            }
+          />
+
         </Routes>
 
       </div>
@@ -128,7 +177,6 @@ function App() {
         pauseOnHover
         theme="colored"
       />
-
     </div>
   );
 }

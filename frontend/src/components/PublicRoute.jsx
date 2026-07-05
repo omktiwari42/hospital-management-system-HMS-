@@ -1,20 +1,33 @@
 import { Navigate } from "react-router-dom";
 
-function PublicRoute({
-    children,
-}) {
-    const token =
-        sessionStorage.getItem(
-            "token"
-        );
+export default function PublicRoute({ children }) {
+    const token = sessionStorage.getItem("token");
+    const role = sessionStorage.getItem("role");
 
-    return token ? (
-        <Navigate
-            to="/dashboard"
-        />
-    ) : (
-        children
-    );
+    if (token) {
+        switch (role) {
+            case "admin":
+                return <Navigate to="/dashboard" replace />;
+
+            case "doctor":
+                return <Navigate to="/doctor-dashboard" replace />;
+
+            case "receptionist":
+                return <Navigate to="/reception-dashboard" replace />;
+
+            case "pharmacist":
+                return <Navigate to="/pharmacist-dashboard" replace />;
+
+            case "lab":
+                return <Navigate to="/lab-dashboard" replace />;
+
+            case "patient":
+                return <Navigate to="/patient-dashboard" replace />;
+
+            default:
+                return <Navigate to="/dashboard" replace />;
+        }
+    }
+
+    return children;
 }
-
-export default PublicRoute;
