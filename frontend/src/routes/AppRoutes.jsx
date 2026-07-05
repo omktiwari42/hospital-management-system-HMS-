@@ -9,12 +9,11 @@ import Billing from "../pages/Billing";
 import Profile from "../pages/Profile";
 import Prescriptions from "../pages/Prescriptions";
 import Payment from "../pages/Payment";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import ReceptionDashboard from "./pages/ReceptionDashboard";
-import PatientDashboard from "./pages/PatientDashboard";
-import PharmacistDashboard from "./pages/PharmacistDashboard";
-import LabDashboard from "./pages/LabDashboard";
-
+import DoctorDashboard from "../pages/DoctorDashboard";
+import ReceptionDashboard from "../pages/ReceptionDashboard";
+import PatientDashboard from "../pages/PatientDashboard";
+import PharmacistDashboard from "../pages/PharmacistDashboard";
+import LabDashboard from "../pages/LabDashboard";
 function AppRoutes() {
     return (
         <Routes>
