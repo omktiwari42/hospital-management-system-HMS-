@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import DashboardLayout from "../layouts/DashboardLayout";
 import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkeleton";
-import ".BookAppointment.css";
+
 export default function BookAppointment() {
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);

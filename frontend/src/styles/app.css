@@ -2158,3 +2158,140 @@ button:hover {
   background: #16a34a;
   color: white;
 }
+
+.book-appointment-page {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+}
+
+.dark-mode .book-appointment-page {
+  background: #1f2937;
+  color: #fff;
+}
+
+.book-appointment-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.appointment-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: .25s;
+  background: #fff;
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group select,
+.dark-mode .form-group textarea {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #374151;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.form-group textarea {
+  resize: none;
+  min-height: 120px;
+}
+
+.appointment-buttons {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.book-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: .3s;
+}
+
+.book-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.book-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clear-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: .3s;
+}
+
+.clear-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+@media(max-width:768px) {
+
+  .book-appointment-page {
+    margin: 15px;
+    padding: 20px;
+  }
+
+  .appointment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-buttons {
+    flex-direction: column;
+  }
+
+  .book-btn,
+  .clear-btn {
+    width: 100%;
+  }
+
+}
