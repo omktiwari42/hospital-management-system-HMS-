@@ -208,6 +208,10 @@ function Login() {
           navigate("/doctor-dashboard");
         } else if (role === "receptionist") {
           navigate("/reception-dashboard");
+        } else if (role === "pharmacist") {
+          navigate("/pharmacist-dashboard");
+        } else if (role === "lab") {
+          navigate("/lab-dashboard");
         } else if (role === "patient") {
           navigate("/patient-dashboard");
         } else {

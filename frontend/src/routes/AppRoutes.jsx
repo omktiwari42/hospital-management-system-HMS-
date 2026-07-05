@@ -12,6 +12,8 @@ import Payment from "../pages/Payment";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
+import PharmacistDashboard from "./pages/PharmacistDashboard";
+import LabDashboard from "./pages/LabDashboard";
 
 function AppRoutes() {
     return (
@@ -26,8 +28,26 @@ function AppRoutes() {
             <Route path="/prescriptions" element={<Prescriptions />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-            <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
-            <Route path="/patient-dashboard" element={<PatientDashboard />} />
+
+            <Route
+                path="/reception-dashboard"
+                element={<ReceptionDashboard />}
+            />
+
+            <Route
+                path="/pharmacist-dashboard"
+                element={<PharmacistDashboard />}
+            />
+
+            <Route
+                path="/lab-dashboard"
+                element={<LabDashboard />}
+            />
+
+            <Route
+                path="/patient-dashboard"
+                element={<PatientDashboard />}
+            />
         </Routes>
     );
 }
