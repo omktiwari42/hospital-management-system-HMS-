@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import jsPDF from "jspdf";
+import { toast } from "react-toastify";
 import autoTable from "jspdf-autotable";
 import BillingSkeleton from "../components/skeletons/BillingSkeleton";
 import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
@@ -90,7 +91,7 @@ function Billing() {
       !amount ||
       !status
     ) {
-      alert("Please fill all fields");
+      toast.warning("Please fill all fields");
       return;
     }
 
@@ -267,13 +268,13 @@ function Billing() {
               billId: bill.id,
             });
 
-            alert("✅ Payment Successful");
+            toast.success("✅ Payment Successful");
 
             fetchBills();
           } catch (error) {
             console.log(error);
 
-            alert("Payment verification failed");
+            toast.warning("Payment verification failed");
           }
         },
 

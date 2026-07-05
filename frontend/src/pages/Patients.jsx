@@ -101,10 +101,10 @@ function Patients() {
         }
       );
 
-      alert("Report Uploaded Successfully");
+      toast.success("Report Uploaded Successfully");
     } catch (error) {
       console.log(error);
-      alert("Upload Failed");
+      toast.warning("Upload Failed");
     }
   }
   async function addPatient() {
