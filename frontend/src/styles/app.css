@@ -2321,3 +2321,13 @@ button:hover {
   justify-content: flex-end;
   gap: 12px;
 }
+
+input[type="time"] {
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+}
