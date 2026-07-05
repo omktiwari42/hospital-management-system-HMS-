@@ -732,6 +732,107 @@ app.post(
     }
   }
 );
+app.post(
+  "/api/patient/book-appointment",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const {
+        doctor_name,
+        department,
+        appointment_date,
+        appointment_time,
+        reason,
+      } = req.body;
+
+      const user = await pool.query(
+        "SELECT full_name FROM users WHERE id=$1",
+        [req.user.id]
+      );
+
+      if (user.rows.length === 0) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      const patientName = user.rows[0].full_name;
+
+      const exists = await pool.query(
+        `SELECT *
+         FROM appointments
+         WHERE doctor_name=$1
+         AND appointment_date=$2
+         AND appointment_time=$3`,
+        [
+          doctor_name,
+          appointment_date,
+          appointment_time,
+        ]
+      );
+
+      if (exists.rows.length > 0) {
+        return res.status(400).json({
+          message: "Doctor already booked for this slot",
+        });
+      }
+
+      const appointment = await pool.query(
+        `INSERT INTO appointments
+        (
+          patient_name,
+          doctor_name,
+          appointment_date,
+          appointment_time,
+          status,
+          reason
+        )
+        VALUES
+        ($1,$2,$3,$4,$5,$6)
+        RETURNING *`,
+        [
+          patientName,
+          doctor_name,
+          appointment_date,
+          appointment_time,
+          "Scheduled",
+          reason,
+        ]
+      );
+
+      await pool.query(
+        `INSERT INTO bills
+        (
+          appointment_id,
+          patient_name,
+          amount,
+          status,
+          payment_status
+        )
+        VALUES
+        ($1,$2,$3,$4,$5)`,
+        [
+          appointment.rows[0].id,
+          patientName,
+          500,
+          "Pending",
+          "Pending",
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: "Appointment booked successfully",
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        message: "Server Error",
+      });
+    }
+  }
+);
 app.put("/api/appointments/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;

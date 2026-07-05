@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkeleton";
 
@@ -25,20 +25,9 @@ export default function BookAppointment() {
 
     async function loadData() {
         try {
-            const token = sessionStorage.getItem("token");
-
             const [profileRes, doctorsRes] = await Promise.all([
-                axios.get("/api/profile", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
-
-                axios.get("/api/doctors", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
+                api.get("/profile"),
+                api.get("/doctors"),
             ]);
 
             setProfile(profileRes.data);
@@ -71,6 +60,44 @@ export default function BookAppointment() {
         }));
     }
 
+    function clearForm() {
+        setSelectedDoctor(null);
+
+        setForm({
+            doctor_name: "",
+            department: "",
+            appointment_date: "",
+            appointment_time: "",
+            reason: "",
+        });
+    }
+
+    async function bookAppointment(e) {
+        e.preventDefault();
+
+        setBooking(true);
+
+        try {
+            const response = await api.post(
+                "/patient/book-appointment",
+                form
+            );
+
+            alert(response.data.message);
+
+            clearForm();
+        } catch (error) {
+            console.log(error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to book appointment."
+            );
+        } finally {
+            setBooking(false);
+        }
+    }
+
     if (loading) {
         return <BookAppointmentSkeleton />;
     }
@@ -90,7 +117,7 @@ export default function BookAppointment() {
 
                         <input
                             type="text"
-                            value={profile.full_name || ""}
+                            value={profile.full_name || profile.name || ""}
                             readOnly
                         />
                     </div>
@@ -195,7 +222,7 @@ export default function BookAppointment() {
 
                         <textarea
                             name="reason"
-                            rows="4"
+                            rows={4}
                             value={form.reason}
                             onChange={handleChange}
                             placeholder="Enter reason for appointment..."
