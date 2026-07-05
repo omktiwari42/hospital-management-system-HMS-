@@ -1,195 +1,107 @@
-// import { useState } from "react";
-// import { Link, useLocation } from "react-router-dom";
-// import { useNavigate } from "react-router-dom";
-// import {
-//   FaBars,
-//   FaMoon,
-//   FaSun,
-//   FaTachometerAlt,
-//   FaUserInjured,
-//   FaUserMd,
-//   FaCalendarCheck,
-//   FaMoneyBillWave,
-//   FaUserCircle,
-// } from "react-icons/fa";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    FaBell,
+    FaMoon,
+    FaSun,
+    FaUserCircle,
+    FaSignOutAlt,
+    FaSearch
+} from "react-icons/fa";
 
-// function Navbar() {
-//   const navigate = useNavigate();
+function Navbar() {
+    const navigate = useNavigate();
 
-//   const [open, setOpen] = useState(true);
+    const [darkMode, setDarkMode] = useState(
+        localStorage.getItem("darkMode") === "true"
+    );
 
-//   const [darkMode, setDarkMode] =
-//     useState(false);
+    const fullName =
+        sessionStorage.getItem("full_name") || "User";
 
-//   const location = useLocation();
+    const role =
+        sessionStorage.getItem("role") || "";
 
-//   const token =
-//     sessionStorage.getItem("token");
+    function toggleDarkMode() {
+        const value = !darkMode;
 
-//   const role =
-//     sessionStorage.getItem("role");
+        setDarkMode(value);
 
-//   if (
-//     !token ||
-//     location.pathname === "/" ||
-//     location.pathname === "/login"
-//   ) {
-//     return null;
-//   }
+        localStorage.setItem("darkMode", value);
 
-//   console.log("Navbar Rendering");
+        document.body.classList.toggle(
+            "dark-mode",
+            value
+        );
+    }
 
-//   function logout() {
-//     sessionStorage.removeItem("token");
-//     navigate("/login");
-//   }
+    function logout() {
+        sessionStorage.clear();
+        localStorage.removeItem("token");
+        navigate("/login");
+    }
 
-//   function toggleDarkMode() {
-//     setDarkMode(!darkMode);
+    return (
+        <header className="top-navbar">
 
-//     document.body.classList.toggle(
-//       "dark-mode"
-//     );
-//   }
+            <div className="navbar-left">
 
-//   return (
-//     <div
-//       className={
-//         open
-//           ? "sidebar"
-//           : "sidebar collapsed"
-//       }
-//     >
-//       <button
-//         className="menu-btn"
-//         onClick={() =>
-//           setOpen(!open)
-//         }
-//       >
-//         <FaBars />
-//       </button>
+                <h2 className="navbar-logo">
+                    🏥 HMS
+                </h2>
 
-//       {open && (
-//         <>
-//           <h2 className="logo">
-//             🏥 HMS
-//           </h2>
+                <div className="navbar-search">
 
-//           <Link to="/dashboard" className={location.pathname === "/dashboard" ? "active-link" : ""}>
-//             <FaTachometerAlt />
-//             Dashboard
-//           </Link>
+                    <FaSearch />
 
-//           {role === "admin" && (
-//             <Link
-//               to="/patients"
-//               className={
-//                 location.pathname ===
-//                   "/patients"
-//                   ? "active-link"
-//                   : ""
-//               }
-//             >
-//               <FaUserInjured />
-//               {open && <span>Patients</span>}
-//             </Link>
-//           )}
-//           {role === "admin" && (
-//             <Link
-//               to="/doctors"
-//               className={
-//                 location.pathname ===
-//                   "/doctors"
-//                   ? "active-link"
-//                   : ""
-//               }
-//             >
-//               <FaUserMd />
-//               Doctors
-//             </Link>
-//           )}
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                    />
 
-//           <Link
-//             to="/appointments"
-//             className={
-//               location.pathname ===
-//                 "/appointments"
-//                 ? "active-link"
-//                 : ""
-//             }
-//           >
-//             <FaCalendarCheck />
-//             Appointments
-//           </Link>
+                </div>
 
-//           {/* NEW PRESCRIPTIONS MENU */}
-//           {/* <Link
-//             to="/prescriptions"
-//             className={
-//               location.pathname ===
-//                 "/prescriptions"
-//                 ? "active-link"
-//                 : ""
-//             }
-//           >
-//             💊 Prescriptions
-//           </Link> */}
+            </div>
 
-//           {role === "admin" && (
-//             <Link
-//               to="/billing"
-//               className={
-//                 location.pathname ===
-//                   "/billing"
-//                   ? "active-link"
-//                   : ""
-//               }
-//             >
-//               <FaMoneyBillWave />
-//               Billing
-//             </Link>
-//           )}
+            <div className="navbar-right">
 
-//           <Link
-//             to="/profile"
-//             className={
-//               location.pathname ===
-//                 "/profile"
-//                 ? "active-link"
-//                 : ""
-//             }
-//           >
-//             <FaUserCircle />
-//             Profile
-//           </Link>
+                <button
+                    className="icon-btn"
+                    onClick={toggleDarkMode}
+                >
+                    {darkMode ? <FaSun /> : <FaMoon />}
+                </button>
 
-//           <button
-//             className="theme-btn"
-//             onClick={
-//               toggleDarkMode
-//             }
-//           >
-//             {darkMode ? (
-//               <FaSun />
-//             ) : (
-//               <FaMoon />
-//             )}
+                <button className="icon-btn">
+                    <FaBell />
+                </button>
 
-//             {darkMode
-//               ? " Light Mode"
-//               : " Dark Mode"}
-//           </button>
+                <div className="profile-box">
 
-//           <button
-//             className="logout-btn"
-//             onClick={logout}
-//           >
-//             Logout
-//           </button>
-//         </>
-//       )}
-//     </div>
-//   );
-// }
+                    <FaUserCircle size={34} />
 
-// export default Navbar;
+                    <div>
+
+                        <strong>{fullName}</strong>
+
+                        <p>{role.toUpperCase()}</p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    className="logout-btn"
+                    onClick={logout}
+                >
+                    <FaSignOutAlt />
+                    Logout
+                </button>
+
+            </div>
+
+        </header>
+    );
+}
+
+export default Navbar;

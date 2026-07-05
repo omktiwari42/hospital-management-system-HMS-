@@ -1,8 +1,9 @@
+import DashboardLayout from "../layouts/DashboardLayout";
 export default function LabDashboard() {
     return (
-        <div style={{ padding: "30px" }}>
+        <DashboardLayout>
             <h1>🧪 Laboratory Dashboard</h1>
 
-        </div>
+        </DashboardLayout>
     );
 }

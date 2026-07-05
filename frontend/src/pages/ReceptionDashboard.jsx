@@ -1,8 +1,9 @@
+import DashboardLayout from "../layouts/DashboardLayout";
 export default function ReceptionDashboard() {
     return (
-        <div style={{ padding: "30px" }}>
+        <DashboardLayout>
             <h1>🧑‍💼 Reception Dashboard</h1>
 
-        </div>
+        </DashboardLayout>
     );
 }

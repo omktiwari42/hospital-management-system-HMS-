@@ -15,6 +15,7 @@ function Dashboard() {
   );
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState(0);
+  const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [appointmentsCount, setAppointmentsCount] = useState(0);
 
@@ -23,6 +24,12 @@ function Dashboard() {
   const [recentAppointments, setRecentAppointments] = useState([]);
 
   const [recentPatients, setRecentPatients] = useState([]);
+  const [summary, setSummary] = useState({
+    patients: 0,
+    doctors: 0,
+    appointments: 0,
+    revenue: 0,
+  });
 
   useEffect(() => {
     async function loadDashboard() {
@@ -48,43 +55,22 @@ function Dashboard() {
       localStorage.setItem("theme", "light");
     }
   }, [darkMode]);
-
   async function fetchData() {
     try {
+      const response = await api.get("/dashboard-summary");
 
-      const patientsRes =
-        await api.get("/patients");
+      setPatients(response.data.patients);
+      setDoctors(response.data.doctors);
+      setAppointmentsCount(response.data.appointments);
+      setRevenue(response.data.revenue);
 
-      const doctorsRes =
-        await api.get("/doctors");
+      const billsRes = await api.get("/bills");
+      setBills(billsRes.data.length);
 
-      const appointmentsRes =
-        await api.get("/appointments");
-
-      const billsRes =
-        await api.get("/bills");
-
-      setPatients(
-        patientsRes.data.length
-      );
-
-      setDoctors(
-        doctorsRes.data.length
-      );
-
-      setAppointmentsCount(
-        appointmentsRes.data.length
-      );
-
-      setBills(
-        billsRes.data.length
-      );
     } catch (error) {
       console.log(error);
     }
-
   }
-
   async function getRecentAppointments() {
     try {
       const token =
@@ -188,6 +174,20 @@ function Dashboard() {
             Bills</h2>
           <p>
             {loading ? <Skeleton width={60} height={35} /> : bills}
+          </p>
+        </Link>
+        <Link
+          to="/billing"
+          className="card revenue-card"
+        >
+          <h2>💰 Revenue</h2>
+
+          <p>
+            {loading ? (
+              <Skeleton width={100} height={35} />
+            ) : (
+              `₹${revenue}`
+            )}
           </p>
         </Link>
       </div>
