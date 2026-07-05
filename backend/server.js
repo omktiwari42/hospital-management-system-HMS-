@@ -982,7 +982,7 @@ app.post("/api/send-otp", (req, res) => {
   }
 });
 
-app.post("/api/verify-otp", (req, res) => {
+app.post("/api/verify-otp", async (req, res) => {
   try {
     const { phone, otp } = req.body;
 
@@ -1004,19 +1004,40 @@ app.post("/api/verify-otp", (req, res) => {
 
     delete otpStore[phone];
 
+    // Fetch user from database
+    const result = await pool.query(
+      `SELECT * FROM users WHERE phone = $1`,
+      [phone]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const user = result.rows[0];
+
     const token = jwt.sign(
       {
-        phone,
-        role: "admin"
+        id: user.id,
+        phone: user.phone,
+        role: user.role,
+        full_name: user.full_name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "1d",
+      }
     );
+
     res.json({
       token,
-      role: "admin",
+      role: user.role,
+      full_name: user.full_name,
       message: "Login Successful 🎉",
     });
+
   } catch (error) {
     console.log(error);
 
