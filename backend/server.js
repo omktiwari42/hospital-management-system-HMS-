@@ -2001,6 +2001,97 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
     });
   }
 });
+app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
+  try {
+    const phone = req.user.phone;
+
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE phone = $1",
+      [phone]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const user = userResult.rows[0];
+
+    const patientResult = await pool.query(
+      "SELECT * FROM patients WHERE phone = $1",
+      [phone]
+    );
+
+    const patient = patientResult.rows[0];
+
+    const appointments = await pool.query(
+      "SELECT * FROM appointments WHERE patient_name = $1 ORDER BY appointment_date ASC",
+      [patient?.name]
+    );
+
+    const bills = await pool.query(
+      "SELECT * FROM bills WHERE patient_name = $1 ORDER BY id DESC",
+      [patient?.name]
+    );
+
+    res.json({
+      user,
+      patient,
+      appointments: appointments.rows,
+      bills: bills.rows
+    }); ``
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+  }
+});
+app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
+  try {
+    const phone = req.user.phone;
+
+    const patientResult = await pool.query(
+      "SELECT name FROM patients WHERE phone = $1",
+      [phone]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Patient not found",
+      });
+    }
+
+    const patientName = patientResult.rows[0].name;
+
+    const appointmentResult = await pool.query(
+      `SELECT
+          id,
+          doctor_name,
+          department,
+          appointment_date,
+          appointment_time,
+          status
+       FROM appointments
+       WHERE patient_name = $1
+       ORDER BY appointment_date ASC, appointment_time ASC`,
+      [patientName]
+    );
+
+    res.json({
+      appointments: appointmentResult.rows,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
 app.get("/api/dashboard-summary", authenticateToken, async (req, res) => {
   try {
     const patients = await pool.query(
