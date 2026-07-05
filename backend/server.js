@@ -1149,10 +1149,11 @@ app.post("/api/verify-otp", async (req, res) => {
 });
 
 app.get("/api/profile", authenticateToken, async (req, res) => {
-  console.log(req.user);
   try {
     res.json({
+      full_name: req.user.full_name,
       phone: req.user.phone,
+      role: req.user.role,
     });
   } catch (error) {
     console.log(error);
