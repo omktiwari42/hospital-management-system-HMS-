@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import BookAppointment from "./pages/BookAppointments";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -21,14 +20,13 @@ import ReceptionDashboard from "./pages/ReceptionDashboard";
 import PharmacistDashboard from "./pages/PharmacistDashboard";
 import LabDashboard from "./pages/LabDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
+import BookAppointment from "./pages/BookAppointment";
 
 function App() {
   return (
     <div className="layout">
       <div className="content">
-
         <Routes>
-
           {/* Public Routes */}
           <Route
             path="/"
@@ -48,7 +46,7 @@ function App() {
             }
           />
 
-          {/* Admin Dashboard */}
+          {/* Admin */}
           <Route
             path="/dashboard"
             element={
@@ -60,7 +58,6 @@ function App() {
             }
           />
 
-          {/* Admin Pages */}
           <Route
             path="/patients"
             element={
@@ -94,7 +91,7 @@ function App() {
             }
           />
 
-          {/* Shared Routes */}
+          {/* Shared */}
           <Route
             path="/appointments"
             element={
@@ -122,7 +119,7 @@ function App() {
             }
           />
 
-          {/* Doctor Dashboard */}
+          {/* Doctor */}
           <Route
             path="/doctor-dashboard"
             element={
@@ -134,7 +131,7 @@ function App() {
             }
           />
 
-          {/* Reception Dashboard */}
+          {/* Receptionist */}
           <Route
             path="/reception-dashboard"
             element={
@@ -146,7 +143,7 @@ function App() {
             }
           />
 
-          {/* Pharmacist Dashboard */}
+          {/* Pharmacist */}
           <Route
             path="/pharmacist-dashboard"
             element={
@@ -158,7 +155,7 @@ function App() {
             }
           />
 
-          {/* Lab Dashboard */}
+          {/* Lab */}
           <Route
             path="/lab-dashboard"
             element={
@@ -170,7 +167,7 @@ function App() {
             }
           />
 
-          {/* Patient Dashboard */}
+          {/* Patient */}
           <Route
             path="/patient-dashboard"
             element={
@@ -182,18 +179,18 @@ function App() {
             }
           />
 
+          {/* Patient Book Appointment */}
+          <Route
+            path="/book-appointment"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <BookAppointment />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-        <Route
-          path="/book-appointment"
-          element={
-            <ProtectedRoute>
-              <RoleRoute roles={["patient"]}>
-                <BookAppointment />
-              </RoleRoute>
-            </ProtectedRoute>
-          }
-        />
-
       </div>
 
       <ToastContainer
