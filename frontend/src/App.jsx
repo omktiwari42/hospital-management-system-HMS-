@@ -23,14 +23,13 @@ import LabDashboard from "./pages/LabDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
 
 function App() {
-  const token = sessionStorage.getItem("token");
-
   return (
     <div className="layout">
       <div className="content">
 
         <Routes>
 
+          {/* Public Routes */}
           <Route
             path="/"
             element={
@@ -49,15 +48,19 @@ function App() {
             }
           />
 
+          {/* Admin Dashboard */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <RoleRoute roles={["admin"]}>
+                  <Dashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
 
+          {/* Admin Pages */}
           <Route
             path="/patients"
             element={
@@ -81,21 +84,22 @@ function App() {
           />
 
           <Route
-            path="/appointments"
-            element={
-              <ProtectedRoute>
-                <Appointments />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/billing"
             element={
               <ProtectedRoute>
                 <RoleRoute roles={["admin"]}>
                   <Billing />
                 </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Shared Routes */}
+          <Route
+            path="/appointments"
+            element={
+              <ProtectedRoute>
+                <Appointments />
               </ProtectedRoute>
             }
           />
@@ -118,49 +122,62 @@ function App() {
             }
           />
 
-          {/* Role Dashboards */}
-
+          {/* Doctor Dashboard */}
           <Route
             path="/doctor-dashboard"
             element={
               <ProtectedRoute>
-                <DoctorDashboard />
+                <RoleRoute roles={["doctor"]}>
+                  <DoctorDashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
 
+          {/* Reception Dashboard */}
           <Route
             path="/reception-dashboard"
             element={
               <ProtectedRoute>
-                <ReceptionDashboard />
+                <RoleRoute roles={["receptionist"]}>
+                  <ReceptionDashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
 
+          {/* Pharmacist Dashboard */}
           <Route
             path="/pharmacist-dashboard"
             element={
               <ProtectedRoute>
-                <PharmacistDashboard />
+                <RoleRoute roles={["pharmacist"]}>
+                  <PharmacistDashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
 
+          {/* Lab Dashboard */}
           <Route
             path="/lab-dashboard"
             element={
               <ProtectedRoute>
-                <LabDashboard />
+                <RoleRoute roles={["lab"]}>
+                  <LabDashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
 
+          {/* Patient Dashboard */}
           <Route
             path="/patient-dashboard"
             element={
               <ProtectedRoute>
-                <PatientDashboard />
+                <RoleRoute roles={["patient"]}>
+                  <PatientDashboard />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />

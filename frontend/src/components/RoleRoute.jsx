@@ -3,7 +3,8 @@ import { Navigate } from "react-router-dom";
 export default function RoleRoute({ children, roles }) {
     const role = sessionStorage.getItem("role");
 
-    if (!roles.includes(role)) {
+    // If no role or the role is not allowed
+    if (!role || !roles.includes(role)) {
         switch (role) {
             case "admin":
                 return <Navigate to="/dashboard" replace />;
@@ -28,5 +29,6 @@ export default function RoleRoute({ children, roles }) {
         }
     }
 
+    // Role is allowed
     return children;
 }
