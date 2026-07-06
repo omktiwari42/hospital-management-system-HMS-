@@ -1607,8 +1607,8 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     // Create patient automatically if missing
     if (patientResult.rows.length === 0) {
       patientResult = await pool.query(
-        `INSERT INTO patients (name, phone)
-         VALUES ($1, $2)
+        `INSERT INTO patients (name, phone, age)
+         VALUES ($1, $2, 18)
          RETURNING *`,
         [user.full_name, user.phone]
       );
@@ -1686,10 +1686,12 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     });
 
   } catch (error) {
+    console.error("BOOK APPOINTMENT ERROR:");
     console.error(error);
+    console.error(error.stack);
 
     res.status(500).json({
-      message: "Server Error",
+      message: error.message,
     });
   }
 });
@@ -1711,8 +1713,8 @@ app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
     // Create patient automatically if it doesn't exist
     await pool.query(
       `
-      INSERT INTO patients (name, phone)
-      SELECT $1, $2
+      INSERT INTO patients (name, phone, age)
+      SELECT $1, $2, 18
       WHERE NOT EXISTS (
         SELECT 1 FROM patients WHERE phone = $2
       )
