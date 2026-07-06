@@ -1585,33 +1585,15 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     const doctorFees = doctor.rows[0].fees;
 
 
-    const userResult = await pool.query(
-      "SELECT full_name, phone FROM users WHERE id = $1",
-      [req.user.id]
+    const patientResult = await pool.query(
+      "SELECT name FROM patients WHERE phone = $1",
+      [phone]
     );
 
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    const user = userResult.rows[0];
-
-    // Find patient
-    let patientResult = await pool.query(
-      "SELECT * FROM patients WHERE phone = $1",
-      [user.phone]
-    );
-
-    // Create patient automatically if missing
     if (patientResult.rows.length === 0) {
-      patientResult = await pool.query(
-        `INSERT INTO patients (name, phone)
-         VALUES ($1, $2)
-         RETURNING *`,
-        [user.full_name, user.phone]
-      );
+      return res.status(404).json({
+        message: "Patient not found",
+      });
     }
 
     const patientName = patientResult.rows[0].name;
