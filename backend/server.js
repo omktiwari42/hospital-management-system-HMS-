@@ -1697,82 +1697,60 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
 });
 app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
   try {
+    console.log("JWT User:", req.user);
+
+    const phone = req.user.phone;
+
     const userResult = await pool.query(
-      "SELECT full_name, phone FROM users WHERE phone = $1",
+      "SELECT full_name FROM users WHERE phone = $1",
       [phone]
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const patientName = userResult.rows[0].full_name;
 
-    // Create patient automatically if it doesn't exist
-    await pool.query(
-      `
-      INSERT INTO patients (name, phone, age)
-      SELECT $1, $2, 18
-      WHERE NOT EXISTS (
-        SELECT 1 FROM patients WHERE phone = $2
-      )
-      `,
-      [patientName, phone]
-    );
-
     const appointmentResult = await pool.query(
-      `SELECT
-          id,
-          doctor_name,
-          department,
-          appointment_date,
-          appointment_time,
-          status
+      `SELECT *
        FROM appointments
-       WHERE patient_name = $1
-       ORDER BY appointment_date ASC, appointment_time ASC`,
+       WHERE patient_name = $1`,
       [patientName]
     );
+
+    console.log("Patient:", patientName);
+    console.log("Appointments:", appointmentResult.rows);
 
     res.json({
       appointments: appointmentResult.rows,
     });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: "Server Error",
-    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
   }
 });
-app.put("/api/patient/cancel-appointment/:id", authenticateToken, async (req, res) => {
+app.delete("/api/patient/appointment/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
     await pool.query(
-      `UPDATE appointments
-       SET status='Cancelled'
-       WHERE id=$1`,
+      "DELETE FROM bills WHERE appointment_id=$1",
       [id]
     );
 
     await pool.query(
-      `UPDATE bills
-       SET status='Cancelled',
-           payment_status='Cancelled'
-       WHERE appointment_id=$1`,
+      "DELETE FROM appointments WHERE id=$1",
       [id]
     );
 
     res.json({
       success: true,
-      message: "Appointment cancelled successfully."
+      message: "Appointment deleted successfully"
     });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     res.status(500).json({
       message: "Server Error"
