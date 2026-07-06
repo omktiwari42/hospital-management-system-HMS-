@@ -10,6 +10,25 @@ export default function PatientAppointments() {
     useEffect(() => {
         loadAppointments();
     }, []);
+    async function cancelAppointment(id) {
+
+        if (!window.confirm("Cancel this appointment?")) return;
+
+        try {
+
+            await api.put(`/patient/cancel-appointment/${id}`);
+
+            alert("Appointment Cancelled");
+
+            loadAppointments();
+
+        } catch (err) {
+
+            alert("Unable to cancel appointment.");
+
+        }
+
+    }
 
     async function loadAppointments() {
         try {
@@ -97,6 +116,21 @@ export default function PatientAppointments() {
                             >
                                 {item.status}
                             </span>
+                            <div className="appointment-actions">
+
+                                {item.status !== "Cancelled" &&
+                                    item.status !== "Completed" && (
+
+                                        <button
+                                            className="cancel-btn"
+                                            onClick={() => cancelAppointment(item.id)}
+                                        >
+                                            ❌ Cancel Appointment
+                                        </button>
+
+                                    )}
+
+                            </div>
 
                         </div>
 
