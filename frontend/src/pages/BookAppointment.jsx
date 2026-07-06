@@ -8,7 +8,10 @@ import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkel
 export default function BookAppointment() {
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);
-
+    const [showAppointmentPopup, setShowAppointmentPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState("");
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [paymentMessage, setPaymentMessage] = useState("");
     const [profile, setProfile] = useState({});
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -100,6 +103,49 @@ export default function BookAppointment() {
                     reason: form.reason,
                 }
             );
+            const order = await api.post("/create-order", {
+                amount: response.data.amount,
+            });
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+
+                amount: order.data.amount,
+
+                currency: order.data.currency,
+
+                name: "Hospital Management System",
+
+                description: "Doctor Consultation",
+
+                order_id: order.data.id,
+
+                handler: async function (payment) {
+                    await api.post("/verify-payment", {
+                        razorpay_order_id: payment.razorpay_order_id,
+                        razorpay_payment_id: payment.razorpay_payment_id,
+                        razorpay_signature: payment.razorpay_signature,
+                        billId: response.data.billId,
+                    });
+                    setPaymentMessage("Appointment Booked Successfully!");
+                    setPaymentSuccess(true);
+
+                    setTimeout(() => {
+                        window.location.href = "/patient-dashboard";
+                    }, 2500);
+                },
+                prefill: {
+                    name: profile.full_name,
+                    contact: profile.phone,
+                },
+
+                theme: {
+                    color: "#2563eb",
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+
+            razorpay.open();
 
             alert(response.data.message);
 
@@ -109,12 +155,18 @@ export default function BookAppointment() {
         } catch (error) {
             console.log(error);
 
-            alert(
-                error.response?.data?.message ||
-                "Failed to book appointment."
-            );
-        } finally {
-            setBooking(false);
+            if (
+                error.response?.status === 400 &&
+                error.response?.data?.message
+            ) {
+                setPopupMessage(error.response.data.message);
+                setShowAppointmentPopup(true);
+            } else {
+                alert(
+                    error.response?.data?.message ||
+                    "Failed to book appointment."
+                );
+            }
         }
     }
 
@@ -265,6 +317,61 @@ export default function BookAppointment() {
                 </form>
 
             </div>
+            {showAppointmentPopup && (
+                <div className="appointment-popup-overlay">
+                    <div className="appointment-popup">
+
+                        <div className="popup-icon">
+                            ⚠️
+                        </div>
+
+                        <h2>
+                            Appointment Already Exists
+                        </h2>
+
+                        <p>
+                            {popupMessage}
+                        </p>
+
+                        <div className="popup-buttons">
+
+                            <button
+                                className="popup-primary"
+                                onClick={() => {
+                                    setShowAppointmentPopup(false);
+                                    window.location.href = "/appointments";
+                                }}
+                            >
+                                View My Appointments
+                            </button>
+
+                            <button
+                                className="popup-secondary"
+                                onClick={() =>
+                                    setShowAppointmentPopup(false)
+                                }
+                            >
+                                Close
+                            </button>
+
+                        </div>
+
+                    </div>
+                </div>
+            )}
+            {paymentSuccess && (
+                <div className="payment-success-overlay">
+                    <div className="payment-success-card">
+                        <div className="success-check">✔</div>
+
+                        <h2>{paymentMessage}</h2>
+
+                        <p>
+                            Redirecting to your dashboard...
+                        </p>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

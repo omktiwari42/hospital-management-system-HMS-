@@ -823,6 +823,9 @@ app.post(
       res.json({
         success: true,
         message: "Appointment booked successfully",
+        amount: doctorFees,
+        appointmentId: appointment.rows[0].id,
+        billId: bill.rows[0].id,
       });
     } catch (err) {
       console.log(err);
@@ -1164,27 +1167,25 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
   }
 });
 
-
 app.post("/api/create-order", authenticateToken, async (req, res) => {
   try {
+    const { amount } = req.body;
+
     const options = {
-      amount: 50000,
+      amount: Number(amount) * 100,
       currency: "INR",
       receipt: "receipt_" + Date.now(),
     };
 
     const order = await razorpay.orders.create(options);
 
-    console.log(order);
-
     res.json(order);
   } catch (err) {
     console.log(err);
-    console.log(err.error);
-    console.log(err.statusCode);
-    console.log(err.response);
 
-    res.status(500).json(err);
+    res.status(500).json({
+      message: "Failed to create Razorpay order",
+    });
   }
 });
 app.post(
@@ -1711,31 +1712,26 @@ app.post(
       // Create Bill Automatically
       const appointmentId = result.rows[0].id;
 
-      await pool.query(
+      const bill = await pool.query(
         `
-  INSERT INTO bills
-  (
-    appointment_id,
-    patient_name,
-    amount,
-    status,
-    payment_status
-  )
-  VALUES
-  (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5
-  )
-  `,
+        INSERT INTO bills
+        (
+          appointment_id,
+          patient_name,
+          amount,
+          status,
+          payment_status
+        )
+        VALUES
+        ($1,$2,$3,$4,$5)
+        RETURNING *
+        `,
         [
-          appointmentId,
+          appointment.rows[0].id,
           patientName,
-          500,
+          doctorFees,
           "Pending",
-          "Pending"
+          "Pending",
         ]
       );
       await transporter.sendMail({
@@ -2164,6 +2160,18 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
       appointment_time,
       reason,
     } = req.body;
+    const doctor = await pool.query(
+      "SELECT fees FROM doctors WHERE name = $1",
+      [doctor_name]
+    );
+
+    if (doctor.rows.length === 0) {
+      return res.status(404).json({
+        message: "Doctor not found",
+      });
+    }
+
+    const doctorFees = doctor.rows[0].fees;
 
     const patientResult = await pool.query(
       "SELECT name FROM patients WHERE phone = $1",
@@ -2177,7 +2185,23 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     }
 
     const patientName = patientResult.rows[0].name;
+    // Check if patient already has an active appointment
+    const existingAppointment = await pool.query(
+      `
+  SELECT *
+  FROM appointments
+  WHERE patient_name = $1
+  AND status IN ('Pending', 'Scheduled')
+  `,
+      [patientName]
+    );
 
+    if (existingAppointment.rows.length > 0) {
+      return res.status(400).json({
+        message:
+          "You already have a pending appointment. Please complete or cancel it before booking another appointment.",
+      });
+    }
     await pool.query(
       `INSERT INTO appointments
       (patient_name, doctor_name, department, appointment_date, appointment_time, reason, status)
@@ -2195,6 +2219,8 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     res.json({
       success: true,
       message: "Appointment booked successfully",
+      amount: doctorFees,
+      appointmentId: appointment.rows[0].id,
     });
 
   } catch (error) {
