@@ -1549,7 +1549,7 @@ app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
       patient,
       appointments: appointments.rows,
       bills: bills.rows
-    }); ``
+    });
 
   } catch (error) {
     console.log(error);
@@ -1677,20 +1677,30 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
 });
 app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
   try {
-    const phone = req.user.phone;
-
-    const patientResult = await pool.query(
-      "SELECT name FROM patients WHERE phone = $1",
+    const userResult = await pool.query(
+      "SELECT full_name, phone FROM users WHERE phone = $1",
       [phone]
     );
 
-    if (patientResult.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({
-        message: "Patient not found",
+        message: "User not found",
       });
     }
 
-    const patientName = patientResult.rows[0].name;
+    const patientName = userResult.rows[0].full_name;
+
+    // Create patient automatically if it doesn't exist
+    await pool.query(
+      `
+      INSERT INTO patients (name, phone)
+      SELECT $1, $2
+      WHERE NOT EXISTS (
+        SELECT 1 FROM patients WHERE phone = $2
+      )
+      `,
+      [patientName, phone]
+    );
 
     const appointmentResult = await pool.query(
       `SELECT
@@ -1952,206 +1962,6 @@ app.post(
 );
 
 
-
-app.get(
-  "/api/recent-appointments",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const result =
-        await pool.query(
-          `SELECT *
-           FROM appointments
-           ORDER BY id DESC
-           LIMIT 5`
-        );
-
-      res.json(result.rows);
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Database Error",
-      });
-    }
-  }
-);
-app.get(
-  "/api/recent-patients",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const result =
-        await pool.query(`
-          SELECT *
-          FROM patients
-          ORDER BY id DESC
-          LIMIT 5
-        `);
-
-      res.json(result.rows);
-    } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
-        message:
-          "Error fetching recent patients",
-      });
-    }
-  }
-);
-app.get(
-  "/api/appointment-status",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const result =
-        await pool.query(
-          `SELECT
-             status,
-             COUNT(*) as count
-           FROM appointments
-           GROUP BY status`
-        );
-
-      res.json(result.rows);
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message:
-          "Database Error",
-      });
-    }
-  }
-);
-app.get(
-  "/api/revenue-chart",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      console.log(
-        "REVENUE ROUTE HIT"
-      );
-
-      const result =
-        await pool.query(`
-          SELECT *
-          FROM bills
-          LIMIT 5
-        `);
-
-      console.log(result.rows);
-
-      return res.json(
-        result.rows
-      );
-    } catch (error) {
-      console.log(error);
-
-      return res.status(500).json({
-        message:
-          "Database Error",
-      });
-    }
-  }
-);
-// pool.query(`
-//   SELECT column_name
-//   FROM information_schema.columns
-//   WHERE table_name = 'bills'
-// `)
-//   .then(res => {
-//     console.log("BILLS COLUMNS:");
-//     console.table(res.rows);
-//   })
-//   .catch(console.error);
-app.post("/api/prescriptions", async (req, res) => {
-  try {
-    const {
-      patient_id,
-      doctor_id,
-      medicines,
-      dosage,
-      duration,
-      notes,
-    } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO prescriptions
-      (patient_id, doctor_id, medicines, dosage, duration, notes)
-      VALUES ($1,$2,$3,$4,$5,$6)
-      RETURNING *`,
-      [
-        patient_id,
-        doctor_id,
-        medicines,
-        dosage,
-        duration,
-        notes,
-      ]
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-app.get("/api/prescriptions", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM prescriptions ORDER BY id DESC"
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-app.post(
-  "/api/upload-report/:id",
-  authenticateToken,
-  upload.single("report"),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      console.log("Patient ID:", id);
-      console.log("File:", req.file);
-
-      if (!req.file) {
-        return res.status(400).json({
-          message: "No file uploaded",
-        });
-      }
-
-      await pool.query(
-        `UPDATE patients
-         SET report = $1
-         WHERE id = $2`,
-        [req.file.filename, id]
-      );
-
-      res.json({
-        message: "Report uploaded successfully",
-        file: req.file.filename,
-      });
-    } catch (error) {
-      console.error(error);
-
-      res.status(500).json({
-        message: error.message,
-      });
-    }
-  }
-);
 
 const PORT = process.env.PORT || 5000;
 
