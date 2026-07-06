@@ -2161,7 +2161,7 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
       reason,
     } = req.body;
     const doctor = await pool.query(
-      "SELECT fees FROM doctors WHERE name = $1",
+      "SELECT fees, specialization FROM doctors WHERE name = $1",
       [doctor_name]
     );
 
@@ -2172,6 +2172,7 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
     }
 
     const doctorFees = doctor.rows[0].fees;
+
 
     const patientResult = await pool.query(
       "SELECT name FROM patients WHERE phone = $1",
@@ -2202,10 +2203,20 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
           "You already have a pending appointment. Please complete or cancel it before booking another appointment.",
       });
     }
-    await pool.query(
+    const appointment = await pool.query(
       `INSERT INTO appointments
-      (patient_name, doctor_name, department, appointment_date, appointment_time, reason, status)
-      VALUES ($1,$2,$3,$4,$5,$6,'Pending')`,
+      (
+        patient_name,
+        doctor_name,
+        department,
+        appointment_date,
+        appointment_time,
+        reason,
+        status
+      )
+      VALUES
+      ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING *`,
       [
         patientName,
         doctor_name,
@@ -2213,6 +2224,27 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
         appointment_date,
         appointment_time,
         reason,
+        "Pending",
+      ]
+    );
+    const bill = await pool.query(
+      `INSERT INTO bills
+      (
+        appointment_id,
+        patient_name,
+        amount,
+        status,
+        payment_status
+      )
+      VALUES
+      ($1,$2,$3,$4,$5)
+      RETURNING *`,
+      [
+        appointment.rows[0].id,
+        patientName,
+        doctorFees,
+        "Pending",
+        "Pending",
       ]
     );
 
@@ -2221,6 +2253,7 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
       message: "Appointment booked successfully",
       amount: doctorFees,
       appointmentId: appointment.rows[0].id,
+      billId: bill.rows[0].id,
     });
 
   } catch (error) {
