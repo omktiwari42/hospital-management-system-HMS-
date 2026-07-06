@@ -21,6 +21,7 @@ import PharmacistDashboard from "./pages/PharmacistDashboard";
 import LabDashboard from "./pages/LabDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
 import BookAppointment from "./pages/BookAppointment";
+import PatientAppointments from "./pages/PatientAppointments";
 
 function App() {
   return (
@@ -186,6 +187,16 @@ function App() {
               <ProtectedRoute>
                 <RoleRoute roles={["patient"]}>
                   <BookAppointment />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient-appointments"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientAppointments />
                 </RoleRoute>
               </ProtectedRoute>
             }

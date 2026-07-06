@@ -120,18 +120,42 @@ export default function BookAppointment() {
                 order_id: order.data.id,
 
                 handler: async function (payment) {
-                    await api.post("/verify-payment", {
-                        razorpay_order_id: payment.razorpay_order_id,
-                        razorpay_payment_id: payment.razorpay_payment_id,
-                        razorpay_signature: payment.razorpay_signature,
-                        billId: response.data.billId,
-                    });
-                    setPaymentMessage("Appointment Booked Successfully!");
-                    setPaymentSuccess(true);
 
-                    setTimeout(() => {
-                        window.location.href = "/patient-dashboard";
-                    }, 2500);
+                    try {
+
+                        const verify = await api.post("/verify-payment", {
+                            razorpay_order_id: payment.razorpay_order_id,
+                            razorpay_payment_id: payment.razorpay_payment_id,
+                            razorpay_signature: payment.razorpay_signature,
+                            billId: response.data.billId,
+                        });
+
+                        setPaymentMessage("Appointment Booked Successfully!");
+                        setPaymentSuccess(true);
+
+                        setBooking(false);
+
+                        clearForm();
+                        setAppointmentDateTime(new Date());
+
+                        if (verify.data.invoiceUrl) {
+                            window.open(verify.data.invoiceUrl, "_blank");
+                        }
+
+                        setTimeout(() => {
+                            window.location.href = "/patient/appointments";
+                        }, 2500);
+
+                    } catch (err) {
+
+                        console.error(err);
+
+                        setBooking(false);
+
+                        alert("Payment verification failed.");
+
+                    }
+
                 },
                 prefill: {
                     name: profile.full_name,
@@ -141,32 +165,51 @@ export default function BookAppointment() {
                 theme: {
                     color: "#2563eb",
                 },
+                modal: {
+                    ondismiss: function () {
+                        setBooking(false);
+                    }
+                },
             };
 
             const razorpay = new window.Razorpay(options);
+            razorpay.on("payment.failed", function () {
+
+                setBooking(false);
+
+                alert("Payment Failed. Please try again.");
+
+            });
 
             razorpay.open();
 
-            alert(response.data.message);
 
-            clearForm();
-            setAppointmentDateTime(new Date());
 
         } catch (error) {
-            console.log(error);
+
+            console.error(error);
 
             if (
                 error.response?.status === 400 &&
                 error.response?.data?.message
             ) {
+
                 setPopupMessage(error.response.data.message);
                 setShowAppointmentPopup(true);
+
             } else {
+
                 alert(
                     error.response?.data?.message ||
                     "Failed to book appointment."
                 );
+
             }
+
+        } finally {
+
+            setBooking(false);
+
         }
     }
 
@@ -339,7 +382,7 @@ export default function BookAppointment() {
                                 className="popup-primary"
                                 onClick={() => {
                                     setShowAppointmentPopup(false);
-                                    window.location.href = "/appointments";
+                                    window.location.href = "/patient-appointments";
                                 }}
                             >
                                 View My Appointments
