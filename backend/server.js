@@ -1762,6 +1762,30 @@ app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
     });
   }
 });
+app.put("/api/patient/cancel-appointment/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query(
+      `UPDATE appointments
+       SET status = 'Cancelled'
+       WHERE id = $1`,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: "Appointment cancelled successfully"
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+  }
+});
 app.delete("/api/patient/appointment/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
