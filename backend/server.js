@@ -69,7 +69,10 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-const pool = require("./db");
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -921,6 +924,7 @@ app.post(
   "/api/verify-payment",
   authenticateToken,
   async (req, res) => {
+    const client = await pool.connect();
     try {
       const {
         razorpay_order_id,
@@ -952,7 +956,10 @@ app.post(
         });
       }
 
-      await pool.query(
+      await client.query('BEGIN');
+
+      // Update bill
+      const billResult = await client.query(
         `UPDATE bills
           SET
           status = 'Paid',
@@ -960,26 +967,50 @@ app.post(
           payment_method = 'Online',
           payment_date = NOW(),
           transaction_id = $1
-          WHERE id = $2`,
+          WHERE id = $2
+          RETURNING appointment_id`,
         [
           razorpay_payment_id,
           billId,
         ]
       );
 
-      res.json({
-        success: true,
-        message:
-          "Payment verified successfully",
-      });
-    } catch (error) {
-      console.log(error);
+      if (billResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          message: "Bill not found",
+        });
+      }
+
+      // Update appointment status to Confirmed
+      const appointmentId = billResult.rows[0].appointment_id;
+      if (appointmentId) {
+        await client.query(
+          `UPDATE appointments
+            SET status = 'Confirmed'
+            WHERE id = $1`,
+          [appointmentId]
+        );
+      }
+
+      await client.query('COMMIT');
 
       res.json({
         success: true,
         message: "Payment verified successfully",
-        invoiceUrl: null
       });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error("Payment verification error:", error);
+
+      res.status(500).json({
+        success: false,
+        message: "Payment verification failed",
+        error: error.message
+      });
+    } finally {
+      client.release();
     }
   }
 );

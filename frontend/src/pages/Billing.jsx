@@ -294,10 +294,28 @@ function Billing() {
 
       razorpay.on(
         "payment.failed",
-        function (response) {
-          alert(
-            response.error.description
-          );
+        async function (response) {
+          try {
+            // Delete the bill
+            await api.delete(`/bills/${bill.id}`);
+            toast.error("Payment failed. Bill has been deleted.");
+          } catch (error) {
+            console.error("Failed to delete bill:", error);
+            toast.error("Payment failed. Please contact support.");
+          }
+        }
+      );
+
+      razorpay.on(
+        "modal.close",
+        async function () {
+          try {
+            // Delete the bill if user closes the modal
+            await api.delete(`/bills/${bill.id}`);
+            toast.warning("Payment cancelled. Bill has been deleted.");
+          } catch (error) {
+            console.error("Failed to delete bill:", error);
+          }
         }
       );
 
