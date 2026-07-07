@@ -256,24 +256,22 @@ function Billing() {
         handler: async function (response) {
           try {
             await api.post("/verify-payment", {
-              razorpay_order_id:
-                response.razorpay_order_id,
-
-              razorpay_payment_id:
-                response.razorpay_payment_id,
-
-              razorpay_signature:
-                response.razorpay_signature,
-
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
               billId: bill.id,
             });
 
             toast.success("✅ Payment Successful");
 
-            fetchBills();
+            await fetchBills();
+
+            navigate("/patient-appointments", {
+              replace: true,
+            });
+
           } catch (error) {
             console.log(error);
-
             toast.warning("Payment verification failed");
           }
         },

@@ -4,7 +4,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkeleton";
-
+import { useNavigate } from "react-router-dom";
 export default function BookAppointment() {
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);
@@ -15,6 +15,7 @@ export default function BookAppointment() {
     const [profile, setProfile] = useState({});
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const navigate = useNavigate()
 
     const [appointmentDateTime, setAppointmentDateTime] = useState(new Date());
 
@@ -143,8 +144,8 @@ export default function BookAppointment() {
                         }
 
                         setTimeout(() => {
-                            window.location.href = "/patient/appointments";
-                        }, 2500);
+                            window.location.replace("/patient-appointments");
+                        }, 1500);
 
                     } catch (err) {
 

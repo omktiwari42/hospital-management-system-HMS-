@@ -1728,37 +1728,38 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
 });
 app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
   try {
-    console.log("JWT User:", req.user);
-
     const phone = req.user.phone;
 
-    const userResult = await pool.query(
-      "SELECT full_name FROM users WHERE phone = $1",
+    const patientResult = await pool.query(
+      "SELECT name FROM patients WHERE phone = $1",
       [phone]
     );
 
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+    if (patientResult.rows.length === 0) {
+      return res.json({
+        appointments: [],
+      });
     }
 
-    const patientName = userResult.rows[0].full_name;
+    const patientName = patientResult.rows[0].name;
 
     const appointmentResult = await pool.query(
       `SELECT *
        FROM appointments
-       WHERE patient_name = $1`,
+       WHERE patient_name = $1
+       ORDER BY appointment_date DESC, appointment_time DESC`,
       [patientName]
     );
-
-    console.log("Patient:", patientName);
-    console.log("Appointments:", appointmentResult.rows);
 
     res.json({
       appointments: appointmentResult.rows,
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({
+      message: "Server Error",
+    });
   }
 });
 app.delete("/api/patient/appointment/:id", authenticateToken, async (req, res) => {

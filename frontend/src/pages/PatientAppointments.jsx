@@ -31,16 +31,26 @@ export default function PatientAppointments() {
     }
 
     async function loadAppointments() {
+        setLoading(true);
+
         try {
             const res = await api.get("/patient/appointments");
-            setAppointments(res.data.appointments || []);
+
+            console.log(res.data);
+
+            if (Array.isArray(res.data)) {
+                setAppointments(res.data);
+            } else {
+                setAppointments(res.data.appointments || []);
+            }
+
         } catch (err) {
-            console.log(err);
+            console.error(err);
+            setAppointments([]);
         } finally {
             setLoading(false);
         }
     }
-
     function badge(status) {
 
         switch (status) {
