@@ -11,6 +11,7 @@ import {
   FaFlask,
   FaUserCircle,
   FaPlusCircle,
+  FaClipboardList,
 } from "react-icons/fa";
 
 function Sidebar() {
@@ -133,6 +134,12 @@ function Sidebar() {
         <NavLink to="/book-appointment">
           <FaPlusCircle />
           {!collapsed && <span>Book Appointment</span>}
+        </NavLink>
+      )}
+      {role === "patient" && (
+        <NavLink to="/patient-appointments">
+          <FaClipboardList />
+          {!collapsed && <span>My Appointments</span>}
         </NavLink>
       )}
 
