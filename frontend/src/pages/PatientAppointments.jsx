@@ -85,7 +85,11 @@ export default function PatientAppointments() {
 
                 ) : appointments.length === 0 ? (
 
-                    <h3>No appointments found.</h3>
+                    <div className="empty-state">
+                        <h1>📅</h1>
+                        <h2>No Appointments Yet</h2>
+                        <p>Book your first appointment to see it here.</p>
+                    </div>
 
                 ) : (
 
@@ -117,11 +121,9 @@ export default function PatientAppointments() {
                             </p>
 
                             <span
+                                className="status-badge"
                                 style={{
-                                    background: badge(item.status),
-                                    color: "#fff",
-                                    padding: "6px 12px",
-                                    borderRadius: "20px"
+                                    background: badge(item.status)
                                 }}
                             >
                                 {item.status}
