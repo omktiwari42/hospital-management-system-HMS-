@@ -1700,7 +1700,7 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
       ($1,$2,$3,$4,$5)
       RETURNING *`,
       [
-        appointmentId,
+        appointment.rows[0].id,
         patientName,
         doctorFees,
         "Pending",
@@ -1745,19 +1745,19 @@ app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
 
     const appointmentResult = await pool.query(
       `
-      SELECT
-          a.*,
-          b.payment_status,
-          b.transaction_id,
-          b.payment_method,
-          b.payment_date,
-          b.amount
-      FROM appointments a
-      LEFT JOIN bills b
-          ON a.id = b.appointment_id
-      WHERE a.patient_name = $1
-      ORDER BY a.appointment_date DESC, a.appointment_time DESC
-      `,
+  SELECT
+      a.*,
+      b.payment_status,
+      b.transaction_id,
+      b.payment_method,
+      b.payment_date,
+      b.amount
+  FROM appointments a
+  LEFT JOIN bills b
+      ON a.id = b.appointment_id
+  WHERE a.patient_name = $1
+  ORDER BY a.appointment_date DESC, a.appointment_time DESC
+  `,
       [patientName]
     );
 
