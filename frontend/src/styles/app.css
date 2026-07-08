@@ -4120,3 +4120,88 @@ STATUS GLOW
 .share-btn:hover {
   transform: translateY(-2px);
 }
+
+/* ===== Appointment Action Buttons ===== */
+
+.view-btn,
+.rebook-btn,
+.invoice-btn,
+.cancel-btn,
+.calendar-btn,
+.share-btn {
+  border: none;
+  outline: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* View Details */
+.view-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.view-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+/* Rebook */
+.rebook-btn {
+  background: #16a34a;
+  color: #fff;
+}
+
+.rebook-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+/* Invoice */
+.invoice-btn {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.invoice-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-2px);
+}
+
+/* Cancel */
+.cancel-btn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+}
+
+/* Calendar */
+.calendar-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Share */
+.share-btn {
+  background: #065f46;
+  color: #fff;
+}
+
+.appointment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.appointment-actions button {
+  min-width: 140px;
+}

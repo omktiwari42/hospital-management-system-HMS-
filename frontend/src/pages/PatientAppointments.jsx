@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import api from "../services/api";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import PatientAppointmentsSkeleton from "../components/skeletons/PatientAppointmentsSkeleton";
 
 export default function PatientAppointments() {
