@@ -773,10 +773,36 @@ app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
    OTP AUTH APIs
 =========================== */
 
-app.post("/api/send-otp", (req, res) => {
+app.post("/api/send-otp", async (req, res) => {
   console.log("BUTTN CLICKED")
+
   try {
-    const { phone } = req.body;
+    const { phone, turnstileToken } = req.body;
+    console.log("BUTTON CLICKED");
+    console.log("TURNSTILE_SECRET_KEY:", process.env.TURNSTILE_SECRET_KEY);
+    console.log("TURNSTILE TOKEN:", turnstileToken);
+    const verifyResponse = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY,
+          response: turnstileToken,
+        }),
+      }
+    );
+
+
+    const verifyResult = await verifyResponse.json();
+
+    if (!verifyResult.success) {
+      return res.status(400).json({
+        message: "Cloudflare verification failed",
+      });
+    }
 
     if (!phone) {
       return res.status(400).json({
@@ -1210,15 +1236,15 @@ app.post(
 
         html: `
           <h2>🏥 Appointment Confirmed</h2>
-      
+
           <p><b>Patient:</b> ${patientName}</p>
-      
+
           <p><b>Doctor:</b> ${doctorName}</p>
-      
+
           <p><b>Date:</b> ${date}</p>
-      
+
           <p><b>Time:</b> ${time}</p>
-      
+
           <p>Your appointment has been booked successfully.</p>
         `
       });
@@ -1417,10 +1443,25 @@ app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
    OTP AUTH APIs
 =========================== */
 
-app.post("/api/send-otp", (req, res) => {
+app.post("/api/send-otp", async (req, res) => {
   console.log("BUTTN CLICKED")
   try {
-    const { phone } = req.body;
+    const { phone, turnstileToken } = req.body;
+    const verifyResponse = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY,
+          response: turnstileToken,
+        }),
+      }
+    );
+
+    const verifyResult = await verifyResponse.json();
 
     if (!phone) {
       return res.status(400).json({

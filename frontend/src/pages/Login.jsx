@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -15,6 +16,7 @@ function Login() {
   const [showOTP, setShowOTP] =
     useState(false);
 
+
   const [loading, setLoading] =
     useState(false);
 
@@ -23,7 +25,27 @@ function Login() {
 
   const [verified, setVerified] =
     useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
+
+  useEffect(() => {
+    if (!showOTP && window.turnstile) {
+      setTimeout(() => {
+        try {
+          window.turnstile.remove(".cf-turnstile");
+        } catch { }
+
+        window.turnstile.render(".cf-turnstile", {
+          sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
+          callback: (token) => {
+            setTurnstileToken(token);
+            setCaptchaVerified(true);
+          },
+        });
+      }, 100);
+    }
+  }, [showOTP]);
   const [mergeOTP, setMergeOTP] = useState(false);
   const [timer, setTimer] =
     useState(60);
@@ -137,12 +159,10 @@ function Login() {
 
       setLoading(true);
 
-      await api.post(
-        "/send-otp",
-        {
-          phone: "+91" + phone,
-        }
-      );
+      await api.post("/send-otp", {
+        phone: "+91" + phone,
+        turnstileToken,
+      });
 
       toast.success(
         "OTP Sent Successfully"
@@ -151,6 +171,13 @@ function Login() {
       setShowOTP(true);
       setTimer(60);
       setCanResend(false);
+
+      setTurnstileToken("");
+      setCaptchaVerified(false);
+
+      setTimeout(() => {
+        window.turnstile?.reset();
+      }, 100);
 
     } catch (err) {
 
@@ -259,12 +286,10 @@ function Login() {
 
     try {
 
-      await api.post(
-        "/send-otp",
-        {
-          phone: "+91" + phone,
-        }
-      );
+      await api.post("/send-otp", {
+        phone: "+91" + phone,
+        turnstileToken,
+      });
 
       toast.success(
         "OTP Sent Again"
@@ -341,13 +366,19 @@ function Login() {
               </div>
             </div>
 
-
+            {!showOTP && (
+              <div
+                className="cf-turnstile"
+                data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                data-callback="onTurnstileSuccess"
+              ></div>
+            )}
             {!showOTP && (
               <button
                 className={`send-otp-btn ${loading ? "loading-btn" : ""
                   }`}
                 onClick={sendOTP}
-                disabled={loading}
+                disabled={loading || !captchaVerified}
               >
                 {loading
                   ? "Sending OTP..."
@@ -441,6 +472,9 @@ function Login() {
                       setPhone("");
                       setTimer(60);
                       setCanResend(false);
+
+                      setTurnstileToken("");
+                      setCaptchaVerified(false);
                     }}
                   >
                     Change Number
@@ -481,7 +515,7 @@ function Login() {
         )}
 
       </div>
-    </div>
+    </div >
   );
 }
 export default Login;
