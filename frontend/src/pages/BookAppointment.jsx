@@ -94,19 +94,22 @@ export default function BookAppointment() {
                     hour12: false,
                 });
 
-            const response = await api.post(
-                "/patient/book-appointment",
-                {
-                    doctor_name: form.doctor_name,
-                    department: form.department,
-                    appointment_date,
-                    appointment_time,
-                    reason: form.reason,
-                }
-            );
+            const response = await api.post("/patient/book-appointment", {
+                doctor_name: form.doctor_name,
+                department: form.department,
+                appointment_date,
+                appointment_time,
+                reason: form.reason,
+            });
+
+            console.log("BOOK RESPONSE:", response.data);
+
             const order = await api.post("/create-order", {
                 amount: response.data.amount,
             });
+
+            console.log("ORDER RESPONSE:", order.data);
+            console.log("Razorpay Key:", import.meta.env.VITE_RAZORPAY_KEY_ID);
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 

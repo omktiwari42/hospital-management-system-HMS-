@@ -115,38 +115,59 @@ export default function PatientAppointments() {
         }
 
     }
-    function getProgress(status) {
+    function statusStyle(status) {
 
         switch (status) {
 
             case "Pending":
-                return 25;
+                return {
+                    background: "#f59e0b",
+                    color: "#fff"
+                };
+
+            case "Scheduled":
+                return {
+                    background: "#8b5cf6",
+                    color: "#fff"
+                };
 
             case "Confirmed":
-                return 50;
+                return {
+                    background: "#2563eb",
+                    color: "#fff"
+                };
 
             case "Completed":
-                return 100;
+                return {
+                    background: "#16a34a",
+                    color: "#fff"
+                };
 
             case "Cancelled":
-                return 100;
+                return {
+                    background: "#dc2626",
+                    color: "#fff"
+                };
 
             default:
-                return 10;
+                return {
+                    background: "#6b7280",
+                    color: "#fff"
+                };
 
         }
 
     }
-    function timelineProgress(status) {
-
+    function getProgress(status) {
         switch (status) {
-
             case "Pending":
                 return 20;
 
-            case "Confirmed":
             case "Scheduled":
-                return 55;
+                return 40;
+
+            case "Confirmed":
+                return 70;
 
             case "Completed":
                 return 100;
@@ -156,11 +177,31 @@ export default function PatientAppointments() {
 
             default:
                 return 0;
-
         }
-
     }
+    function timelineProgress(status) {
 
+        switch (status) {
+
+            case "Pending":
+                return 20;
+
+            case "Scheduled":
+                return 40;
+
+            case "Confirmed":
+                return 70;
+
+            case "Completed":
+                return 100;
+
+            case "Cancelled":
+                return 100;
+
+            default:
+                return 0;
+        }
+    }
     function timelineIcon(status) {
 
         switch (status) {
@@ -184,20 +225,25 @@ export default function PatientAppointments() {
         }
 
     }
-    function getAppointmentDay(date) {
+    function getAppointmentDay(item) {
+
+        if (item.status === "Completed")
+            return "Completed";
+
+        if (item.status === "Cancelled")
+            return "Cancelled";
 
         const today = new Date();
-
         today.setHours(0, 0, 0, 0);
 
-        const appointment = new Date(date);
-
+        const appointment = new Date(item.appointment_date);
         appointment.setHours(0, 0, 0, 0);
 
-        const diff = Math.ceil(
-            (appointment - today) /
-            (1000 * 60 * 60 * 24)
-        );
+        const diff =
+            Math.ceil(
+                (appointment - today) /
+                (1000 * 60 * 60 * 24)
+            );
 
         if (diff === 0) return "Today";
 
@@ -205,7 +251,7 @@ export default function PatientAppointments() {
 
         if (diff > 1) return `${diff} Days Left`;
 
-        return "Completed";
+        return "Past Appointment";
     }
     function formatAppointmentDate(date) {
         return new Date(date).toLocaleDateString("en-IN", {
@@ -254,48 +300,61 @@ export default function PatientAppointments() {
 
     }
 
-    function urgencyColor(date) {
+    function urgencyColor(item) {
+
+        if (item.status === "Completed")
+            return "#16a34a";
+
+        if (item.status === "Cancelled")
+            return "#dc2626";
 
         const today = new Date();
-
         today.setHours(0, 0, 0, 0);
 
-        const appointment = new Date(date);
-
+        const appointment = new Date(item.appointment_date);
         appointment.setHours(0, 0, 0, 0);
 
-        const diff = Math.ceil(
-            (appointment - today) / (1000 * 60 * 60 * 24)
-        );
+        const diff =
+            Math.ceil(
+                (appointment - today) /
+                (1000 * 60 * 60 * 24)
+            );
 
-        if (diff === 0) return "#dc2626";
+        if (diff === 0)
+            return "#2563eb";
 
-        if (diff <= 2) return "#f59e0b";
+        if (diff <= 2)
+            return "#f59e0b";
 
         return "#16a34a";
-
     }
+    function urgencyText(item) {
 
-    function urgencyText(date) {
+        if (item.status === "Completed")
+            return "DONE";
+
+        if (item.status === "Cancelled")
+            return "CANCELLED";
 
         const today = new Date();
-
         today.setHours(0, 0, 0, 0);
 
-        const appointment = new Date(date);
-
+        const appointment = new Date(item.appointment_date);
         appointment.setHours(0, 0, 0, 0);
 
-        const diff = Math.ceil(
-            (appointment - today) / (1000 * 60 * 60 * 24)
-        );
+        const diff =
+            Math.ceil(
+                (appointment - today) /
+                (1000 * 60 * 60 * 24)
+            );
 
-        if (diff === 0) return "URGENT";
+        if (diff === 0)
+            return "TODAY";
 
-        if (diff <= 2) return "SOON";
+        if (diff <= 2)
+            return "SOON";
 
-        return "NORMAL";
-
+        return "UPCOMING";
     }
     function downloadCalendar(item) {
 
@@ -412,159 +471,121 @@ export default function PatientAppointments() {
         doc.text(
             "Professional Medical Invoice",
             18,
-            30
+            34
         );
         doc.setFontSize(10);
+        doc.setTextColor(100);
 
-        doc.text(
-            "Phone : +91 9876543210",
-            18,
-            54
-        );
+        doc.text("City Hospital", 15, 40);
+        doc.text("Main Road, Lucknow, Uttar Pradesh", 15, 46);
+        doc.text("Phone : +91 8355001466", 15, 52);
+        doc.text("Email : support@hospital.com", 15, 58);
+        doc.text("GSTIN : 09ABCDE1234F1Z5", 15, 64);
 
-        doc.text(
-            "Email : support@hms.com",
-            18,
-            60
-        );
-
-        doc.text(
-            "Website : www.hms.com",
-            18,
-            66
-        );
-        doc.text(
-            "GSTIN : 09ABCDE1234F1Z5",
-            18,
-            48
-        );
-        doc.setFontSize(10);
-
-        doc.setTextColor(120);
-
-        doc.text(
-            "City Hospital, Main Road, Lucknow, Uttar Pradesh",
-            18,
-            36
-        );
-
-        doc.text(
-            "Email: support@hospital.com | Phone: +91-9876543210",
-            18,
-            42
-        );
-
-        doc.setDrawColor(37, 99, 235);
-
-        doc.line(
-            18,
-            35,
-            190,
-            35
-        );
-
-        doc.setFontSize(11);
+        doc.rect(165, 28, 28, 28);
+        doc.text("QR", 176, 44);
 
         doc.setTextColor(0);
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+
+        let y = 78;
 
         doc.text(
             `Invoice No : INV-${new Date().getFullYear()}-${item.id}`,
-            18,
-            60
+            15,
+            y
         );
-        doc.text(
-            `Generated : ${new Date().toLocaleDateString("en-IN")}`,
-            110,
-            48
-        );
+
+        y += 8;
 
         doc.text(
             `Appointment ID : ${item.id}`,
-            18,
-            68
+            15,
+            y
         );
+
+        y += 8;
 
         doc.text(
             `Date : ${formatAppointmentDate(item.appointment_date)}`,
-            18,
-            76
+            15,
+            y
         );
+
+        y += 8;
 
         doc.text(
             `Time : ${formatAppointmentTime(item.appointment_time)}`,
-            18,
-            84
+            15,
+            y
         );
+
+        y += 8;
 
         doc.text(
             `Doctor : Dr. ${item.doctor_name}`,
-            18,
-            92
+            15,
+            y
         );
+
+        y += 8;
 
         doc.text(
             `Department : ${item.department}`,
-            18,
-            100
+            15,
+            y
         );
 
+        y += 8;
+
         doc.text(
-            `Patient : ${sessionStorage.getItem("full_name")
-            }`,
-            18,
-            108
+            `Patient : ${sessionStorage.getItem("full_name")}`,
+            15,
+            y
         );
+
         doc.text(
             `Patient ID : ${sessionStorage.getItem("user_id") || "N/A"}`,
-            110,
-            108
-        );
-        doc.setFillColor(
-            item.payment_status === "Paid"
-                ? 22
-                : 245,
-            item.payment_status === "Paid"
-                ? 163
-                : 158,
-            item.payment_status === "Paid"
-                ? 74
-                : 11
+            120,
+            y
         );
 
-        doc.roundedRect(
-            140,
-            98,
-            45,
-            10,
-            3,
-            3,
-            "F"
+        y += 10;
+
+        doc.setFillColor(
+            item.payment_status === "Paid" ? 22 : 245,
+            item.payment_status === "Paid" ? 163 : 158,
+            item.payment_status === "Paid" ? 74 : 11
         );
+
+        doc.roundedRect(145, y - 8, 40, 10, 3, 3, "F");
 
         doc.setTextColor(255);
 
-        doc.setFontSize(10);
-
         doc.text(
             item.payment_status || "Pending",
-            150,
-            105
+            155,
+            y - 1
         );
 
         doc.setTextColor(0);
+
+        y += 10;
+
         doc.text(
-            `Transaction ID : ${item.transaction_id || "N/A"
-            }`,
-            18,
-            124
+            `Transaction ID : ${item.transaction_id || "N/A"}`,
+            15,
+            y
         );
+
+        y += 8;
+
         doc.text(
-            `Payment Mode : ${item.payment_status === "Paid"
-                ? "Online"
-                : "Pending"
+            `Payment Mode : ${item.payment_status === "Paid" ? "Online" : "Pending"
             }`,
-            18,
-            132
+            15,
+            y
         );
         const consultationFee = Number(item.amount || 500);
 
@@ -583,22 +604,22 @@ export default function PatientAppointments() {
             [
                 "Doctor Consultation",
                 "1",
-                `₹${consultationFee}`
+                `₹${consultationFee.toLocaleString("en-IN")}`
             ],
             [
                 "Hospital Charge",
                 "1",
-                `₹${hospitalCharge}`
+                `₹${hospitalCharge.toLocaleString("en-IN")}`
             ],
             [
                 "GST (18%)",
                 "1",
-                `₹${gst}`
+                `₹${gst.toLocaleString("en-IN")}`
             ]
         ];
-        doc.setTextColor(240);
+        doc.setTextColor(255);
 
-        doc.setFontSize(42);
+        doc.setFontSize(60);
 
         doc.text(
             "HMS",
@@ -612,7 +633,7 @@ export default function PatientAppointments() {
         doc.setTextColor(0);
         autoTable(doc, {
 
-            startY: 122,
+            startY: y + 10,
 
             head: [[
                 "Service",
@@ -642,8 +663,8 @@ export default function PatientAppointments() {
 
             doc.text(
                 "PAID",
-                125,
-                end,
+                105,
+                end + 15,
                 {
                     angle: 30
                 }
@@ -659,7 +680,7 @@ export default function PatientAppointments() {
 
         doc.text(
 
-            `Total : ₹${total}`,
+            `Total : ₹${total.toLocaleString("en-IN")}`,
 
             145,
 
@@ -759,19 +780,18 @@ export default function PatientAppointments() {
 
         doc.rect(
             150,
-            end + 50,
+            end + 20,
             35,
             35
         );
-
         doc.setFontSize(9);
 
         doc.setTextColor(120);
 
         doc.text(
             "QR CODE",
-            158,
-            end + 70
+            156,
+            end + 40
         );
 
         doc.setTextColor(0);
@@ -779,11 +799,10 @@ export default function PatientAppointments() {
 
         doc.line(
             15,
-            285,
+            275,
             195,
-            285
+            275
         );
-
         doc.setFontSize(9);
 
         doc.setTextColor(120);
@@ -791,13 +810,13 @@ export default function PatientAppointments() {
         doc.text(
             "Generated by Hospital Management System",
             18,
-            291
+            281
         );
 
         doc.text(
             "© 2026 HMS. All Rights Reserved.",
             125,
-            291
+            281
         );
 
         doc.save(
@@ -947,7 +966,7 @@ export default function PatientAppointments() {
 
                                             Dr. {item.doctor_name}
 
-                                            {getAppointmentDay(item.appointment_date) === "Today" && (
+                                            {getAppointmentDay(item) === "Today" && (
 
                                                 <span className="today-badge">
 
@@ -978,40 +997,26 @@ export default function PatientAppointments() {
 
                                     <span
                                         className="status-chip"
-                                        style={{
-                                            background: badge(item.status)
-                                        }}
+                                        style={statusStyle(item.status)}
                                     >
                                         {item.status}
                                     </span>
-
                                 </div>
 
                             </div>
-                            <div className="appointment-day" >
-
-                                <div>
-
-                                    ⏰ {getRemainingDays(item.appointment_date)}
-
+                            <div className="appointment-day">
+                                <div className="day-left">
+                                    🔥 {getRemainingDays(item.appointment_date)}
                                 </div>
 
-                                <span
-
-                                    className="urgent-badge"
-
-                                    style={{
-
-                                        background: urgencyColor(item.appointment_date)
-
-                                    }}
-
-                                >
-
-                                    {urgencyText(item.appointment_date)}
-
-                                </span>
-
+                                <div className="day-right">
+                                    <span
+                                        className="urgency-badge"
+                                        style={{ background: urgencyColor(item.appointment_date) }}
+                                    >
+                                        {urgencyText(item.appointment_date)}
+                                    </span>
+                                </div>
                             </div>
                             <div className="appointment-progress">
 
@@ -1056,28 +1061,22 @@ export default function PatientAppointments() {
 
                                 <div className="timeline-labels">
 
-                                    <span className={
-                                        timelineProgress(item.status) >= 20
-                                            ? "active-step"
-                                            : ""
-                                    }>
+                                    <span
+                                        className={timelineProgress(item.status) >= 20 ? "active-step" : ""}
+                                    >
                                         Booked
                                     </span>
 
-                                    <span className={
-                                        timelineProgress(item.status) >= 55
-                                            ? "active-step"
-                                            : ""
-                                    }>
+                                    <span
+                                        className={timelineProgress(item.status) >= 70 ? "active-step" : ""}
+                                    >
                                         Confirmed
                                     </span>
 
-                                    <span className={
-                                        timelineProgress(item.status) >= 100
-                                            ? "active-step"
-                                            : ""
-                                    }>
-                                        Completed
+                                    <span
+                                        className={timelineProgress(item.status) >= 100 ? "active-step" : ""}
+                                    >
+                                        {item.status === "Cancelled" ? "Cancelled" : "Completed"}
                                     </span>
 
                                 </div>
