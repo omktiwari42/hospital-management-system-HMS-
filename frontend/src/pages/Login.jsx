@@ -371,6 +371,7 @@ function Login() {
                 className="cf-turnstile"
                 data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
                 data-callback="onTurnstileSuccess"
+                data-theme="light"
               ></div>
             )}
             {!showOTP && (
