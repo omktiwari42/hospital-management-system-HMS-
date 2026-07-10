@@ -167,22 +167,10 @@ export default function PatientDashboard() {
 
         try {
 
-            const [
-
-                dashboardRes,
-
-                prescriptionRes
-
-            ] = await Promise.all([
-
-                api.get("/patient-dashboard"),
-
-                api.get("/patient/prescriptions")
-
-            ]);
+            const dashboardRes = await api.get("/patient-dashboard");
+            console.log("Dashboard:", dashboardRes.data);
 
             const data = dashboardRes.data;
-
             const appointmentList = data.appointments || [];
 
             const billList = data.bills || [];
@@ -209,7 +197,7 @@ export default function PatientDashboard() {
 
                 bills: billList.length,
 
-                prescriptions: prescriptionRes.data.length || 0,
+                prescriptions: 0,
 
                 reports: 0
 
@@ -301,31 +289,25 @@ export default function PatientDashboard() {
         if (!nextAppointment) return;
 
         function updateCountdown() {
+            const target = new Date(nextAppointment.appointment_date);
 
-            const target = new Date(
+            const diff = target.getTime() - Date.now();
 
-                `${nextAppointment.appointment_date}T${nextAppointment.appointment_time}`
-
-            );
-
-            const diff = target - new Date();
-
-            if (diff <= 0) {
-
-                setCountdown("Appointment Time");
-
+            if (isNaN(target.getTime())) {
+                setCountdown("--");
                 return;
-
             }
 
-            const days = Math.floor(diff / 86400000);
+            if (diff <= 0) {
+                setCountdown("Started");
+                return;
+            }
 
-            const hours = Math.floor((diff % 86400000) / 3600000);
-
-            const mins = Math.floor((diff % 3600000) / 60000);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
 
             setCountdown(`${days}d ${hours}h ${mins}m`);
-
         }
 
         updateCountdown();
@@ -363,12 +345,6 @@ export default function PatientDashboard() {
 
                     </div>
 
-                    <button
-                        className="primary-btn"
-                        onClick={() => navigate("/book-appointment")}
-                    >
-                        + Book Appointment
-                    </button>
 
                 </div>
 
@@ -740,14 +716,16 @@ export default function PatientDashboard() {
                     <div className="progress-wrapper">
 
                         <div className="progress-bar">
-
                             <div
                                 className="progress-fill"
                                 style={{
-                                    width: `${completionRate}%`
+                                    width: `${completionRate}%`,
+                                    background: "#2563eb",
+                                    height: "100%",
+                                    borderRadius: "999px",
+                                    transition: "width 0.5s ease"
                                 }}
-                            ></div>
-
+                            />
                         </div>
 
                         <h3>

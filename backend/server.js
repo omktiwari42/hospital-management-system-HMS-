@@ -1615,9 +1615,7 @@ app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
       "SELECT * FROM bills WHERE patient_name = $1 ORDER BY id DESC",
       [patient?.name]
     );
-    console.log("Patient:", patient?.name);
-    console.log("Appointments:", appointments.rows);
-    console.log("Bills:", bills.rows);
+
     res.json({
       user,
       patient,
