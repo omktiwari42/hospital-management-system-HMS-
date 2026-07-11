@@ -1813,6 +1813,57 @@ app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
     });
   }
 });
+app.get("/api/patient/bills", authenticateToken, async (req, res) => {
+  try {
+
+    const phone = req.user.phone;
+
+    const patientResult = await pool.query(
+      "SELECT name FROM patients WHERE phone = $1",
+      [phone]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.json({
+        bills: []
+      });
+    }
+
+    const patientName = patientResult.rows[0].name;
+
+    const billsResult = await pool.query(
+      `
+          SELECT
+              b.*,
+              a.doctor_name,
+              a.department,
+              a.appointment_date,
+              a.appointment_time
+          FROM bills b
+          LEFT JOIN appointments a
+              ON b.appointment_id = a.id
+          WHERE b.patient_name = $1
+          ORDER BY b.id DESC
+          `,
+      [patientName]
+    );
+
+    res.json({
+      success: true,
+      bills: billsResult.rows
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to load bills."
+    });
+
+  }
+});
 app.put("/api/patient/cancel-appointment/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;

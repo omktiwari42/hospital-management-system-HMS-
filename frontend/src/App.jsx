@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
-
+import PatientBilling from "./pages/PatientBilling";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -143,6 +143,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/patient-billing"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientBilling />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Pharmacist */}
           <Route
@@ -191,6 +201,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/patient-appointments"
             element={
