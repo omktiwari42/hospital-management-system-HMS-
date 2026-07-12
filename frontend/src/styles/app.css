@@ -7262,3 +7262,60 @@ Appointment Progress
   height: 100%;
   background: #d1d5db;
 }
+
+/* ===== FINAL OVERRIDE ===== */
+
+.premium-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, .10) !important;
+}
+
+.info-card {
+  background: #f8fafc !important;
+  border: 1px solid #dbeafe !important;
+}
+
+.appointment-body {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 18px !important;
+}
+
+.progress-bar {
+  width: 100% !important;
+  height: 10px !important;
+  background: #e5e7eb !important;
+  border-radius: 999px !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #2563eb, #22c55e) !important;
+  height: 100% !important;
+}
+
+.status-chip {
+  color: #fff !important;
+  border-radius: 999px !important;
+  padding: 10px 18px !important;
+}
+
+.doctor-avatar {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+  color: #fff !important;
+}
+
+.appointment-footer {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 18px !important;
+}
+
+.appointment-footer div {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
