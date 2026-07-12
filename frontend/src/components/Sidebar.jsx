@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import {
   FaBars,
@@ -15,17 +15,31 @@ import {
 } from "react-icons/fa";
 
 function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Start collapsed
+  const [collapsed, setCollapsed] = useState(true);
 
   const role = sessionStorage.getItem("role") || "";
 
+  // Auto close after 3 seconds whenever opened
+  useEffect(() => {
+    if (!collapsed) {
+      const timer = setTimeout(() => {
+        setCollapsed(true);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [collapsed]);
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => !prev);
+  };
+
   return (
-    <aside
-      className={collapsed ? "sidebar collapsed" : "sidebar"}
-    >
+    <aside className={collapsed ? "sidebar collapsed" : "sidebar"}>
       <button
         className="menu-btn"
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={toggleSidebar}
       >
         <FaBars />
       </button>
@@ -136,6 +150,7 @@ function Sidebar() {
           {!collapsed && <span>Book Appointment</span>}
         </NavLink>
       )}
+
       {role === "patient" && (
         <NavLink to="/patient-appointments">
           <FaClipboardList />
