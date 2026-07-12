@@ -875,7 +875,7 @@ export default function PatientAppointments() {
                         <h2>{totalAppointments}</h2>
                     </div>
 
-                    <div className="summary-card pending">
+                    <div className="summary-card upcoming">
                         <h4>Upcoming</h4>
                         <h2>{upcomingAppointments}</h2>
                     </div>

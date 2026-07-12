@@ -2880,22 +2880,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   margin-bottom: 10px;
 }
 
-.summary-card h2 {
-  font-size: 34px;
-  color: #2563eb;
-}
 
-.summary-card.pending {
-  border-left: 6px solid orange;
-}
-
-.summary-card.completed {
-  border-left: 6px solid #16a34a;
-}
-
-.summary-card.cancelled {
-  border-left: 6px solid #dc2626;
-}
 
 @media(max-width:768px) {
 
@@ -4477,7 +4462,7 @@ STATUS GLOW
 
 }
 
-.summary-card.pending::before {
+.summary-card.upcoming::before {
 
   background: #f59e0b;
 

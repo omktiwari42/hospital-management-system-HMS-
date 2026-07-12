@@ -1813,7 +1813,9 @@ app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
     });
   }
 });
+
 app.get("/api/patient/bills", authenticateToken, async (req, res) => {
+
   try {
 
     const phone = req.user.phone;
@@ -1847,6 +1849,7 @@ app.get("/api/patient/bills", authenticateToken, async (req, res) => {
           `,
       [patientName]
     );
+
 
     res.json({
       success: true,

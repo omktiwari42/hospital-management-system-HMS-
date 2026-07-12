@@ -10,13 +10,18 @@ export default function PatientBilling() {
 
     const [search, setSearch] = useState("");
 
+    const [selectedBill, setSelectedBill] = useState(null);
+    const [showInvoice, setShowInvoice] = useState(false);
+
     async function loadBills() {
 
         try {
 
             setLoading(true);
 
+
             const res = await api.get("/patient/bills");
+
 
             setBills(res.data.bills || []);
 
@@ -100,6 +105,19 @@ export default function PatientBilling() {
 
         );
 
+    }
+    function openInvoice(bill) {
+        setSelectedBill(bill);
+        setShowInvoice(true);
+    }
+
+    function closeInvoice() {
+        setShowInvoice(false);
+        setSelectedBill(null);
+    }
+
+    function printInvoice() {
+        window.print();
     }
 
     return (
@@ -289,41 +307,18 @@ export default function PatientBilling() {
                                         </td>
 
                                         <td>
-
-                                            {
-
-                                                bill.created_at
-
-                                                    ?
-
-                                                    new Date(
-
-                                                        bill.created_at
-
-                                                    ).toLocaleDateString(
-
-                                                        "en-IN"
-
-                                                    )
-
-                                                    :
-
-                                                    "-"
-
-                                            }
-
+                                            {bill.appointment_date
+                                                ? new Date(bill.appointment_date).toLocaleDateString("en-IN")
+                                                : "-"}
                                         </td>
 
                                         <td>
 
                                             <button
-
                                                 className="view-bill-btn"
-
+                                                onClick={() => openInvoice(bill)}
                                             >
-
-                                                View
-
+                                                👁 View
                                             </button>
 
                                         </td>
@@ -341,6 +336,142 @@ export default function PatientBilling() {
                 )}
 
             </div>
+            {showInvoice && selectedBill && (
+
+                <div className="invoice-overlay">
+
+                    <div className="invoice-modal">
+
+                        <button
+                            className="invoice-close"
+                            onClick={closeInvoice}
+                        >
+
+                            ✕
+
+                        </button>
+
+                        <h1>🏥 Hospital Invoice</h1>
+
+                        <div className="invoice-grid">
+
+                            <div>
+
+                                <strong>Bill ID</strong>
+
+                                <p>#{selectedBill.id}</p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Appointment</strong>
+
+                                <p>#{selectedBill.appointment_id}</p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Doctor</strong>
+
+                                <p>
+
+                                    Dr. {selectedBill.doctor_name}
+
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Department</strong>
+
+                                <p>
+
+                                    {selectedBill.department}
+
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Date</strong>
+
+                                <p>
+
+                                    {selectedBill.appointment_date}
+
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Time</strong>
+
+                                <p>
+
+                                    {selectedBill.appointment_time}
+
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Amount</strong>
+
+                                <h2>
+
+                                    ₹{selectedBill.amount}
+
+                                </h2>
+
+                            </div>
+
+                            <div>
+
+                                <strong>Payment Status</strong>
+
+                                <p>
+
+                                    {selectedBill.payment_status}
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div className="invoice-buttons">
+
+                            <button
+                                className="print-btn"
+                                onClick={printInvoice}
+                            >
+
+                                🖨 Print
+
+                            </button>
+
+                            <button
+                                className="close-btn"
+                                onClick={closeInvoice}
+                            >
+
+                                Close
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </DashboardLayout>
 
