@@ -2,7 +2,7 @@ export default function AppointmentSkeleton() {
     return (
         <div className="patient-appointments">
 
-            Header
+            {/* Header */}
             <div className="appointment-header">
                 <div>
                     <div className="appointment-header-skeleton skeleton"></div>
@@ -12,9 +12,9 @@ export default function AppointmentSkeleton() {
                 <div
                     className="skeleton"
                     style={{
-                        width: 300,
-                        height: 46,
-                        borderRadius: 12
+                        width: 320,
+                        height: 48,
+                        borderRadius: 12,
                     }}
                 ></div>
             </div>
@@ -22,19 +22,29 @@ export default function AppointmentSkeleton() {
             {/* Summary Cards */}
             <div className="appointment-summary-skeleton">
                 {[1, 2, 3, 4].map((i) => (
-                    <div
-                        key={i}
-                        className="summary-card-skeleton skeleton"
-                    ></div>
+                    <div key={i} className="summary-card-skeleton">
+                        <div
+                            className="skeleton"
+                            style={{
+                                width: 55,
+                                height: 55,
+                                borderRadius: "50%",
+                                marginBottom: 15,
+                            }}
+                        ></div>
+
+                        <div className="line medium skeleton"></div>
+                        <div className="line small skeleton"></div>
+                    </div>
                 ))}
             </div>
 
-            {/* Filter Buttons */}
+            {/* Filters */}
             <div
                 style={{
                     display: "flex",
                     gap: 12,
-                    marginBottom: 30,
+                    marginBottom: 28,
                     flexWrap: "wrap",
                 }}
             >
@@ -44,8 +54,8 @@ export default function AppointmentSkeleton() {
                         className="skeleton"
                         style={{
                             width: 95,
-                            height: 38,
-                            borderRadius: 30,
+                            height: 40,
+                            borderRadius: 25,
                         }}
                     ></div>
                 ))}
@@ -55,29 +65,52 @@ export default function AppointmentSkeleton() {
             {[1, 2].map((card) => (
                 <div className="appointment-card-skeleton" key={card}>
 
-                    {/* Doctor Header */}
+                    {/* Doctor */}
                     <div className="appointment-top-skeleton">
-                        <div className="avatar-skeleton skeleton"></div>
 
-                        <div className="doctor-info-skeleton">
+                        <div
+                            className="avatar-skeleton skeleton"
+                            style={{
+                                width: 70,
+                                height: 70,
+                                borderRadius: "50%",
+                            }}
+                        ></div>
+
+                        <div
+                            className="doctor-info-skeleton"
+                            style={{ flex: 1 }}
+                        >
                             <div className="line large skeleton"></div>
                             <div className="line medium skeleton"></div>
                             <div
                                 className="line skeleton"
-                                style={{ width: 180, height: 15 }}
+                                style={{
+                                    width: 170,
+                                    height: 14,
+                                }}
                             ></div>
                         </div>
 
-                        <div className="badge-skeleton skeleton"></div>
+                        <div
+                            className="badge-skeleton skeleton"
+                            style={{
+                                width: 110,
+                                height: 36,
+                                borderRadius: 20,
+                            }}
+                        ></div>
+
                     </div>
 
                     {/* Today Badge */}
                     <div
-                        className="line medium skeleton"
+                        className="skeleton"
                         style={{
                             width: 120,
-                            height: 18,
-                            marginBottom: 20,
+                            height: 22,
+                            borderRadius: 15,
+                            margin: "18px 0",
                         }}
                     ></div>
 
@@ -85,9 +118,9 @@ export default function AppointmentSkeleton() {
                     <div
                         className="line skeleton"
                         style={{
-                            width: 180,
+                            width: 190,
                             height: 18,
-                            marginBottom: 12,
+                            marginBottom: 10,
                         }}
                     ></div>
 
@@ -96,51 +129,51 @@ export default function AppointmentSkeleton() {
                         style={{
                             width: "100%",
                             height: 10,
-                            borderRadius: 50,
+                            borderRadius: 20,
                             marginBottom: 30,
                         }}
                     ></div>
 
-                    {/* Info Grid */}
+                    {/* Details */}
                     <div className="appointment-grid-skeleton">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div
-                                key={i}
-                                className="grid-box skeleton"
-                            ></div>
+                            <div key={i} className="grid-box">
+                                <div className="line small skeleton"></div>
+                                <div className="line medium skeleton"></div>
+                            </div>
                         ))}
                     </div>
 
-                    {/* Reason */}
+                    {/* Alert */}
                     <div
                         className="skeleton"
                         style={{
                             width: "100%",
-                            height: 95,
-                            borderRadius: 16,
-                            marginBottom: 25,
+                            height: 70,
+                            borderRadius: 14,
+                            margin: "25px 0",
                         }}
                     ></div>
 
-                    {/* Footer */}
+                    {/* Footer Cards */}
                     <div
                         style={{
                             display: "grid",
                             gridTemplateColumns:
                                 "repeat(auto-fit,minmax(180px,1fr))",
                             gap: 18,
-                            marginBottom: 25,
+                            marginBottom: 30,
                         }}
                     >
                         {[1, 2, 3, 4].map((i) => (
-                            <div
-                                key={i}
-                                className="grid-box skeleton"
-                            ></div>
+                            <div key={i} className="grid-box">
+                                <div className="line small skeleton"></div>
+                                <div className="line medium skeleton"></div>
+                            </div>
                         ))}
                     </div>
 
-                    {/* Buttons */}
+                    {/* Action Buttons */}
                     <div
                         style={{
                             display: "flex",
@@ -149,7 +182,7 @@ export default function AppointmentSkeleton() {
                             flexWrap: "wrap",
                         }}
                     >
-                        {[1, 2, 3, 4].map((i) => (
+                        {[1, 2, 3, 4, 5].map((i) => (
                             <div
                                 key={i}
                                 className="skeleton"

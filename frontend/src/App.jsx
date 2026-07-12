@@ -14,6 +14,7 @@ import Appointments from "./pages/Appointments";
 import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
+import Notifications from "./pages/Notifications";
 
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
@@ -57,6 +58,10 @@ function App() {
                 </RoleRoute>
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/notifications"
+            element={<Notifications />}
           />
 
           <Route
