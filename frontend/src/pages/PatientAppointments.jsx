@@ -1011,7 +1011,7 @@ export default function PatientAppointments() {
 
                                 <div className="day-right">
                                     <span
-                                        className="urgency-badge"
+                                        className="urgency-chip"
                                         style={{ background: urgencyColor(item.appointment_date) }}
                                     >
                                         {urgencyText(item.appointment_date)}

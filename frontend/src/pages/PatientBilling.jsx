@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
+import BillingSkeleton from "./BillingSkeleton";
 
 export default function PatientBilling() {
 
@@ -90,21 +91,11 @@ export default function PatientBilling() {
     );
 
     if (loading) {
-
         return (
-
             <DashboardLayout>
-
-                <div className="patient-billing-page">
-
-                    <h1>Loading Bills...</h1>
-
-                </div>
-
+                <BillingSkeleton />
             </DashboardLayout>
-
         );
-
     }
     function openInvoice(bill) {
         setSelectedBill(bill);
@@ -340,7 +331,7 @@ export default function PatientBilling() {
 
                 <div className="invoice-overlay">
 
-                    <div className="invoice-modal">
+                    <div className="invoice-container">
 
                         <button
                             className="invoice-close"
@@ -353,7 +344,7 @@ export default function PatientBilling() {
 
                         <h1>🏥 Hospital Invoice</h1>
 
-                        <div className="invoice-grid">
+                        <div className="invoice-section">
 
                             <div>
 
@@ -449,11 +440,9 @@ export default function PatientBilling() {
 
                             <button
                                 className="print-btn"
-                                onClick={printInvoice}
+                                onClick={() => window.print()}
                             >
-
                                 🖨 Print
-
                             </button>
 
                             <button

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
+import DashboardSkeleton from "./DashboardSkeleton";
 
 export default function PatientDashboard() {
 
@@ -320,6 +321,13 @@ export default function PatientDashboard() {
 
     // Part 2 starts here with:
     // return (
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <DashboardSkeleton />
+            </DashboardLayout>
+        );
+    }
     return (
         <DashboardLayout>
 
