@@ -1,6 +1,7 @@
 const multer = require("multer");
-
-
+const notificationRoutes =
+  require("./routes/notificationRoutes");
+const createNotification = require("./utils/createNotification");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -90,6 +91,12 @@ app.use(
   "/uploads",
   express.static("uploads")
 );
+app.use(
+  "/api/notifications",
+  authenticateToken,
+  notificationRoutes
+);
+console.log("✅ Notification routes mounted");
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
@@ -1748,6 +1755,19 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
         "Pending",
       ]
     );
+    await createNotification(
+      req.user.id,
+      "Appointment Booked",
+      `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
+      "appointment"
+    );
+    await createNotification(
+      req.user.id,
+      "Bill Generated",
+      `A bill of ₹${doctorFees} has been generated for your appointment.`,
+      "payment"
+    );
+
 
     res.json({
       success: true,
@@ -2089,6 +2109,12 @@ app.post("/api/prescriptions", async (req, res) => {
         duration,
         notes,
       ]
+    );
+    await createNotification(
+      patient_id,
+      "Prescription Ready",
+      "Your doctor uploaded a prescription.",
+      "prescription"
     );
 
     res.status(201).json(result.rows[0]);

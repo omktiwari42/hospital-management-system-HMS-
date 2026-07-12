@@ -32,6 +32,10 @@ function AppRoutes() {
                 path="/reception-dashboard"
                 element={<ReceptionDashboard />}
             />
+            <Route
+                path="/notifications"
+                element={<Notifications />}
+            />
 
             <Route
                 path="/pharmacist-dashboard"

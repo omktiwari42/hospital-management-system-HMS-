@@ -2,7 +2,7 @@ export default function AppointmentSkeleton() {
     return (
         <div className="patient-appointments">
 
-            {/* Header */}
+            Header
             <div className="appointment-header">
                 <div>
                     <div className="appointment-header-skeleton skeleton"></div>

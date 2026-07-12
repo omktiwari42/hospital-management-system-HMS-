@@ -377,7 +377,7 @@ export default function PatientAppointments() {
     SUMMARY:Hospital Appointment
     DESCRIPTION:Appointment with Dr. ${item.doctor_name}
     LOCATION:Hospital
-    DTSTART:${formatICS(start)}
+    DTSTART:${formatICS(start)}s
     DTEND:${formatICS(end)}
     END:VEVENT
     END:VCALENDAR`;

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import {
     FaBell,
@@ -21,6 +22,95 @@ function Navbar() {
 
     const role =
         sessionStorage.getItem("role") || "";
+    /* ===========================
+NOTIFICATIONS
+=========================== */
+
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    const notificationRef = useRef(null);
+
+    const [notifications, setNotifications] = useState([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+    const unreadCount = notifications.filter(
+        item => item.unread === true
+    ).length;
+
+    /* Close dropdown when clicking outside */
+
+    useEffect(() => {
+
+        function handleClickOutside(e) {
+
+            if (
+                notificationRef.current &&
+                !notificationRef.current.contains(e.target)
+            ) {
+                setShowNotifications(false);
+            }
+
+        }
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () =>
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+
+    }, []);
+
+    async function markAllRead() {
+
+        try {
+
+            await api.put("/notifications/read-all");
+
+            setNotifications(prev =>
+                prev.map(item => ({
+                    ...item,
+                    unread: false
+                }))
+            );
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+    async function loadNotifications() {
+
+        try {
+
+            setLoadingNotifications(true);
+
+            const res = await api.get("/notifications");
+
+            setNotifications(res.data || []);
+
+        } catch (err) {
+
+            console.error("Notification Error:", err);
+
+        } finally {
+
+            setLoadingNotifications(false);
+
+        }
+
+    }
+    useEffect(() => {
+
+        loadNotifications();
+
+    }, []);
 
     function toggleDarkMode() {
         const value = !darkMode;
@@ -72,9 +162,123 @@ function Navbar() {
                     {darkMode ? <FaSun /> : <FaMoon />}
                 </button>
 
-                <button className="icon-btn">
-                    <FaBell />
-                </button>
+                <div
+                    className="notification-wrapper"
+                    ref={notificationRef}
+                >
+
+                    <button
+                        className="icon-btn"
+                        onClick={() => {
+
+                            const value = !showNotifications;
+
+                            setShowNotifications(value);
+
+                            if (value) {
+
+                                loadNotifications();
+
+                            }
+
+                        }}
+                    >
+
+                        <FaBell />
+
+                        {unreadCount > 0 && (
+
+                            <span className="notification-count">
+
+                                {unreadCount}
+
+                            </span>
+
+                        )}
+
+                    </button>
+
+                    {showNotifications && (
+
+                        <div className="notification-dropdown">
+
+                            <div className="notification-header">
+
+                                <h3>Notifications</h3>
+
+                                <button
+                                    onClick={markAllRead}
+                                    className="mark-read-btn"
+                                >
+                                    Mark all read
+                                </button>
+
+                            </div>
+
+                            {loadingNotifications ? (
+
+                                <div className="empty-notification">
+
+                                    Loading Notifications...
+
+                                </div>
+
+                            ) : notifications.length === 0 ? (
+
+                                <div className="empty-notification">
+
+                                    No Notifications
+
+                                </div>
+
+                            ) : (
+
+                                notifications.map(item => (
+
+                                    <div
+                                        key={item.id}
+                                        className={`notification-item ${item.unread ? "unread" : ""
+                                            }`}
+                                    >
+
+                                        <div className="notification-icon">
+                                            {{
+                                                appointment: "📅",
+                                                payment: "💳",
+                                                prescription: "💊",
+                                                report: "🧪",
+                                                general: "🔔"
+                                            }[item.type] || "🔔"}
+                                        </div>
+                                        <div className="notification-content">
+
+                                            <h4>{item.title}</h4>
+
+                                            <p>{item.message}</p>
+
+                                            <small>
+                                                {new Date(item.created_at).toLocaleString()}
+                                            </small>
+                                        </div>
+
+                                    </div>
+
+                                ))
+
+                            )}
+
+                            <button
+                                className="view-all-btn"
+                                onClick={() => navigate("/notifications")}
+                            >
+                                View All Notifications
+                            </button>
+
+                        </div>
+
+                    )}
+
+                </div>
 
                 <div className="profile-box">
 
