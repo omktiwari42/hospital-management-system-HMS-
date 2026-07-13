@@ -314,3 +314,133 @@
     color: #60a5fa;
 
 }
+
+/* ==========================================
+   PART 7.3 PREMIUM ANIMATIONS
+========================================== */
+
+.Toastify__toast {
+
+    animation: hmsToastIn .45s cubic-bezier(.22, 1, .36, 1);
+
+}
+
+@keyframes hmsToastIn {
+
+    0% {
+
+        opacity: 0;
+
+        transform: translateX(120%) scale(.9);
+
+    }
+
+    70% {
+
+        opacity: 1;
+
+        transform: translateX(-8px);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform: translateX(0);
+
+    }
+
+}
+
+.Toastify__toast--exit {
+
+    animation: hmsToastOut .28s ease forwards;
+
+}
+
+@keyframes hmsToastOut {
+
+    to {
+
+        opacity: 0;
+
+        transform: translateX(120%);
+
+    }
+
+}
+
+.Toastify__toast:hover {
+
+    transform: translateY(-3px) scale(1.01);
+
+    transition: .25s;
+
+}
+
+.Toastify__progress-bar {
+
+    border-radius: 30px;
+
+}
+
+.Toastify__toast {
+
+    overflow: hidden;
+
+    position: relative;
+
+}
+
+.Toastify__toast::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    top: 0;
+
+    width: 4px;
+
+    height: 100%;
+
+    background: #2563eb;
+
+}
+
+.Toastify__toast--success::before {
+
+    background: #22c55e;
+
+}
+
+.Toastify__toast--error::before {
+
+    background: #ef4444;
+
+}
+
+.Toastify__toast--warning::before {
+
+    background: #f59e0b;
+
+}
+
+.Toastify__toast--info::before {
+
+    background: #3b82f6;
+
+}
+
+.Toastify__toast:hover {
+
+    box-shadow:
+
+        0 24px 60px rgba(0, 0, 0, .18),
+
+        0 8px 18px rgba(0, 0, 0, .08);
+
+}

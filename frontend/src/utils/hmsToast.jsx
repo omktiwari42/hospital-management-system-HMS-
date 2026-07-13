@@ -7,18 +7,30 @@ import {
 } from "react-icons/fa";
 
 const common = {
+
     position: "top-right",
-    autoClose: 3000,
+
+    autoClose: 3500,
+
     hideProgressBar: false,
+
     newestOnTop: true,
+
     closeOnClick: true,
+
     pauseOnHover: true,
+
     draggable: true,
+
+    draggablePercent: 60,
+
     progress: undefined,
 
     icon: false,
-};
 
+    theme: "light",
+
+};
 export const hmsToast = {
 
     success(title, message = "") {
