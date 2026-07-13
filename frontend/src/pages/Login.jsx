@@ -210,6 +210,9 @@ function Login() {
 
       return;
     }
+    const toastId = hmsToast.loading(
+      "Verifying OTP..."
+    );
 
     try {
 
@@ -230,7 +233,11 @@ function Login() {
         setVerified(true);
       }, 1000);
 
-      hmsToast.success("Login Successful");
+      hmsToast.updateSuccess(
+        toastId,
+        "Login Successful",
+        "Welcome back!"
+      );
 
       setTimeout(() => {
         const role = response.data.role;
@@ -258,7 +265,11 @@ function Login() {
 
       setTimeout(() => setShake(false), 500);
 
-      hmsToast.error("Invalid OTP");
+      hmsToast.updateError(
+        toastId,
+        "Invalid OTP",
+        "Please enter the correct OTP."
+      );
 
     } finally {
 
@@ -290,6 +301,10 @@ function Login() {
 
   async function resendOTP() {
 
+    const toastId = hmsToast.loading(
+      "Resending OTP..."
+    );
+
     try {
 
       await api.post("/send-otp", {
@@ -297,8 +312,10 @@ function Login() {
         turnstileToken,
       });
 
-      hmsToast.success(
-        "OTP Sent Again"
+      hmsToast.updateSuccess(
+        toastId,
+        "OTP Sent Again",
+        "A new OTP has been sent."
       );
 
       setTimer(60);
@@ -307,8 +324,10 @@ function Login() {
 
     } catch {
 
-      hmsToast.error(
-        "Failed to resend OTP"
+      hmsToast.updateError(
+        toastId,
+        "Failed",
+        "Unable to resend OTP."
       );
 
     }

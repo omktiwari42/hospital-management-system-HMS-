@@ -6,6 +6,7 @@ import {
     FaTrash,
     FaCheckCircle
 } from "react-icons/fa";
+import { hmsToast } from "../utils/hmsToast";
 
 export default function Notifications() {
     const [loading, setLoading] = useState(true);
@@ -29,39 +30,70 @@ export default function Notifications() {
     }
 
     async function markAllRead() {
+
+        const toastId = hmsToast.loading(
+            "Updating notifications..."
+        );
+
         try {
+
             await api.put("/notifications/read-all");
 
-            setNotifications((prev) =>
-                prev.map((item) => ({
+            setNotifications(prev =>
+                prev.map(item => ({
                     ...item,
                     unread: false,
                 }))
             );
-        } catch (err) {
-            console.error(err);
+
+            hmsToast.updateSuccess(
+                toastId,
+                "Completed",
+                "All notifications marked as read."
+            );
+
+        } catch {
+
+            hmsToast.updateError(
+                toastId,
+                "Failed",
+                "Unable to update notifications."
+            );
+
         }
+
     }
     async function markRead(id) {
+
+        const toastId = hmsToast.loading(
+            "Marking as read..."
+        );
 
         try {
 
             await api.put(`/notifications/${id}/read`);
 
-            setNotifications((prev) =>
-                prev.map((item) =>
+            setNotifications(prev =>
+                prev.map(item =>
                     item.id === id
-                        ? {
-                            ...item,
-                            unread: false,
-                        }
+                        ? { ...item, unread: false }
                         : item
                 )
             );
 
-        } catch (err) {
+            hmsToast.updateSuccess(
+                toastId,
+                "Updated",
+                "Notification marked as read."
+            );
 
-            console.error(err);
+        } catch {
+
+            hmsToast.updateError(
+                toastId,
+                "Failed",
+                "Unable to update notification."
+            );
 
         }
 
@@ -69,17 +101,31 @@ export default function Notifications() {
 
     async function deleteNotification(id) {
 
+        const toastId = hmsToast.loading(
+            "Deleting notification..."
+        );
+
         try {
 
             await api.delete(`/notifications/${id}`);
 
-            setNotifications((prev) =>
-                prev.filter((item) => item.id !== id)
+            setNotifications(prev =>
+                prev.filter(item => item.id !== id)
             );
 
-        } catch (err) {
+            hmsToast.updateSuccess(
+                toastId,
+                "Deleted",
+                "Notification removed successfully."
+            );
 
-            console.error(err);
+        } catch {
+
+            hmsToast.updateError(
+                toastId,
+                "Failed",
+                "Unable to delete notification."
+            );
 
         }
 
