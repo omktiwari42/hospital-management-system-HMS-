@@ -74,6 +74,80 @@ router.put("/read-all", async (req, res) => {
 });
 
 /* ===========================
+   MARK SINGLE AS READ
+=========================== */
+
+router.put("/:id/read", async (req, res) => {
+
+    try {
+
+        await db.query(
+            `
+            UPDATE notifications
+            SET unread = FALSE
+            WHERE id = $1
+            AND user_id = $2
+            `,
+            [
+                req.params.id,
+                req.user.id
+            ]
+        );
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
+/* ===========================
+   DELETE NOTIFICATION
+=========================== */
+
+router.delete("/:id", async (req, res) => {
+    console.log("DELETE HIT", req.params.id);
+
+    try {
+
+        await db.query(
+            `
+            DELETE FROM notifications
+            WHERE id = $1
+            AND user_id = $2
+            `,
+            [
+                req.params.id,
+                req.user.id
+            ]
+        );
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
+/* ===========================
    UNREAD COUNT
 =========================== */
 

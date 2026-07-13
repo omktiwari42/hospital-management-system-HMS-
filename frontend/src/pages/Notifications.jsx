@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { FaBell, FaCalendarCheck, FaMoneyBillWave, FaFileMedical, FaFlask } from "react-icons/fa";
 import api from "../services/api";
 import NotificationSkeleton from "../components/NotificationSkeleton";
+import {
+    FaTrash,
+    FaCheckCircle
+} from "react-icons/fa";
 
 export default function Notifications() {
     const [loading, setLoading] = useState(true);
@@ -37,6 +41,48 @@ export default function Notifications() {
         } catch (err) {
             console.error(err);
         }
+    }
+    async function markRead(id) {
+
+        try {
+
+            await api.put(`/notifications/${id}/read`);
+
+            setNotifications((prev) =>
+                prev.map((item) =>
+                    item.id === id
+                        ? {
+                            ...item,
+                            unread: false,
+                        }
+                        : item
+                )
+            );
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+
+    async function deleteNotification(id) {
+
+        try {
+
+            await api.delete(`/notifications/${id}`);
+
+            setNotifications((prev) =>
+                prev.filter((item) => item.id !== id)
+            );
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
     }
     const filteredNotifications = notifications.filter((item) => {
 
@@ -181,9 +227,27 @@ export default function Notifications() {
 
                         </div>
 
-                        {item.unread && (
-                            <div className="notification-dot"></div>
-                        )}
+                        <div className="notification-actions">
+
+                            {item.unread && (
+
+                                <button
+                                    className="read-btn"
+                                    onClick={() => markRead(item.id)}
+                                >
+                                    <FaCheckCircle />
+                                </button>
+
+                            )}
+
+                            <button
+                                className="delete-btn"
+                                onClick={() => deleteNotification(item.id)}
+                            >
+                                <FaTrash />
+                            </button>
+
+                        </div>
 
                     </div>
 

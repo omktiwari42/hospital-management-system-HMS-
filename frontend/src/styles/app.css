@@ -8106,3 +8106,55 @@ body.dark-mode .notification-filters button {
 body.dark-mode .notification-filters .active {
   background: #2563eb;
 }
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.read-btn,
+.delete-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: .25s;
+  font-size: 16px;
+}
+
+.read-btn {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.read-btn:hover {
+  background: #16a34a;
+  color: white;
+  transform: scale(1.08);
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  color: white;
+  transform: scale(1.08);
+}
+
+body.dark-mode .read-btn {
+  background: #14532d;
+  color: #86efac;
+}
+
+body.dark-mode .delete-btn {
+  background: #450a0a;
+  color: #fca5a5;
+}
