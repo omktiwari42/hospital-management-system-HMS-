@@ -108,9 +108,9 @@ export default function BookAppointment() {
                 amount: response.data.amount,
             });
 
-            console.log("ORDER RESPONSE:", order.data);
-            console.log("Razorpay Key:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+            console.log(import.meta.env.VITE_RAZORPAY_KEY_ID);
             const options = {
+
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 
                 amount: order.data.amount,
