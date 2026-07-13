@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import "./styles/pro-toast.css";
 
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -15,6 +15,8 @@ import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import Notifications from "./pages/Notifications";
+import { useState } from "react";
+
 
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";

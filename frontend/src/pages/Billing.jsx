@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import jsPDF from "jspdf";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 import autoTable from "jspdf-autotable";
 import BillingSkeleton from "../components/skeletons/BillingSkeleton";
 import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
@@ -91,7 +91,7 @@ function Billing() {
       !amount ||
       !status
     ) {
-      toast.warning("Please fill all fields");
+      hmsToast.warning("Please fill all fields");
       return;
     }
 
@@ -262,7 +262,7 @@ function Billing() {
               billId: bill.id,
             });
 
-            toast.success("✅ Payment Successful");
+            hmsToast.success("✅ Payment Successful");
 
             await fetchBills();
 
@@ -272,7 +272,7 @@ function Billing() {
 
           } catch (error) {
             console.log(error);
-            toast.warning("Payment verification failed");
+            hmsToast.warning("Payment verification failed");
           }
         },
 
@@ -296,10 +296,10 @@ function Billing() {
           try {
             // Delete the bill
             await api.delete(`/bills/${bill.id}`);
-            toast.error("Payment failed. Bill has been deleted.");
+            hmsToast.error("Payment failed. Bill has been deleted.");
           } catch (error) {
             console.error("Failed to delete bill:", error);
-            toast.error("Payment failed. Please contact support.");
+            hmsToast.error("Payment failed. Please contact support.");
           }
         }
       );
@@ -310,7 +310,7 @@ function Billing() {
           try {
             // Delete the bill if user closes the modal
             await api.delete(`/bills/${bill.id}`);
-            toast.warning("Payment cancelled. Bill has been deleted.");
+            hmsToast.warning("Payment cancelled. Bill has been deleted.");
           } catch (error) {
             console.error("Failed to delete bill:", error);
           }

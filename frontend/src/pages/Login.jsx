@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 
 function Login() {
   const navigate = useNavigate();
@@ -148,7 +148,7 @@ function Login() {
 
     if (phone.length !== 10) {
 
-      toast.error(
+      hmsToast.error(
         "Enter valid 10 digit mobile number"
       );
 
@@ -164,7 +164,7 @@ function Login() {
         turnstileToken,
       });
 
-      toast.success(
+      hmsToast.success(
         "OTP Sent Successfully"
       );
 
@@ -183,7 +183,7 @@ function Login() {
 
       console.log(err);
 
-      toast.error(
+      hmsToast.error(
         "Failed to Send OTP"
       );
 
@@ -224,7 +224,7 @@ function Login() {
         setVerified(true);
       }, 1000);
 
-      toast.success("Login Successful");
+      hmsToast.success("Login Successful");
 
       setTimeout(() => {
         const role = response.data.role;
@@ -252,7 +252,7 @@ function Login() {
 
       setTimeout(() => setShake(false), 500);
 
-      toast.error("Invalid OTP");
+      hmsToast.error("Invalid OTP");
 
     } finally {
 
@@ -291,7 +291,7 @@ function Login() {
         turnstileToken,
       });
 
-      toast.success(
+      hmsToast.success(
         "OTP Sent Again"
       );
 
@@ -301,7 +301,7 @@ function Login() {
 
     } catch {
 
-      toast.error(
+      hmsToast.error(
         "Failed to resend OTP"
       );
 

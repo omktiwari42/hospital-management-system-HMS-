@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import api from "../services/api";
@@ -79,7 +79,7 @@ function Payment() {
                                 `/bills/pay/${appointmentId}`
                             );
 
-                            toast.success(
+                            hmsToast.success(
                                 "Payment Successful ✅"
                             );
 
@@ -91,7 +91,7 @@ function Payment() {
                                 error
                             );
 
-                            toast.error(
+                            hmsToast.error(
                                 "Failed to update bill"
                             );
                         }
@@ -117,7 +117,7 @@ function Payment() {
         } catch (error) {
             console.log(error);
 
-            toast.error(
+            hmsToast.error(
                 "Payment Failed ❌"
             );
         }

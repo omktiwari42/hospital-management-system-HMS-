@@ -1,6 +1,6 @@
 // import { useState } from "react";
 // import api from "../services/api";
-// import { toast } from "react-toastify";
+// import { hmsToast } from "../utils/hmsToast";
 //import PrescriptionSkeleton from "../components/skeletons/PrescriptionSkeleton";
 // function Prescriptions() {
 //     const [patientId, setPatientId] =
@@ -37,7 +37,7 @@
 //                 }
 //             );
 
-//             toast.success(
+//             hmsToast.success(
 //                 "Prescription Saved"
 //             );
 
@@ -50,7 +50,7 @@
 //         } catch (error) {
 //             console.log(error);
 
-//             toast.error(
+//             hmsToast.error(
 //                 "Failed to save prescription"
 //             );
 //         }

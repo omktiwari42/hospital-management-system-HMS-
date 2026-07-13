@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 import { useNavigate } from "react-router-dom";
 import DoctorsSkeleton from "../components/skeletons/DoctorsSkeleton";
 
@@ -85,7 +85,7 @@ function Doctors() {
         email,
         availability,
       });
-      toast.success("✅ Doctor Added Successfully", {
+      hmsToast.success("✅ Doctor Added Successfully", {
         position: "top-right",
         autoClose: 2000,
       });
@@ -118,7 +118,7 @@ function Doctors() {
         availability,
       });
 
-      toast.success("✅ Doctor Updated Successfully", {
+      hmsToast.success("✅ Doctor Updated Successfully", {
         position: "top-right",
         autoClose: 2000,
       });
@@ -137,7 +137,7 @@ function Doctors() {
     } catch (error) {
       console.log("Error updating doctor:", error);
 
-      toast.error("❌ Failed to Update Doctor", {
+      hmsToast.error("❌ Failed to Update Doctor", {
         position: "top-right",
         autoClose: 2000,
       });
@@ -151,7 +151,7 @@ function Doctors() {
     try {
       await api.delete(`/doctors/${id}`);
 
-      toast.success("✅ Doctor Deleted Successfully", {
+      hmsToast.success("✅ Doctor Deleted Successfully", {
         position: "top-right",
         autoClose: 2000,
       });
@@ -160,7 +160,7 @@ function Doctors() {
     } catch (error) {
       console.log("Error deleting doctor:", error);
 
-      toast.error("❌ Failed to Delete Doctor", {
+      hmsToast.error("❌ Failed to Delete Doctor", {
         position: "top-right",
         autoClose: 2000,
       });

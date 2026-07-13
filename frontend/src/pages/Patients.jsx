@@ -9,7 +9,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
@@ -101,15 +101,15 @@ function Patients() {
         }
       );
 
-      toast.success("Report Uploaded Successfully");
+      hmsToast.success("Report Uploaded Successfully");
     } catch (error) {
       console.log(error);
-      toast.warning("Upload Failed");
+      hmsToast.warning("Upload Failed");
     }
   }
   async function addPatient() {
     if (!name.trim() || !age) {
-      toast.warning(
+      hmsToast.warning(
         "Please fill all fields"
       );
       return;
@@ -133,7 +133,7 @@ function Patients() {
 
       await fetchPatients();
 
-      toast.success(
+      hmsToast.success(
         "Patient Added Successfully"
       );
       setShowForm(false);
@@ -157,7 +157,7 @@ function Patients() {
         error
       );
 
-      toast.error(
+      hmsToast.error(
         "Failed to add patient"
       );
     }
@@ -177,7 +177,7 @@ function Patients() {
         `/patients/${id}`
       );
       await fetchPatients();
-      toast.success(
+      hmsToast.success(
         "Patient Deleted Successfully"
       );
 
@@ -188,7 +188,7 @@ function Patients() {
         error
       );
 
-      toast.error(
+      hmsToast.error(
         "Failed to delete patient"
       );
     }
@@ -322,7 +322,7 @@ function Patients() {
 
   async function updatePatient() {
     if (!name.trim() || !age) {
-      toast.warning(
+      hmsToast.warning(
         "Please fill all fields"
       );
       return;
@@ -349,7 +349,7 @@ function Patients() {
 
       await fetchPatients();
 
-      toast.success(
+      hmsToast.success(
         "Patient Updated Successfully"
       );
 
@@ -372,7 +372,7 @@ function Patients() {
       console.log("UPDATE ERROR:", error);
       console.log("RESPONSE:", error.response?.data);
 
-      toast.error(
+      hmsToast.error(
         "Failed to update patient"
       );
     }

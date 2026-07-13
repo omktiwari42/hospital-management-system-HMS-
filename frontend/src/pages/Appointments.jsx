@@ -5,7 +5,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 import AppointmentsSkeleton from "../components/skeletons/AppointmentsSkeleton";
-import { toast } from "react-toastify";
+import { hmsToast } from "../utils/hmsToast";
 function Appointments() {
   const [appointments, setAppointments] =
     useState([]);
@@ -110,7 +110,7 @@ function Appointments() {
         !doctorName.trim() ||
         !reason.trim()
       ) {
-        toast.error(
+        t.error(
           "⚠️ Please fill all fields"
         );
         return;
@@ -126,7 +126,7 @@ function Appointments() {
           status,
         }
       );
-      toast.success(
+      hmsToast.success(
         "Appointment Added Successfully✅ ",
         {
           position: "top-right",
@@ -146,7 +146,7 @@ function Appointments() {
     } catch (error) {
       console.log(error);
 
-      toast.error(
+      hmsToast.error(
         error.response?.data?.message ||
         "Failed to create appointment"
       );
@@ -233,7 +233,7 @@ function Appointments() {
         !doctorName.trim() ||
         !reason.trim()
       ) {
-        toast.error(
+        hmsToast.error(
           "Please fill all fields⚠️ "
         );
         return;
@@ -250,7 +250,7 @@ function Appointments() {
         }
       );
 
-      toast.success(
+      hmsToast.success(
         "✏️ Appointment Updated Successfully",
         {
           position: "top-right",
@@ -272,7 +272,7 @@ function Appointments() {
     } catch (error) {
       console.log(error);
 
-      toast.error(
+      hmsToast.error(
         error.response?.data?.message ||
         "Failed to update appointment"
       );
@@ -292,7 +292,7 @@ function Appointments() {
         response.data
       );
 
-      toast.success(
+      hmsToast.success(
         "✅ Appointment Deleted Successfully"
       );
 
@@ -308,7 +308,7 @@ function Appointments() {
         error.response?.data
       );
 
-      toast.error(
+      hmsToast.error(
         "❌ Delete Failed"
       );
     }
