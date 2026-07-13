@@ -15,6 +15,8 @@ const common = {
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
+
+    icon: false,
 };
 
 export const hmsToast = {
