@@ -444,3 +444,27 @@
         0 8px 18px rgba(0, 0, 0, .08);
 
 }
+
+/* ===========================
+   Loading Toast
+=========================== */
+
+.Toastify__spinner {
+
+    width: 24px;
+
+    height: 24px;
+
+}
+
+.Toastify__toast--default {
+
+    border-left: 5px solid #3b82f6;
+
+}
+
+.Toastify__toast--default::before {
+
+    background: #3b82f6;
+
+}

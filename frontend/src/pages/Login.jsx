@@ -155,6 +155,8 @@ function Login() {
       return;
     }
 
+    const toastId = hmsToast.loading("Sending OTP...");
+
     try {
 
       setLoading(true);
@@ -164,8 +166,10 @@ function Login() {
         turnstileToken,
       });
 
-      hmsToast.success(
-        "OTP Sent Successfully"
+      hmsToast.updateSuccess(
+        toastId,
+        "OTP Sent",
+        "Check your mobile for the verification code."
       );
 
       setShowOTP(true);
@@ -183,8 +187,10 @@ function Login() {
 
       console.log(err);
 
-      hmsToast.error(
-        "Failed to Send OTP"
+      hmsToast.updateError(
+        toastId,
+        "Failed",
+        "Unable to send OTP."
       );
 
     } finally {

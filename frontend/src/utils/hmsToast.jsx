@@ -31,11 +31,13 @@ const common = {
     theme: "light",
 
 };
+
 export const hmsToast = {
 
     success(title, message = "") {
 
         toast.success(
+
             <div className="hms-toast-content">
 
                 <div className="hms-toast-icon success">
@@ -53,7 +55,9 @@ export const hmsToast = {
                 </div>
 
             </div>,
+
             common
+
         );
 
     },
@@ -61,6 +65,7 @@ export const hmsToast = {
     error(title, message = "") {
 
         toast.error(
+
             <div className="hms-toast-content">
 
                 <div className="hms-toast-icon error">
@@ -78,7 +83,9 @@ export const hmsToast = {
                 </div>
 
             </div>,
+
             common
+
         );
 
     },
@@ -86,6 +93,7 @@ export const hmsToast = {
     warning(title, message = "") {
 
         toast.warning(
+
             <div className="hms-toast-content">
 
                 <div className="hms-toast-icon warning">
@@ -103,7 +111,9 @@ export const hmsToast = {
                 </div>
 
             </div>,
+
             common
+
         );
 
     },
@@ -111,6 +121,7 @@ export const hmsToast = {
     info(title, message = "") {
 
         toast.info(
+
             <div className="hms-toast-content">
 
                 <div className="hms-toast-icon info">
@@ -128,8 +139,114 @@ export const hmsToast = {
                 </div>
 
             </div>,
+
             common
+
         );
+
+    },
+
+    loading(message = "Please wait...") {
+
+        return toast.loading(message, {
+
+            position: "top-right",
+
+            closeButton: false,
+
+            draggable: false,
+
+            closeOnClick: false,
+
+            pauseOnHover: false,
+
+            icon: false,
+
+        });
+
+    },
+
+    updateSuccess(id, title, message = "") {
+
+        toast.update(id, {
+
+            render: (
+
+                <div className="hms-toast-content">
+
+                    <div className="hms-toast-icon success">
+
+                        <FaCheckCircle />
+
+                    </div>
+
+                    <div>
+
+                        <h4>{title}</h4>
+
+                        {message && <p>{message}</p>}
+
+                    </div>
+
+                </div>
+
+            ),
+
+            type: "success",
+
+            isLoading: false,
+
+            autoClose: 2500,
+
+            closeButton: true,
+
+            draggable: true,
+
+            icon: false,
+
+        });
+
+    },
+
+    updateError(id, title, message = "") {
+
+        toast.update(id, {
+
+            render: (
+
+                <div className="hms-toast-content">
+
+                    <div className="hms-toast-icon error">
+
+                        <FaTimesCircle />
+
+                    </div>
+
+                    <div>
+
+                        <h4>{title}</h4>
+
+                        {message && <p>{message}</p>}
+
+                    </div>
+
+                </div>
+
+            ),
+
+            type: "error",
+
+            isLoading: false,
+
+            autoClose: 3500,
+
+            closeButton: true,
+
+            draggable: true,
+
+            icon: false,
+
+        });
 
     },
 
