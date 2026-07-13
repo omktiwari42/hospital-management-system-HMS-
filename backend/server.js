@@ -96,7 +96,7 @@ app.use(
   authenticateToken,
   notificationRoutes
 );
-console.log("✅ Notification routes mounted");
+
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });

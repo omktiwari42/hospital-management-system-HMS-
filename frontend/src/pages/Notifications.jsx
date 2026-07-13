@@ -6,6 +6,8 @@ import NotificationSkeleton from "../components/NotificationSkeleton";
 export default function Notifications() {
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState([]);
+    const [search, setSearch] = useState("");
+    const [filter, setFilter] = useState("all");
 
     useEffect(() => {
         loadNotifications();
@@ -36,7 +38,22 @@ export default function Notifications() {
             console.error(err);
         }
     }
+    const filteredNotifications = notifications.filter((item) => {
 
+        const matchesSearch =
+            item.title.toLowerCase().includes(search.toLowerCase()) ||
+            item.message.toLowerCase().includes(search.toLowerCase());
+
+        const matchesFilter =
+            filter === "all"
+                ? true
+                : filter === "unread"
+                    ? item.unread
+                    : item.type === filter;
+
+        return matchesSearch && matchesFilter;
+
+    });
     const icon = (type) => {
         switch (type) {
             case "appointment":
@@ -72,8 +89,65 @@ export default function Notifications() {
                 </button>
 
             </div>
+            <div className="notification-toolbar">
 
-            {notifications.length === 0 ? (
+                <input
+                    type="text"
+                    placeholder="Search notifications..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="notification-search"
+                />
+
+                <div className="notification-filters">
+
+                    <button
+                        className={filter === "all" ? "active" : ""}
+                        onClick={() => setFilter("all")}
+                    >
+                        All
+                    </button>
+
+                    <button
+                        className={filter === "unread" ? "active" : ""}
+                        onClick={() => setFilter("unread")}
+                    >
+                        Unread
+                    </button>
+
+                    <button
+                        className={filter === "appointment" ? "active" : ""}
+                        onClick={() => setFilter("appointment")}
+                    >
+                        Appointments
+                    </button>
+
+                    <button
+                        className={filter === "payment" ? "active" : ""}
+                        onClick={() => setFilter("payment")}
+                    >
+                        Payments
+                    </button>
+
+                    <button
+                        className={filter === "prescription" ? "active" : ""}
+                        onClick={() => setFilter("prescription")}
+                    >
+                        Prescription
+                    </button>
+
+                    <button
+                        className={filter === "report" ? "active" : ""}
+                        onClick={() => setFilter("report")}
+                    >
+                        Reports
+                    </button>
+
+                </div>
+
+            </div>
+
+            {filteredNotifications.length === 0 ? (
 
                 <div className="empty-notification-page">
                     <FaBell size={60} />
@@ -83,7 +157,7 @@ export default function Notifications() {
 
             ) : (
 
-                notifications.map((item) => (
+                filteredNotifications.map((item) => (
 
                     <div
                         key={item.id}
