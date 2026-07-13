@@ -6,7 +6,7 @@ import {
     FaTrash,
     FaCheckCircle
 } from "react-icons/fa";
-import { hmsToast } from "../utils/hmsToast";
+import { hmsToast, TOAST_IDS } from "../utils/hmsToast";
 
 export default function Notifications() {
     const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function Notifications() {
     async function markAllRead() {
 
         const toastId = hmsToast.loading(
-            "Updating notifications..."
+            "Updating notifications...", TOAST_IDS.MARK_ALL
         );
 
         try {
@@ -66,7 +66,7 @@ export default function Notifications() {
     async function markRead(id) {
 
         const toastId = hmsToast.loading(
-            "Marking as read..."
+            "Marking as read...", TOAST_IDS.MARK_READ
         );
 
         try {
@@ -102,7 +102,7 @@ export default function Notifications() {
     async function deleteNotification(id) {
 
         const toastId = hmsToast.loading(
-            "Deleting notification..."
+            "Deleting notification...", TOAST_IDS.DELETE_NOTIFICATION
         );
 
         try {

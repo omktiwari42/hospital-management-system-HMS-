@@ -5,6 +5,27 @@ import {
     FaInfoCircle,
     FaExclamationTriangle,
 } from "react-icons/fa";
+const TOAST_IDS = {
+
+    LOGIN: "login",
+
+    SEND_OTP: "send_otp",
+
+    VERIFY_OTP: "verify_otp",
+
+    RESEND_OTP: "resend_otp",
+
+    DELETE_NOTIFICATION: "delete_notification",
+
+    MARK_READ: "mark_read",
+
+    MARK_ALL: "mark_all",
+
+    BOOK_APPOINTMENT: "book_appointment",
+
+    PAYMENT: "payment",
+
+};
 
 const common = {
 
@@ -146,7 +167,7 @@ export const hmsToast = {
 
     },
 
-    loading(message = "Please wait...") {
+    loading(message = "Please wait...", id = undefined) {
 
         return toast.loading(message, {
 
@@ -161,6 +182,8 @@ export const hmsToast = {
             pauseOnHover: false,
 
             icon: false,
+
+            toastId: id,
 
         });
 
@@ -251,3 +274,4 @@ export const hmsToast = {
     },
 
 };
+export { TOAST_IDS };

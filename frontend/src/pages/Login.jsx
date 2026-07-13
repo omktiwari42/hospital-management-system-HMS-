@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { hmsToast } from "../utils/hmsToast";
+import { hmsToast, TOAST_IDS } from "../utils/hmsToast";
 
 function Login() {
   const navigate = useNavigate();
@@ -155,7 +155,7 @@ function Login() {
       return;
     }
 
-    const toastId = hmsToast.loading("Sending OTP...");
+    const toastId = hmsToast.loading("Sending OTP...", TOAST_IDS.SEND_OTP);
 
     try {
 
@@ -211,7 +211,7 @@ function Login() {
       return;
     }
     const toastId = hmsToast.loading(
-      "Verifying OTP..."
+      "Verifying OTP...", TOAST_IDS.VERIFY_OTP
     );
 
     try {
@@ -302,7 +302,7 @@ function Login() {
   async function resendOTP() {
 
     const toastId = hmsToast.loading(
-      "Resending OTP..."
+      "Resending OTP...", TOAST_IDS.RESEND_OTP
     );
 
     try {

@@ -107,8 +107,6 @@ export default function BookAppointment() {
             const order = await api.post("/create-order", {
                 amount: response.data.amount,
             });
-            console.log(import.meta.env);
-            console.log(import.meta.env.VITE_RAZORPAY_KEY_ID);
             const options = {
 
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
