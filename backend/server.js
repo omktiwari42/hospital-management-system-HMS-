@@ -37,7 +37,10 @@ const upload = multer({
 });
 const path = require("path");
 require("dotenv").config();
-
+const {
+  router: sseRoutes,
+  sendNotificationEvent,
+} = require("./routes/sseRoutes");
 const authenticateToken =
   require(
     "./middleware/auth"
@@ -87,6 +90,7 @@ const otpStore = {};
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/sse", sseRoutes);
 app.use(
   "/uploads",
   express.static("uploads")
@@ -1761,13 +1765,26 @@ app.post("/api/patient/book-appointment", authenticateToken, async (req, res) =>
       `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
       "appointment"
     );
+    sendNotificationEvent({
+      title: "Appointment Booked",
+      message: `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
+      type: "appointment",
+      unread: true,
+      created_at: new Date(),
+    });
     await createNotification(
       req.user.id,
       "Bill Generated",
       `A bill of ₹${doctorFees} has been generated for your appointment.`,
       "payment"
     );
-
+    sendNotificationEvent({
+      title: "Bill Generated",
+      message: `A bill of ₹${doctorFees} has been generated for your appointment.`,
+      type: "payment",
+      unread: true,
+      created_at: new Date(),
+    });
 
     res.json({
       success: true,
@@ -2116,6 +2133,13 @@ app.post("/api/prescriptions", async (req, res) => {
       "Your doctor uploaded a prescription.",
       "prescription"
     );
+    sendNotificationEvent({
+      title: "Prescription Ready",
+      message: "Your doctor uploaded a prescription.",
+      type: "prescription",
+      unread: true,
+      created_at: new Date(),
+    });
 
     res.status(201).json(result.rows[0]);
   } catch (err) {

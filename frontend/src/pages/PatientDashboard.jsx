@@ -169,7 +169,7 @@ export default function PatientDashboard() {
         try {
 
             const dashboardRes = await api.get("/patient-dashboard");
-            console.log("Dashboard:", dashboardRes.data);
+
 
             const data = dashboardRes.data;
             const appointmentList = data.appointments || [];

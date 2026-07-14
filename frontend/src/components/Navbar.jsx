@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import api from "../services/api";
-import useNotificationWatcher from "../hooks/useNotificationWatcher";
+import useRealtimeNotifications from "../hooks/useRealtimeNotifications";
 import { useNavigate } from "react-router-dom";
 import {
     FaBell,
@@ -122,21 +122,25 @@ NOTIFICATIONS
         loadUnreadCount();
 
     }, []);
-    useNotificationWatcher((notifications) => {
+    useRealtimeNotifications((notification) => {
 
+        setNotifications((prev) => [
+            notification,
+            ...prev,
+        ]);
 
+        setUnreadCount((prev) => prev + 1);
 
-        setUnreadCount(unread);
+        const audio = new Audio("/notification.mp3");
+        audio.play().catch(() => { });
 
         setBellAnimation(true);
 
         setTimeout(() => {
-
             setBellAnimation(false);
-
         }, 600);
 
-    }, 15000);
+    });
 
     function toggleDarkMode() {
         const value = !darkMode;
