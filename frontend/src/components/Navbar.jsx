@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import api from "../services/api";
+import useNotificationWatcher from "../hooks/useNotificationWatcher";
 import { useNavigate } from "react-router-dom";
 import {
     FaBell,
@@ -32,10 +33,11 @@ NOTIFICATIONS
 
     const [notifications, setNotifications] = useState([]);
     const [loadingNotifications, setLoadingNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    const unreadCount = notifications.filter(
-        item => item.unread === true
-    ).length;
+    const [bellAnimation, setBellAnimation] =
+        useState(false);
+
 
     /* Close dropdown when clicking outside */
 
@@ -77,7 +79,7 @@ NOTIFICATIONS
                     unread: false
                 }))
             );
-
+            setUnreadCount(0);
         } catch (err) {
 
             console.error(err);
@@ -94,6 +96,9 @@ NOTIFICATIONS
             const res = await api.get("/notifications");
 
             setNotifications(res.data || []);
+            setUnreadCount(
+                res.data.filter(item => item.unread).length
+            );
 
         } catch (err) {
 
@@ -106,11 +111,32 @@ NOTIFICATIONS
         }
 
     }
+
     useEffect(() => {
 
         loadNotifications();
 
     }, []);
+    useEffect(() => {
+
+        loadUnreadCount();
+
+    }, []);
+    useNotificationWatcher((notifications) => {
+
+
+
+        setUnreadCount(unread);
+
+        setBellAnimation(true);
+
+        setTimeout(() => {
+
+            setBellAnimation(false);
+
+        }, 600);
+
+    }, 15000);
 
     function toggleDarkMode() {
         const value = !darkMode;
@@ -131,6 +157,22 @@ NOTIFICATIONS
         navigate("/login");
     }
 
+    async function loadUnreadCount() {
+
+        try {
+
+            const res =
+                await api.get("/notifications/count");
+
+            setUnreadCount(res.data.unread);
+
+        } catch (err) {
+
+            console.log(err);
+
+        }
+
+    }
     return (
         <header className="top-navbar">
 
@@ -168,7 +210,8 @@ NOTIFICATIONS
                 >
 
                     <button
-                        className="icon-btn"
+                        className={`icon-btn navbar-bell ${bellAnimation ? "ring" : ""
+                            }`}
                         onClick={() => {
 
                             const value = !showNotifications;
@@ -178,6 +221,7 @@ NOTIFICATIONS
                             if (value) {
 
                                 loadNotifications();
+                                loadUnreadCount();
 
                             }
 
@@ -190,7 +234,9 @@ NOTIFICATIONS
 
                             <span className="notification-count">
 
-                                {unreadCount}
+                                {unreadCount > 99
+                                    ? "99+"
+                                    : unreadCount}
 
                             </span>
 

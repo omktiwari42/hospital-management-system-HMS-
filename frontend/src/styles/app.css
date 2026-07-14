@@ -8166,3 +8166,95 @@ body.dark-mode .delete-btn {
   background: #450a0a;
   color: #fca5a5;
 }
+
+.navbar-bell {
+
+  position: relative;
+
+}
+
+.notification-count {
+
+  position: absolute;
+
+  top: -6px;
+
+  right: -6px;
+
+  min-width: 20px;
+
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: #ef4444;
+
+  color: #fff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  animation: badgePop .3s;
+
+}
+
+.ring {
+
+  animation: ringBell .6s;
+
+}
+
+@keyframes ringBell {
+
+  0% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(18deg);
+  }
+
+  30% {
+    transform: rotate(-18deg);
+  }
+
+  45% {
+    transform: rotate(15deg);
+  }
+
+  60% {
+    transform: rotate(-10deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+
+}
+
+@keyframes badgePop {
+
+  0% {
+
+    transform: scale(.4);
+
+    opacity: 0;
+
+  }
+
+  100% {
+
+    transform: scale(1);
+
+    opacity: 1;
+
+  }
+
+}

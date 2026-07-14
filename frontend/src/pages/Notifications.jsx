@@ -1,3 +1,4 @@
+import useNotificationWatcher from "../hooks/useNotificationWatcher";
 import { useEffect, useState } from "react";
 import { FaBell, FaCalendarCheck, FaMoneyBillWave, FaFileMedical, FaFlask } from "react-icons/fa";
 import api from "../services/api";
@@ -14,9 +15,13 @@ export default function Notifications() {
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("all");
 
-    useEffect(() => {
-        loadNotifications();
-    }, []);
+    useNotificationWatcher((data) => {
+
+        setNotifications(data);
+
+        setLoading(false);
+
+    }, 15000);
 
     async function loadNotifications() {
 
@@ -32,11 +37,6 @@ export default function Notifications() {
 
         } finally {
 
-            setTimeout(() => {
-
-                setLoading(false);
-
-            }, 400);
 
         }
 
