@@ -468,3 +468,221 @@
     background: #3b82f6;
 
 }
+
+.notification-card {
+
+    animation: notificationEnter .45s ease;
+
+}
+
+@keyframes notificationEnter {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(20px) scale(.98);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0) scale(1);
+
+    }
+
+}
+
+.notification-card.unread {
+
+    position: relative;
+
+    border-left: 4px solid #2563eb;
+
+    background: linear-gradient(90deg,
+            rgba(37, 99, 235, .06),
+            white);
+
+}
+
+.notification-card.unread::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 20px;
+
+    right: 18px;
+
+    width: 10px;
+
+    height: 10px;
+
+    border-radius: 50%;
+
+    background: #2563eb;
+
+    animation: notificationPulse 2s infinite;
+
+}
+
+@keyframes notificationPulse {
+
+    0% {
+
+        transform: scale(1);
+
+        opacity: 1;
+
+    }
+
+    70% {
+
+        transform: scale(2);
+
+        opacity: 0;
+
+    }
+
+    100% {
+
+        transform: scale(1);
+
+        opacity: 0;
+
+    }
+
+}
+
+.notification-card {
+
+    transition: .3s;
+
+}
+
+.notification-card:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow:
+
+        0 18px 40px rgba(0, 0, 0, .08);
+
+}
+
+.notification-icon {
+
+    transition: .35s;
+
+}
+
+.notification-card:hover .notification-icon {
+
+    transform: rotate(-8deg) scale(1.15);
+
+}
+
+.notification-card.deleting {
+
+    animation: deleteCard .35s forwards;
+
+}
+
+@keyframes deleteCard {
+
+    to {
+
+        opacity: 0;
+
+        transform: translateX(80px);
+
+        height: 0;
+
+        padding: 0;
+
+        margin: 0;
+
+    }
+
+}
+
+.new-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-left: 10px;
+
+    padding: 4px 10px;
+
+    border-radius: 20px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+}
+
+.notification-actions button {
+
+    transition: .25s;
+
+}
+
+.notification-actions button:hover {
+
+    transform: translateY(-2px) scale(1.08);
+
+}
+
+.empty-notification-page {
+
+    animation: fadeEmpty .7s ease;
+
+}
+
+@keyframes fadeEmpty {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(20px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+
+    }
+
+}
+
+.notification-search {
+
+    transition: .3s;
+
+}
+
+.notification-search:focus {
+
+    transform: scale(1.01);
+
+    box-shadow:
+
+        0 0 0 4px rgba(37, 99, 235, .15);
+
+}

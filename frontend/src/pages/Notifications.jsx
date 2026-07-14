@@ -19,14 +19,27 @@ export default function Notifications() {
     }, []);
 
     async function loadNotifications() {
+
         try {
+
             const res = await api.get("/notifications");
+
             setNotifications(res.data || []);
+
         } catch (err) {
+
             console.error(err);
+
         } finally {
-            setLoading(false);
+
+            setTimeout(() => {
+
+                setLoading(false);
+
+            }, 400);
+
         }
+
     }
 
     async function markAllRead() {
@@ -102,32 +115,51 @@ export default function Notifications() {
     async function deleteNotification(id) {
 
         const toastId = hmsToast.loading(
-            "Deleting notification...", TOAST_IDS.DELETE_NOTIFICATION
+            "Deleting notification...",
+            TOAST_IDS.DELETE_NOTIFICATION
         );
 
-        try {
+        // Start delete animation
+        setNotifications((prev) =>
+            prev.map((item) =>
+                item.id === id
+                    ? {
+                        ...item,
+                        deleting: true,
+                    }
+                    : item
+            )
+        );
 
-            await api.delete(`/notifications/${id}`);
+        setTimeout(async () => {
 
-            setNotifications(prev =>
-                prev.filter(item => item.id !== id)
-            );
+            try {
 
-            hmsToast.updateSuccess(
-                toastId,
-                "Deleted",
-                "Notification removed successfully."
-            );
+                await api.delete(`/notifications/${id}`);
 
-        } catch {
+                setNotifications((prev) =>
+                    prev.filter((item) => item.id !== id)
+                );
 
-            hmsToast.updateError(
-                toastId,
-                "Failed",
-                "Unable to delete notification."
-            );
+                hmsToast.updateSuccess(
+                    toastId,
+                    "Deleted",
+                    "Notification removed successfully."
+                );
 
-        }
+            } catch {
+
+                hmsToast.updateError(
+                    toastId,
+                    "Failed",
+                    "Unable to delete notification."
+                );
+
+                loadNotifications();
+
+            }
+
+        }, 300);
 
     }
     const filteredNotifications = notifications.filter((item) => {
@@ -253,17 +285,33 @@ export default function Notifications() {
 
                     <div
                         key={item.id}
-                        className={`notification-card ${item.unread ? "unread" : ""
-                            }`}
+                        className={`notification-card
+                        ${item.unread ? "unread" : ""}
+                        ${item.deleting ? "deleting" : ""}
+                    `}
                     >
 
-                        <div className="notification-icon">
+                        <div className={`notification-icon ${item.type}`}>
                             {icon(item.type)}
                         </div>
 
                         <div className="notification-body">
 
-                            <h3>{item.title}</h3>
+                            <h3>
+
+                                {item.title}
+
+                                {item.unread && (
+
+                                    <span className="new-badge">
+
+                                        NEW
+
+                                    </span>
+
+                                )}
+
+                            </h3>
 
                             <p>{item.message}</p>
 
