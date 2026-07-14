@@ -1,35 +1,43 @@
 import { useEffect } from "react";
 
 export default function useRealtimeNotifications(onMessage) {
-
     useEffect(() => {
+        const API_URL =
+            import.meta.env.VITE_API_URL ||
+            "https://your-render-backend.onrender.com/api";
 
-        const eventSource = new EventSource(
+        let eventSource;
 
-            `${import.meta.env.VITE_API_URL}/sse/notifications`
+        const connect = () => {
+            console.log("Connecting to:", `${API_URL}/sse`);
 
-        );
+            eventSource = new EventSource(`${API_URL}/sse`);
 
-        eventSource.onmessage = (event) => {
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    onMessage(data);
+                } catch (err) {
+                    console.error("Invalid SSE data:", err);
+                }
+            };
 
-            const data = JSON.parse(event.data);
+            eventSource.onerror = (err) => {
+                console.error("SSE Error:", err);
 
-            onMessage(data);
+                eventSource.close();
 
+                // Reconnect after 5 seconds
+                setTimeout(connect, 5000);
+            };
         };
 
-        eventSource.onerror = () => {
-
-            eventSource.close();
-
-        };
+        connect();
 
         return () => {
-
-            eventSource.close();
-
+            if (eventSource) {
+                eventSource.close();
+            }
         };
-
-    }, []);
-
+    }, [onMessage]);
 }

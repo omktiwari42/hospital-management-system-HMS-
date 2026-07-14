@@ -5,61 +5,43 @@ export default function useNotificationWatcher(
     onNotifications,
     interval = 15000
 ) {
-
     const timer = useRef(null);
-
     const running = useRef(false);
 
-    async function fetchNotifications() {
-
+    const fetchNotifications = async () => {
         if (running.current) return;
 
         running.current = true;
 
         try {
-
             const res = await api.get("/notifications");
 
-            onNotifications(res.data || []);
-
+            if (Array.isArray(res.data)) {
+                onNotifications(res.data);
+            } else {
+                onNotifications([]);
+            }
         } catch (err) {
-
-            console.error(
-                "Notification Watcher:",
-                err
-            );
-
+            console.error("Notification Watcher:", err);
         } finally {
-
             running.current = false;
-
         }
-
-    }
+    };
 
     useEffect(() => {
-
         fetchNotifications();
 
         timer.current = setInterval(() => {
-
             if (!document.hidden) {
-
                 fetchNotifications();
-
             }
-
         }, interval);
 
-        function visibilityChanged() {
-
+        const visibilityChanged = () => {
             if (!document.hidden) {
-
                 fetchNotifications();
-
             }
-
-        }
+        };
 
         document.addEventListener(
             "visibilitychange",
@@ -67,16 +49,12 @@ export default function useNotificationWatcher(
         );
 
         return () => {
-
             clearInterval(timer.current);
 
             document.removeEventListener(
                 "visibilitychange",
                 visibilityChanged
             );
-
         };
-
-    }, []);
-
+    }, [interval]);
 }
