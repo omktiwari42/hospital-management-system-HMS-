@@ -87,15 +87,21 @@ app.use((req, res, next) => {
   next();
 });
 const otpStore = {};
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://www.myhms.online",
-    "https://myhms.online"
-  ],
-  credentials: true,
-};
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://www.myhms.online",
+  "https://myhms.online"
+];
 
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/api/sse", sseRoutes);
@@ -108,10 +114,7 @@ app.use(
   "/uploads",
   express.static("uploads")
 );
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+
 
 app.get("/", (req, res) => {
   res.send("Backend is Running");

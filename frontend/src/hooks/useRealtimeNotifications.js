@@ -4,7 +4,7 @@ export default function useRealtimeNotifications(onMessage) {
     useEffect(() => {
         const API_URL =
             import.meta.env.VITE_API_URL ||
-            "https://your-render-backend.onrender.com/api";
+            "https://hospital-backend-8pek.onrender.com/api";
 
         let eventSource;
 
