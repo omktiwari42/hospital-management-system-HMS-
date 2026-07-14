@@ -5,26 +5,31 @@ const router = express.Router();
 const clients = [];
 
 router.get("/", (req, res) => {
-    // CORS headers for SSE
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+    const origin = req.headers.origin;
+
+    const allowedOrigins = [
+        "http://localhost:5173",
+        "https://myhms.online",
+        "https://www.myhms.online",
+    ];
+
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+    }
+
     res.setHeader("Access-Control-Allow-Credentials", "true");
 
-    // SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-
-    // Prevent proxy buffering
     res.setHeader("X-Accel-Buffering", "no");
 
     res.flushHeaders();
 
-    // Retry after 5 seconds if disconnected
     res.write("retry: 5000\n\n");
 
     clients.push(res);
 
-    // Keep the connection alive
     const keepAlive = setInterval(() => {
         res.write(": ping\n\n");
     }, 30000);
