@@ -87,10 +87,16 @@ app.use((req, res, next) => {
   next();
 });
 const otpStore = {};
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://www.myhms.online",
+    "https://myhms.online"
+  ],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/api/sse", sseRoutes);
 app.use(
