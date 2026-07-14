@@ -4,23 +4,22 @@ const router = express.Router();
 
 const clients = [];
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://myhms.online",
+    "https://www.myhms.online",
+];
+
 router.get("/", (req, res) => {
     const origin = req.headers.origin;
-
-    const allowedOrigins = [
-        "http://localhost:5173",
-        "https://myhms.online",
-        "https://www.myhms.online",
-    ];
 
     if (allowedOrigins.includes(origin)) {
         res.setHeader("Access-Control-Allow-Origin", origin);
     }
 
     res.setHeader("Access-Control-Allow-Credentials", "true");
-
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
 
@@ -30,25 +29,44 @@ router.get("/", (req, res) => {
 
     clients.push(res);
 
+    console.log("✅ SSE Client Connected");
+    console.log("Connected Clients:", clients.length);
+
     const keepAlive = setInterval(() => {
-        res.write(": ping\n\n");
-    }, 30000);
+        try {
+            res.write(": keep-alive\n\n");
+        } catch (err) {
+            clearInterval(keepAlive);
+        }
+    }, 25000);
 
     req.on("close", () => {
         clearInterval(keepAlive);
 
         const index = clients.indexOf(res);
+
         if (index !== -1) {
             clients.splice(index, 1);
         }
+
+        console.log("❌ SSE Client Disconnected");
+        console.log("Connected Clients:", clients.length);
 
         res.end();
     });
 });
 
 function sendNotificationEvent(notification) {
+    console.log("📢 Sending Notification:", notification);
+
     clients.forEach((client) => {
-        client.write(`data: ${JSON.stringify(notification)}\n\n`);
+        try {
+            client.write(
+                `data: ${JSON.stringify(notification)}\n\n`
+            );
+        } catch (err) {
+            console.error("SSE Send Error:", err);
+        }
     });
 }
 
