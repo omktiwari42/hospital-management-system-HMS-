@@ -49,15 +49,15 @@ router.get("/", (req, res) => {
             clients.splice(index, 1);
         }
 
-        console.log("❌ SSE Client Disconnected");
-        console.log("Connected Clients:", clients.length);
+        // console.log("❌ SSE Client Disconnected");
+        // console.log("Connected Clients:", clients.length);
 
         res.end();
     });
 });
 
 function sendNotificationEvent(notification) {
-    console.log("📢 Sending Notification:", notification);
+    // console.log("📢 Sending Notification:", notification);
 
     clients.forEach((client) => {
         try {
