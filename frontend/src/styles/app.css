@@ -1924,8 +1924,9 @@ button:hover {
 
 .page-header {
   display: flex;
+  align-items: center;
+  margin-bottom: 30px;
   justify-content: space-between;
-  margin-bottom: 20px;
 }
 
 .back-btn,
@@ -8260,26 +8261,27 @@ body.dark-mode .delete-btn {
 }
 
 .profile-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 30px;
   display: flex;
-  gap: 30px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 40px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
 }
 
 .profile-avatar {
-  width: 110px;
-  height: 110px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: #2563eb;
   color: #fff;
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 42px;
-  font-weight: 700;
+  align-items: center;
+  font-size: 48px;
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
 .profile-details {
