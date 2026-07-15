@@ -8326,11 +8326,7 @@ body.dark-mode .delete-btn {
   font-weight: 600;
 }
 
-.profile-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-}
+
 
 .edit-profile-btn {
   padding: 12px 22px;
