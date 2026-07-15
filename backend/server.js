@@ -937,11 +937,12 @@ app.post("/api/verify-otp", async (req, res) => {
 
 app.get("/api/profile", authenticateToken, async (req, res) => {
   try {
-    res.json({
-      full_name: req.user.full_name,
-      phone: req.user.phone,
-      role: req.user.role,
-    });
+    const result = await pool.query(
+      "SELECT * FROM users WHERE id=$1",
+      [req.user.id]
+    );
+
+    res.json(result.rows[0]);
   } catch (error) {
     console.log(error);
 
@@ -950,6 +951,105 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
     });
   }
 });
+app.put("/api/profile", authenticateToken, async (req, res) => {
+  try {
+
+    const {
+      full_name,
+      email,
+      gender,
+      dob,
+      emergency_contact,
+      blood_group,
+      allergies,
+      medical_history,
+    } = req.body;
+
+    const result = await pool.query(
+      `
+          UPDATE users
+          SET
+              full_name = $1,
+              email = $2,
+              gender = $3,
+              dob = $4,
+              emergency_contact = $5,
+              blood_group = $6,
+              allergies = $7,
+              medical_history = $8
+          WHERE id = $9
+          RETURNING *
+          `,
+      [
+        full_name,
+        email,
+        gender,
+        dob,
+        emergency_contact,
+        blood_group,
+        allergies,
+        medical_history,
+        req.user.id,
+      ]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Unable to update profile",
+    });
+
+  }
+});
+app.post(
+  "/api/profile/upload-image",
+  authenticateToken,
+  upload.single("image"),
+  async (req, res) => {
+
+    try {
+
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No image uploaded",
+        });
+      }
+
+      const imagePath = req.file.filename;
+
+      await pool.query(
+        `
+              UPDATE users
+              SET profile_image = $1
+              WHERE id = $2
+              `,
+        [
+          imagePath,
+          req.user.id,
+        ]
+      );
+
+      res.json({
+        success: true,
+        image: imagePath,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message: "Upload failed",
+      });
+
+    }
+
+  }
+);
 
 app.post("/api/create-order", authenticateToken, async (req, res) => {
   try {
