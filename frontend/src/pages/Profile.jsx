@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
+
 function Profile() {
   const navigate = useNavigate();
 
@@ -31,28 +32,71 @@ function Profile() {
       setLoading(false);
     }
   }
+
   if (loading) {
-    return <ProfileSkeleton />
+    return <ProfileSkeleton />;
   }
 
   return (
     <div className="page">
+
       <div className="page-header">
+
         <button
           className="back-btn"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate(-1)}
         >
-          🏠 Dashboard
+          ← Back
         </button>
+
+        <h1>My Profile</h1>
+
       </div>
 
-      <div className="card">
-        <h2>👤 My Profile</h2>
+      <div className="profile-card">
 
-        <p>
-          <strong>Phone:</strong> {profile.phone}
-        </p>
+        <div className="profile-avatar">
+          {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
+        </div>
+
+        <div className="profile-details">
+
+          <h2>
+            {profile.full_name || "User"}
+          </h2>
+
+          <span className="role-badge">
+            {profile.role || "User"}
+          </span>
+
+          <div className="profile-grid">
+
+            <div className="profile-item">
+              <label>Full Name</label>
+              <p>{profile.full_name || "-"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Phone Number</label>
+              <p>{profile.phone || "-"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Role</label>
+              <p>{profile.role || "-"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Account Status</label>
+              <p>Active</p>
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
+
     </div>
   );
 }
