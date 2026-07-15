@@ -99,10 +99,6 @@ function Profile() {
         </button>
 
         <h1>My Profile</h1>
-
-      </div>
-
-      <div className="profile-card">
         <div className="profile-actions">
 
           <button
@@ -114,6 +110,11 @@ function Profile() {
           </button>
 
         </div>
+
+      </div>
+
+      <div className="profile-card">
+
 
         <div className="profile-avatar">
           {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
