@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
 import { FaEdit, FaTimes } from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 function Profile() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
-
+  const [uploading, setUploading] =
+    useState(false);
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -82,6 +84,49 @@ function Profile() {
     }
 
   }
+  async function uploadPhoto(e) {
+
+    try {
+
+      setUploading(true);
+
+      const token =
+        localStorage.getItem("token");
+
+      const data = new FormData();
+
+      data.append(
+        "avatar",
+        e.target.files[0]
+      );
+
+      const res = await api.post(
+        "/profile/upload",
+        data,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+      setProfile(prev => ({
+        ...prev,
+        avatar: res.data.image,
+      }));
+
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setUploading(false);
+
+    }
+
+  }
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -117,7 +162,35 @@ function Profile() {
 
 
         <div className="profile-avatar">
-          {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
+
+          {
+            profile.avatar ?
+
+              <img
+                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${profile.avatar}`}
+                alt=""
+              />
+
+              :
+
+              profile.full_name?.charAt(0)
+          }
+
+          <label
+            className="avatar-upload"
+          >
+
+            <FaCamera />
+
+            <input
+              hidden
+              type="file"
+              accept="image/*"
+              onChange={uploadPhoto}
+            />
+
+          </label>
+
         </div>
 
         <div className="profile-details">

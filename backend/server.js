@@ -114,6 +114,10 @@ app.use(
   "/uploads",
   express.static("uploads")
 );
+app.use(
+  "/api/profile/upload",
+  profileUpload
+);
 
 
 app.get("/", (req, res) => {
