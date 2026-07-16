@@ -143,13 +143,58 @@ function Profile() {
             </div>
 
             <div className="profile-item">
+              <label>Email</label>
+              <p>{profile.email || "Not Added"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Gender</label>
+              <p>{profile.gender || "Not Added"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Date of Birth</label>
+              <p>{profile.dob || "Not Added"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Blood Group</label>
+              <p>{profile.blood_group || "Not Added"}</p>
+            </div>
+
+            <div className="profile-item">
+              <label>Emergency Contact</label>
+              <p>{profile.emergency_contact || "Not Added"}</p>
+            </div>
+
+            <div className="profile-item">
               <label>Role</label>
-              <p>{profile.role || "-"}</p>
+              <p>{profile.role}</p>
             </div>
 
             <div className="profile-item">
               <label>Account Status</label>
-              <p>Active</p>
+              <p className="status-active">Active</p>
+            </div>
+
+          </div>
+
+          <div className="profile-section">
+
+            <h3>🩺 Allergies</h3>
+
+            <div className="profile-box">
+              {profile.allergies || "No allergies recorded."}
+            </div>
+
+          </div>
+
+          <div className="profile-section">
+
+            <h3>📋 Medical History</h3>
+
+            <div className="profile-box">
+              {profile.medical_history || "No medical history available."}
             </div>
 
           </div>
