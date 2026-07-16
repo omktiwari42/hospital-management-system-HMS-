@@ -996,13 +996,11 @@ app.put("/api/profile", authenticateToken, async (req, res) => {
     res.json(result.rows[0]);
 
   } catch (err) {
-
-    console.log(err);
+    console.error("Profile update error:", err);
 
     res.status(500).json({
-      message: "Unable to update profile",
+      message: err.message,
     });
-
   }
 });
 app.post(
