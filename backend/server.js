@@ -2,7 +2,7 @@ const multer = require("multer");
 const notificationRoutes =
   require("./routes/notificationRoutes");
 const createNotification = require("./utils/createNotification");
-
+const profileUpload = require("./routes/profileUpload");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
