@@ -18,7 +18,23 @@ function Sidebar() {
   // Start collapsed
   const [collapsed, setCollapsed] = useState(true);
 
-  const role = sessionStorage.getItem("role") || "";
+  const [role, setRole] = useState(
+    sessionStorage.getItem("role") || ""
+  );
+
+  useEffect(() => {
+    function syncRole() {
+      setRole(sessionStorage.getItem("role") || "");
+    }
+
+    window.addEventListener("storage", syncRole);
+    window.addEventListener("userUpdated", syncRole);
+
+    return () => {
+      window.removeEventListener("storage", syncRole);
+      window.removeEventListener("userUpdated", syncRole);
+    };
+  }, []);
 
   // Auto close after 3 seconds whenever opened
   useEffect(() => {

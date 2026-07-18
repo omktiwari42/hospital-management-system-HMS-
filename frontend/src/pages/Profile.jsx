@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
+import ProfileSkeleton from "../components/ProfileSkeleton";
 import { FaEdit, FaTimes } from "react-icons/fa";
 import { FaCamera } from "react-icons/fa";
 function Profile() {
@@ -73,10 +73,15 @@ function Profile() {
         }
       );
 
+      // Update session storage
+      sessionStorage.setItem("full_name", form.full_name);
+
+      // Notify Navbar and Sidebar
+      window.dispatchEvent(new Event("userUpdated"));
+
       setShowEdit(false);
 
       getProfile();
-
     } catch (err) {
 
       console.log(err);
@@ -223,7 +228,15 @@ function Profile() {
 
             <div className="profile-item">
               <label>Date of Birth</label>
-              <p>{profile.dob || "Not Added"}</p>
+              <p>
+                {profile.dob
+                  ? new Date(profile.dob).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })
+                  : "Not Added"}
+              </p>
             </div>
 
             <div className="profile-item">

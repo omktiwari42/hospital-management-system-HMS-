@@ -1,4 +1,4 @@
-import "./ProfileSkeleton.css";
+
 
 function ProfileSkeleton() {
     return (
