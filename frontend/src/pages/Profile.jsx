@@ -195,10 +195,6 @@ function Profile() {
 
         <div className="profile-details">
 
-          <h2>
-            {profile.full_name || "User"}
-          </h2>
-
           <span className="role-badge">
             {profile.role || "User"}
           </span>
