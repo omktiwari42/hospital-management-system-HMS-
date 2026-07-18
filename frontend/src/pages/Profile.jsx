@@ -137,7 +137,7 @@ function Profile() {
   }
 
   return (
-    <div className="page">
+    <div className="profile-page page">
 
       <div className="page-header">
 
