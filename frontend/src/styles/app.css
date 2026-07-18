@@ -8361,15 +8361,6 @@ body.dark-mode .delete-btn {
   color: #1e3a8a;
 }
 
-.profile-box {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px;
-  min-height: 90px;
-  line-height: 1.7;
-}
-
 .status-active {
   color: #16a34a;
   font-weight: 700;
