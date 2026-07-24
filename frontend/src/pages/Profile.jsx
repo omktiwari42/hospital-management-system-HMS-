@@ -83,9 +83,10 @@ function Profile() {
       setShowEdit(false);
 
 
-      hmsToast.success("Profile updated successfully!", {
-        description: "Your profile information has been saved."
-      });
+      hmsToast.success(
+        "Profile updated successfully!",
+        "Your profile information has been saved."
+      );
     } catch (err) {
 
       console.log(err);

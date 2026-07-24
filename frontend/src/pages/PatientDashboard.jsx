@@ -19,7 +19,9 @@ export default function PatientDashboard() {
     ========================== */
 
     const [patient, setPatient] = useState(null);
-
+    const [patientName, setPatientName] = useState(
+        sessionStorage.getItem("full_name") || ""
+    );
     const [summary, setSummary] = useState({
         appointments: 0,
         completed: 0,
@@ -177,7 +179,14 @@ export default function PatientDashboard() {
             const billList = data.bills || [];
 
             setPatient(data.patient);
+            const updatedName = sessionStorage.getItem("full_name");
 
+            setPatientName(
+                updatedName ||
+                data.patient?.full_name ||
+                data.patient?.name ||
+                ""
+            );
             setAppointments(appointmentList);
 
             setBills(billList);
@@ -280,6 +289,17 @@ export default function PatientDashboard() {
 
         loadDashboard();
 
+        function handleUserUpdated() {
+            setPatientName(sessionStorage.getItem("full_name") || "");
+            loadDashboard();
+        }
+
+        window.addEventListener("userUpdated", handleUserUpdated);
+
+        return () => {
+            window.removeEventListener("userUpdated", handleUserUpdated);
+        };
+
     }, []);
 
     /* ==========================
@@ -346,7 +366,7 @@ export default function PatientDashboard() {
                             {greeting},
                             <span className="patient-name">
                                 {" "}
-                                {patient?.name || "Patient"}
+                                {patientName || patient?.full_name || patient?.name || "Patient"}
                             </span>
                         </h1>
 
