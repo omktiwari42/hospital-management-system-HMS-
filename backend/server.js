@@ -78,6 +78,7 @@ const pool = new Pool({
 });
 const express = require("express");
 const cors = require("cors");
+const generatePrescriptionPDF = require("./utils/generatePrescriptionPDF");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const app = express();
@@ -1718,9 +1719,27 @@ app.post("/api/prescriptions", authenticateToken, async (req, res) => {
 app.get("/api/prescriptions", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM prescriptions ORDER BY id DESC"
+      `
+      SELECT
+          p.id,
+          p.patient_id,
+          p.doctor_id,
+          p.medicines,
+          p.dosage,
+          p.duration,
+          p.notes,
+          p.created_at,
+          p.status,
+          u.full_name AS doctor_name,
+          u.specialization
+      FROM prescriptions p
+      LEFT JOIN users u
+      ON p.doctor_id = u.id
+      WHERE p.patient_id = $1
+      ORDER BY p.created_at DESC
+      `,
+      [req.user.id]
     );
-
     res.json(result.rows);
   } catch (err) {
     console.log(err);
@@ -1730,6 +1749,51 @@ app.get("/api/prescriptions", authenticateToken, async (req, res) => {
     });
   }
 });
+app.get(
+  "/api/prescriptions/:id/pdf",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await pool.query(
+        `
+              SELECT
+                  p.*,
+                  patient.full_name AS patient_name,
+                  doctor.full_name AS doctor_name,
+                  doctor.specialization
+              FROM prescriptions p
+              LEFT JOIN users patient
+                  ON patient.id = p.patient_id
+              LEFT JOIN users doctor
+                  ON doctor.id = p.doctor_id
+              WHERE p.id = $1
+              `,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({
+            message: "Prescription not found",
+          });
+      }
+
+      generatePrescriptionPDF(
+        res,
+        result.rows[0]
+      );
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        message: "Failed to generate PDF",
+      });
+    }
+  }
+);
 app.post(
   "/api/upload-report/:id",
   authenticateToken,

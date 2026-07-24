@@ -323,50 +323,47 @@ function PatientPrescriptions() {
                                     </button>
 
                                     <button
-                                        onClick={() => {
-                                            const blob = new Blob(
-                                                [
-                                                    `
-Prescription #${item.id}
+                                        onClick={async () => {
+                                            try {
+                                                const token = localStorage.getItem("token");
 
-Doctor : ${item.doctor_name || item.doctor_id}
+                                                const response = await fetch(
+                                                    `${import.meta.env.VITE_API_URL}/prescriptions/${item.id}/pdf`,
+                                                    {
+                                                        headers: {
+                                                            Authorization: `Bearer ${token}`,
+                                                        },
+                                                    }
+                                                );
 
-Medicines :
-${item.medicines}
-
-Dosage :
-${item.dosage}
-
-Duration :
-${item.duration}
-
-Notes :
-${item.notes}
-`
-                                                ],
-                                                {
-                                                    type: "text/plain"
+                                                if (!response.ok) {
+                                                    throw new Error("Failed to download PDF");
                                                 }
-                                            );
 
-                                            const url =
-                                                URL.createObjectURL(blob);
+                                                const blob = await response.blob();
 
-                                            const a =
-                                                document.createElement("a");
+                                                const url = window.URL.createObjectURL(blob);
 
-                                            a.href = url;
+                                                const a = document.createElement("a");
 
-                                            a.download =
-                                                `Prescription-${item.id}.txt`;
+                                                a.href = url;
 
-                                            a.click();
+                                                a.download = `Prescription-${item.id}.pdf`;
 
-                                            URL.revokeObjectURL(url);
+                                                document.body.appendChild(a);
 
+                                                a.click();
+
+                                                a.remove();
+
+                                                window.URL.revokeObjectURL(url);
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Unable to download PDF.");
+                                            }
                                         }}
                                     >
-                                        ⬇ Download
+                                        ⬇ Download PDF
                                     </button>
 
                                 </div>
