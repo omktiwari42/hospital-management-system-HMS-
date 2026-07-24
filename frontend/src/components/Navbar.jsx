@@ -22,7 +22,7 @@ function Navbar() {
     const [fullName, setFullName] = useState(
         sessionStorage.getItem("full_name") || "User"
     );
-
+    const [imageLoading, setImageLoading] = useState(true);
     const [role, setRole] = useState(
         sessionStorage.getItem("role") || ""
     );
@@ -49,11 +49,12 @@ NOTIFICATIONS
 
     useEffect(() => {
         function handleUserUpdated() {
+            setImageLoading(true);
+
             setProfileImage(sessionStorage.getItem("profile_image") || null);
             setFullName(sessionStorage.getItem("full_name") || "User");
             setRole(sessionStorage.getItem("role") || "");
         }
-
         window.addEventListener("userUpdated", handleUserUpdated);
 
         return () => {
@@ -358,12 +359,25 @@ NOTIFICATIONS
                 >
 
                     {profileImage ? (
-                        <img
-                            className="navbar-profile-image"
-                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profileImage}`}
-                            alt="Profile"
-                            onError={() => setProfileImage(null)}
-                        />
+                        <>
+                            {imageLoading && (
+                                <div className="navbar-profile-skeleton"></div>
+                            )}
+
+                            <img
+                                className="navbar-profile-image"
+                                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profileImage}`}
+                                alt="Profile"
+                                onLoad={() => setImageLoading(false)}
+                                onError={() => {
+                                    setImageLoading(false);
+                                    setProfileImage(null);
+                                }}
+                                style={{
+                                    display: imageLoading ? "none" : "block",
+                                }}
+                            />
+                        </>
                     ) : (
                         <FaUserCircle size={34} />
                     )}

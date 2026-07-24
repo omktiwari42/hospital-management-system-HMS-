@@ -9479,3 +9479,26 @@ body.dark-mode .followup-card {
   }
 
 }
+
+.navbar-profile-skeleton {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(90deg,
+      #ececec 25%,
+      #f7f7f7 50%,
+      #ececec 75%);
+  background-size: 200% 100%;
+  animation: navbarSkeleton 1.2s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes navbarSkeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
