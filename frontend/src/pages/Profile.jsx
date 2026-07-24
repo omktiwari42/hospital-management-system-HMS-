@@ -135,39 +135,56 @@ function Profile() {
 
     }
   }
+  // async function deletePhoto() {
+  //   try {
+  //     const token = localStorage.getItem("token");
+
+  //     await api.delete("/profile/delete-image", {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     sessionStorage.removeItem("profile_image");
+
+  //     await getProfile();
+
+  //     window.dispatchEvent(new Event("userUpdated"));
+
+  //     hmsToast.success("Profile photo removed!", {
+  //       description: "Your profile picture has been deleted.",
+  //     });
+
+  //     setTimeout(() => {
+  //       window.dispatchEvent(new Event("userUpdated"));
+  //     }, 100);
+
+  //   } catch (err) {
+  //     console.error(err);
+
+  //     hmsToast.error(
+  //       err.response?.data?.message || "Failed to remove profile photo."
+  //     );
+  //   }
+  // }
   async function deletePhoto() {
     try {
-      const token = localStorage.getItem("token");
+      await api.delete("/profile/delete-image");
 
-      await api.delete("/profile/delete-image", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      setProfile(prev => ({
+        ...prev,
+        profile_image: null,
+      }));
 
-      sessionStorage.removeItem("profile_image");
+      // Comment these out temporarily
+      // sessionStorage.removeItem("profile_image");
+      // window.dispatchEvent(new Event("userUpdated"));
 
-      await getProfile();
-
-      window.dispatchEvent(new Event("userUpdated"));
-
-      hmsToast.success("Profile photo removed!", {
-        description: "Your profile picture has been deleted.",
-      });
-
-      setTimeout(() => {
-        window.dispatchEvent(new Event("userUpdated"));
-      }, 100);
-
+      hmsToast.success("Deleted");
     } catch (err) {
-      console.error(err);
-
-      hmsToast.error(
-        err.response?.data?.message || "Failed to remove profile photo."
-      );
+      console.log(err);
     }
   }
-
 
   if (loading) {
     return <ProfileSkeleton />;

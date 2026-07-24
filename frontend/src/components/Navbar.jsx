@@ -19,11 +19,13 @@ function Navbar() {
         localStorage.getItem("darkMode") === "true"
     );
 
-    const fullName =
-        sessionStorage.getItem("full_name") || "User";
+    const [fullName, setFullName] = useState(
+        sessionStorage.getItem("full_name") || "User"
+    );
 
-    const role =
-        sessionStorage.getItem("role") || "";
+    const [role, setRole] = useState(
+        sessionStorage.getItem("role") || ""
+    );
     /* ===========================
 NOTIFICATIONS
 =========================== */
@@ -48,13 +50,15 @@ NOTIFICATIONS
     useEffect(() => {
         function handleUserUpdated() {
             setProfileImage(sessionStorage.getItem("profile_image") || null);
+            setFullName(sessionStorage.getItem("full_name") || "User");
+            setRole(sessionStorage.getItem("role") || "");
         }
 
         window.addEventListener("userUpdated", handleUserUpdated);
 
-        return () =>
+        return () => {
             window.removeEventListener("userUpdated", handleUserUpdated);
-
+        };
     }, []);
     useEffect(() => {
 
@@ -317,12 +321,14 @@ NOTIFICATIONS
                                         </div>
                                         <div className="notification-content">
 
-                                            <h4>{item.title}</h4>
+                                            <h4>{String(item.title || "Notification")}</h4>
 
-                                            <p>{item.message}</p>
+                                            <p>{String(item.message || "")}</p>
 
                                             <small>
-                                                {new Date(item.created_at).toLocaleString()}
+                                                {item.created_at
+                                                    ? new Date(item.created_at).toLocaleString()
+                                                    : "Just now"}
                                             </small>
                                         </div>
 
