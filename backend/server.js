@@ -1063,6 +1063,9 @@ app.delete(
   authenticateToken,
   async (req, res) => {
     console.log("DELETE PROFILE IMAGE ROUTE LOADED");
+    console.log("JWT USER:", req.user);
+    console.log("USER ID:", req.user.id);
+
     try {
       const result = await pool.query(
         "SELECT profile_image FROM users WHERE id = $1",
