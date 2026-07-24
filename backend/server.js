@@ -1670,9 +1670,9 @@ app.get(
   }
 );
 app.post("/api/prescriptions", authenticateToken, async (req, res) => {
-  console.log("looged in user");
-  console.log("JWT USER:", req.user);
-  console.log("Patient ID used:", req.user.id);
+  // console.log("looged in user");
+  // console.log("JWT USER:", req.user);
+  // console.log("Patient ID used:", req.user.id);
   try {
     const {
       patient_id,
@@ -1734,17 +1734,17 @@ app.get("/api/prescriptions", authenticateToken, async (req, res) => {
       p.created_at,
       p.status,
       d.name AS doctor_name,
-      d.specialization AS specialization,
-      patient.full_name AS patient_name
-  FROM prescriptions p
-  LEFT JOIN doctors d
+      d.specialization,
+      pt.name AS patient_name
+FROM prescriptions p
+INNER JOIN patients pt
+      ON pt.id = p.patient_id
+LEFT JOIN doctors d
       ON d.id = p.doctor_id
-  LEFT JOIN users patient
-      ON patient.id = p.patient_id
-  WHERE p.patient_id = $1
-  ORDER BY p.created_at DESC;
+WHERE pt.phone = $1
+ORDER BY p.created_at DESC;
       `,
-      [req.user.id]
+      [req.user.phone]
     );
     res.json(result.rows);
   } catch (err) {
@@ -1766,15 +1766,15 @@ app.get(
         `
         SELECT
         p.*,
-        patient.full_name AS patient_name,
+        patient.name AS patient_name,
         d.name AS doctor_name,
-        d.specialization AS specialization
-    FROM prescriptions p
-    LEFT JOIN doctors d
+        d.specialization
+        FROM prescriptions p
+        LEFT JOIN doctors d
         ON d.id = p.doctor_id
-    LEFT JOIN users patient
+        LEFT JOIN patients patient
         ON patient.id = p.patient_id
-    WHERE p.id = $1;
+        WHERE p.id = $1;
         `,
         [id]
       );
