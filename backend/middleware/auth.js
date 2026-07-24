@@ -17,7 +17,7 @@ function authenticateToken(
     authHeader &&
     authHeader.split(" ")[1];
 
-  console.log("TOKEN:", token);
+  // console.log("TOKEN:", token);
 
   if (!token) {
     return res.status(401).json({
