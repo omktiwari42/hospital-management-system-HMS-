@@ -121,10 +121,10 @@ function Profile() {
 
       window.dispatchEvent(new Event("userUpdated"));
       await getProfile();
-      hmsToast.success("Profile photo updated!", {
-        description: "Your new profile picture is now visible."
-      });
-
+      hmsToast.success(
+        "Profile updated successfully!",
+        "Your profile information has been saved."
+      );
     } catch (err) {
 
       console.log(err);
@@ -135,56 +135,40 @@ function Profile() {
 
     }
   }
-  // async function deletePhoto() {
-  //   try {
-  //     const token = localStorage.getItem("token");
-
-  //     await api.delete("/profile/delete-image", {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     sessionStorage.removeItem("profile_image");
-
-  //     await getProfile();
-
-  //     window.dispatchEvent(new Event("userUpdated"));
-
-  //     hmsToast.success("Profile photo removed!", {
-  //       description: "Your profile picture has been deleted.",
-  //     });
-
-  //     setTimeout(() => {
-  //       window.dispatchEvent(new Event("userUpdated"));
-  //     }, 100);
-
-  //   } catch (err) {
-  //     console.error(err);
-
-  //     hmsToast.error(
-  //       err.response?.data?.message || "Failed to remove profile photo."
-  //     );
-  //   }
-  // }
   async function deletePhoto() {
     try {
-      await api.delete("/profile/delete-image");
+      const token = localStorage.getItem("token");
 
-      setProfile(prev => ({
-        ...prev,
-        profile_image: null,
-      }));
+      await api.delete("/profile/delete-image", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      // Comment these out temporarily
-      // sessionStorage.removeItem("profile_image");
-      // window.dispatchEvent(new Event("userUpdated"));
+      sessionStorage.removeItem("profile_image");
 
-      hmsToast.success("Deleted");
+      await getProfile();
+
+      window.dispatchEvent(new Event("userUpdated"));
+
+      hmsToast.success(
+        "Profile photo removed!",
+        "Your profile picture has been deleted."
+      );
+
+      setTimeout(() => {
+        // window.dispatchEvent(new Event("userUpdated"));
+      }, 100);
+
     } catch (err) {
-      console.log(err);
+      console.error(err);
+
+      hmsToast.error(
+        err.response?.data?.message || "Failed to remove profile photo."
+      );
     }
   }
+
 
   if (loading) {
     return <ProfileSkeleton />;
