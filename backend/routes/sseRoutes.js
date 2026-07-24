@@ -29,9 +29,6 @@ router.get("/", (req, res) => {
 
     clients.push(res);
 
-    console.log("✅ SSE Client Connected");
-    console.log("Connected Clients:", clients.length);
-
     const keepAlive = setInterval(() => {
         try {
             res.write(": keep-alive\n\n");

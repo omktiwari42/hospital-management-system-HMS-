@@ -799,13 +799,10 @@ app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
 =========================== */
 
 app.post("/api/send-otp", async (req, res) => {
-  console.log("BUTTN CLICKED")
+
 
   try {
     const { phone, turnstileToken } = req.body;
-    console.log("BUTTON CLICKED");
-    console.log("TURNSTILE_SECRET_KEY:", process.env.TURNSTILE_SECRET_KEY);
-    console.log("TURNSTILE TOKEN:", turnstileToken);
     const verifyResponse = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       {

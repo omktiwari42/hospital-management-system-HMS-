@@ -8,10 +8,10 @@ function authenticateToken(
   const authHeader =
     req.headers.authorization;
 
-  console.log(
-    "AUTH HEADER:",
-    authHeader
-  );
+  // console.log(
+  //   "AUTH HEADER:",
+  //   authHeader
+  // );
 
   const token =
     authHeader &&
