@@ -325,8 +325,9 @@ function PatientPrescriptions() {
                                     <button
                                         onClick={async () => {
                                             try {
-                                                const token = localStorage.getItem("token");
-
+                                                const token =
+                                                    sessionStorage.getItem("token") ||
+                                                    localStorage.getItem("token");
                                                 const response = await fetch(
                                                     `${import.meta.env.VITE_API_URL}/prescriptions/${item.id}/pdf`,
                                                     {

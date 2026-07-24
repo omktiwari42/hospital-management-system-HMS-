@@ -181,7 +181,9 @@ export default function PatientDashboard() {
             setAppointments(appointmentList);
 
             setBills(billList);
+            const prescriptionRes = await api.get("/prescriptions");
 
+            const prescriptionList = prescriptionRes.data || [];
             setSummary({
 
                 appointments: appointmentList.length,
@@ -197,8 +199,7 @@ export default function PatientDashboard() {
                 ).length,
 
                 bills: billList.length,
-
-                prescriptions: 0,
+                prescriptions: prescriptionList.length,
 
                 reports: 0
 
