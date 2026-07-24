@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "./styles/pro-toast.css";
-
+import PatientPrescriptions from "./pages/patient/PatientPrescriptions";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
@@ -64,6 +64,16 @@ function App() {
           <Route
             path="/notifications"
             element={<Notifications />}
+          />
+          <Route
+            path="/patient-prescriptions"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientPrescriptions />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
           />
 
           <Route

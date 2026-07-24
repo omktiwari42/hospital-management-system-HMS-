@@ -2,7 +2,6 @@ const multer = require("multer");
 const notificationRoutes =
   require("./routes/notificationRoutes");
 const createNotification = require("./utils/createNotification");
-const profileUpload = require("./routes/profileUpload");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -114,11 +113,6 @@ app.use(
   "/uploads",
   express.static("uploads")
 );
-app.use(
-  "/api/profile/upload",
-  profileUpload
-);
-
 
 app.get("/", (req, res) => {
   res.send("Backend is Running");
@@ -938,23 +932,30 @@ app.post("/api/verify-otp", async (req, res) => {
     });
   }
 });
-
 app.get("/api/profile", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM users WHERE id=$1",
+      "SELECT * FROM users WHERE id = $1",
       [req.user.id]
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
     res.json(result.rows[0]);
-  } catch (error) {
-    console.log(error);
+
+  } catch (err) {
+    console.log(err);
 
     res.status(500).json({
-      message: "Server Error",
+      message: "Server Error"
     });
   }
 });
+
 app.put("/api/profile", authenticateToken, async (req, res) => {
   try {
 
@@ -1168,548 +1169,6 @@ app.post(
     }
   }
 );
-
-
-/* ===========================
-   DOCTORS APIs
-=========================== */
-
-app.put("/api/doctors/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const {
-      name,
-      specialization,
-      fees,
-      phone,
-      email,
-      availability,
-      experience
-    } = req.body;
-
-    await pool.query(
-      `
-      UPDATE doctors
-      SET
-      name=$1,
-      specialization=$2,
-      fees=$3,
-      phone=$4,
-      email=$5,
-      availability=$6,
-      experience=$7
-      WHERE id=$8
-      `,
-      [
-        name,
-        specialization,
-        fees,
-        phone,
-        email,
-        availability,
-        experience,
-        id
-      ]
-    );
-
-    res.json({
-      message: "Doctor updated successfully",
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-
-app.delete(
-  "/api/doctors/:id",
-  authenticateToken,
-  authorizeRole("admin"),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      await pool.query(
-        "DELETE FROM doctors WHERE id = $1",
-        [id]
-      );
-
-      res.json({
-        message:
-          "Doctor deleted successfully",
-      });
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Database Error",
-      });
-    }
-  });
-/* ===========================
-   APPOINTMENTS APIs
-=========================== */
-
-
-
-app.post(
-  "/api/appointments",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const {
-        patientName,
-        doctorName,
-        date,
-        time,
-        status,
-        reason,
-      } = req.body;
-
-      // Check if doctor is already booked
-      const existingAppointment =
-        await pool.query(
-          `
-          SELECT *
-          FROM appointments
-          WHERE doctor_name = $1
-          AND appointment_date = $2
-          AND appointment_time = $3
-          `,
-          [
-            doctorName,
-            date,
-            time,
-          ]
-        );
-
-      if (
-        existingAppointment.rows
-          .length > 0
-      ) {
-        return res.status(400).json({
-          message:
-            "Doctor already booked for this slot",
-        });
-      }
-
-      // Insert Appointment
-      const result =
-        await pool.query(
-          `
-          INSERT INTO appointments
-          (
-            patient_name,
-            doctor_name,
-            appointment_date,
-            appointment_time,
-            status,
-            reason
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6
-          )
-          RETURNING *
-          `,
-          [
-            patientName,
-            doctorName,
-            date,
-            time,
-            status,
-            reason,
-          ]
-        );
-      // Create Bill Automatically
-      const appointmentId = result.rows[0].id;
-
-      const bill = await pool.query(
-        `
-        INSERT INTO bills
-        (
-          appointment_id,
-          patient_name,
-          amount,
-          status,
-          payment_status
-        )
-        VALUES
-        ($1,$2,$3,$4,$5)
-        RETURNING *
-        `,
-        [
-          appointment.rows[0].id,
-          patientName,
-          doctorFees,
-          "Pending",
-          "Pending",
-        ]
-      );
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-
-        to: process.env.EMAIL_USER,
-
-        subject: "Appointment Confirmation",
-
-        html: `
-          <h2>🏥 Appointment Confirmed</h2>
-
-          <p><b>Patient:</b> ${patientName}</p>
-
-          <p><b>Doctor:</b> ${doctorName}</p>
-
-          <p><b>Date:</b> ${date}</p>
-
-          <p><b>Time:</b> ${time}</p>
-
-          <p>Your appointment has been booked successfully.</p>
-        `
-      });
-
-
-
-      res.status(201).json(
-        result.rows[0]
-      );
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Database Error",
-      });
-    }
-  }
-);
-app.put("/api/appointments/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const {
-      patientName,
-      doctorName,
-      date,
-      time,
-      status,
-      reason,
-    } = req.body;
-
-    await pool.query(
-      `UPDATE appointments
-       SET
-       patient_name = $1,
-       doctor_name = $2,
-       appointment_date = $3,
-       appointment_time = $4,
-       status = $5,
-       reason = $6
-       WHERE id = $7`,
-      [
-        patientName,
-        doctorName,
-        date,
-        time,
-        status,
-        reason,
-        id,
-      ]
-    );
-
-    res.json({
-      message:
-        "Appointment updated successfully",
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-
-app.delete("/api/appointments/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await pool.query(
-      "DELETE FROM appointments WHERE id = $1",
-      [id]
-    );
-
-    res.json({
-      message:
-        "Appointment deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-/* ===========================
-   BILLING APIs
-=========================== */
-app.get(
-  "/api/bills",
-  authenticateToken,
-  authorizeRole("admin"),
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        "SELECT * FROM bills ORDER BY id"
-      );
-
-      res.json(result.rows);
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Database Error",
-      });
-    }
-  });
-
-/* ADD THIS ROUTE */
-
-app.put("/api/bills/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { patientName, amount, status } = req.body;
-
-    const result = await pool.query(
-      `UPDATE bills
-       SET
-         patient_name = $1,
-         amount = $2,
-         status = $3
-       WHERE id = $4
-       RETURNING *`,
-      [patientName, amount, status, id]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-app.put(
-  "/api/bills/pay/:id",
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const result = await pool.query(
-        `
-        UPDATE bills
-        SET
-          status = 'Paid',
-          payment_status = 'Paid',
-          payment_method = 'Online',
-          payment_date = NOW(),
-          transaction_id = $1
-        WHERE id = $2
-        RETURNING *
-        `,
-        [
-          "TXN" + Date.now(),
-          id,
-        ]
-      );
-
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Payment Failed",
-      });
-    }
-  }
-);
-
-app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await pool.query(
-      "DELETE FROM bills WHERE id = $1",
-      [id]
-    );
-
-    res.json({
-      message:
-        "Bill deleted successfully",
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Database Error",
-    });
-  }
-});
-
-/* ===========================
-   OTP AUTH APIs
-=========================== */
-
-app.post("/api/send-otp", async (req, res) => {
-  console.log("BUTTN CLICKED")
-  try {
-    const { phone, turnstileToken } = req.body;
-    const verifyResponse = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          secret: process.env.TURNSTILE_SECRET_KEY,
-          response: turnstileToken,
-        }),
-      }
-    );
-
-    const verifyResult = await verifyResponse.json();
-
-    if (!phone) {
-      return res.status(400).json({
-        message: "Phone Number Required",
-      });
-    }
-
-    const phoneRegex =
-      /^\+\d{10,15}$/;
-
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({
-        message:
-          "Invalid Phone Number Format",
-      });
-    }
-
-    const otp = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
-
-    otpStore[phone] = otp;
-
-    console.log(
-      `OTP for ${phone}: ${otp}`
-    );
-
-    res.json({
-      message:
-        "OTP Sent Successfully",
-
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
-});
-
-app.post("/api/verify-otp", async (req, res) => {
-  try {
-    const { phone, otp } = req.body;
-
-    console.log("PHONE:", phone);
-    console.log("OTP RECEIVED:", otp);
-    console.log("OTP STORED:", otpStore[phone]);
-
-    if (!phone || !otp) {
-      return res.status(400).json({
-        message: "Phone and OTP Required",
-      });
-    }
-
-    if (otpStore[phone] !== otp) {
-      return res.status(401).json({
-        message: "Invalid OTP",
-      });
-    }
-
-    delete otpStore[phone];
-
-    // Fetch user from database
-    const result = await pool.query(
-      `SELECT * FROM users WHERE phone = $1`,
-      [phone]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    const user = result.rows[0];
-
-    const token = jwt.sign(
-      {
-        id: user.id,
-        phone: user.phone,
-        role: user.role,
-        full_name: user.full_name,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
-    );
-
-    res.json({
-      token,
-      role: user.role,
-      full_name: user.full_name,
-      message: "Login Successful 🎉",
-    });
-
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
-});
-
-app.get("/api/profile", authenticateToken, async (req, res) => {
-  console.log(req.user);
-  try {
-    res.json({
-      phone: req.user.phone,
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
-});
 app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;
@@ -2209,17 +1668,7 @@ app.get(
     }
   }
 );
-// pool.query(`
-//   SELECT column_name
-//   FROM information_schema.columns
-//   WHERE table_name = 'bills'
-// `)
-//   .then(res => {
-//     console.log("BILLS COLUMNS:");
-//     console.table(res.rows);
-//   })
-//   .catch(console.error);
-app.post("/api/prescriptions", async (req, res) => {
+app.post("/api/prescriptions", authenticateToken, async (req, res) => {
   try {
     const {
       patient_id,
@@ -2266,7 +1715,7 @@ app.post("/api/prescriptions", async (req, res) => {
     });
   }
 });
-app.get("/api/prescriptions", async (req, res) => {
+app.get("/api/prescriptions", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM prescriptions ORDER BY id DESC"

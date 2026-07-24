@@ -100,25 +100,17 @@ function Profile() {
 
       const data = new FormData();
 
-      data.append(
-        "avatar",
-        e.target.files[0]
-      );
+      data.append("image", e.target.files[0]);
 
-      const res = await api.post(
-        "/profile/upload",
-        data,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await api.post("/profile/upload-image", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setProfile(prev => ({
         ...prev,
-        avatar: res.data.image,
+        profile_image: res.data.image,
       }));
 
     } catch (err) {
@@ -169,16 +161,17 @@ function Profile() {
         <div className="profile-avatar">
 
           {
-            profile.avatar ?
+            profile.profile_image ?
 
               <img
-                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${profile.avatar}`}
-                alt=""
+                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profile.profile_image}`}
+                alt="Profile"
               />
 
               :
-
-              profile.full_name?.charAt(0)
+              (profile.full_name || "U")
+                .charAt(0)
+                .toUpperCase()
           }
 
           <label
