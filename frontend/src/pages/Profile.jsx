@@ -112,6 +112,9 @@ function Profile() {
         ...prev,
         profile_image: res.data.image,
       }));
+      sessionStorage.setItem("profile_image", res.data.image);
+
+      window.dispatchEvent(new Event("userUpdated"));
 
     } catch (err) {
 

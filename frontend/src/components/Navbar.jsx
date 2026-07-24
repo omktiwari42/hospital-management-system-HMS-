@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { hmsToast } from "../utils/hmsToast";
 import api from "../services/api";
 import useRealtimeNotifications from "../hooks/useRealtimeNotifications";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +41,23 @@ NOTIFICATIONS
 
 
     /* Close dropdown when clicking outside */
+    const [profileImage, setProfileImage] = useState(
+        sessionStorage.getItem("profile_image")
+    );
 
+    useEffect(() => {
+        function handleUserUpdated() {
+            setProfileImage(sessionStorage.getItem("profile_image"));
+        }
+
+        window.addEventListener("userUpdated", handleUserUpdated);
+
+        return () =>
+            window.removeEventListener("userUpdated", handleUserUpdated);
+        hmsToast.success("✅ Profile photo updated successfully!", {
+            description: "Your new profile picture is now visible."
+        });
+    }, []);
     useEffect(() => {
 
         function handleClickOutside(e) {
@@ -332,7 +349,19 @@ NOTIFICATIONS
 
                 <div className="profile-box">
 
-                    <FaUserCircle size={34} />
+                    {sessionStorage.getItem("profile_image") ? (
+
+                        <img
+                            className="navbar-profile-image"
+                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profileImage}`}
+                            alt="Profile"
+                        />
+
+                    ) : (
+
+                        <FaUserCircle size={34} />
+
+                    )}
 
                     <div>
 
@@ -343,7 +372,6 @@ NOTIFICATIONS
                     </div>
 
                 </div>
-
                 <button
                     className="logout-btn"
                     onClick={logout}
