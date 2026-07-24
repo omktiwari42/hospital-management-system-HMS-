@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "./styles/pro-toast.css";
-import PatientPrescriptions from "./pages/patient/PatientPrescriptions";
+import PatientPrescriptions from "./pages/PatientPrescriptions";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
