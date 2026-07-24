@@ -8932,3 +8932,176 @@ body.dark-mode .prescription-search {
   }
 
 }
+
+.doctor-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.doctor-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.doctor-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.doctor-card p {
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+.medicine-section {
+  margin-top: 18px;
+}
+
+.medicine-chip {
+  margin-top: 10px;
+  display: inline-block;
+  background: #eef2ff;
+  color: #1e40af;
+  padding: 10px 16px;
+  border-radius: 30px;
+  font-weight: 600;
+}
+
+.dosage-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.dosage-box,
+.duration-box {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+body.dark-mode .medicine-chip {
+  background: #312e81;
+  color: white;
+}
+
+body.dark-mode .dosage-box,
+body.dark-mode .duration-box {
+  background: #334155;
+  color: white;
+}
+
+.prescription-footer {
+  margin-top: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.medicine-time {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-pill {
+  padding: 8px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.morning {
+  background: #fff7cc;
+  color: #a16207;
+}
+
+.afternoon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.night {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.prescription-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.prescription-buttons button {
+  cursor: pointer;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: .25s;
+}
+
+.prescription-buttons button:first-child {
+  background: #2563eb;
+  color: white;
+}
+
+.prescription-buttons button:last-child {
+  background: #10b981;
+  color: white;
+}
+
+.prescription-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .15);
+}
+
+body.dark-mode .morning {
+  background: #78350f;
+  color: #fde68a;
+}
+
+body.dark-mode .afternoon {
+  background: #1e3a8a;
+  color: white;
+}
+
+body.dark-mode .night {
+  background: #4c1d95;
+  color: white;
+}
+
+@media(max-width:768px) {
+
+  .prescription-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .medicine-time {
+    justify-content: center;
+  }
+
+  .prescription-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .prescription-buttons button {
+    width: 100%;
+  }
+
+}
