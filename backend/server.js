@@ -1721,22 +1721,25 @@ app.get("/api/prescriptions", authenticateToken, async (req, res) => {
     const result = await pool.query(
       `
       SELECT
-          p.id,
-          p.patient_id,
-          p.doctor_id,
-          p.medicines,
-          p.dosage,
-          p.duration,
-          p.notes,
-          p.created_at,
-          p.status,
-          u.full_name AS doctor_name,
-          u.specialization
-      FROM prescriptions p
-      LEFT JOIN users u
-      ON p.doctor_id = u.id
-      WHERE p.patient_id = $1
-      ORDER BY p.created_at DESC
+      p.id,
+      p.patient_id,
+      p.doctor_id,
+      p.medicines,
+      p.dosage,
+      p.duration,
+      p.notes,
+      p.created_at,
+      p.status,
+      d.name AS doctor_name,
+      d.specialization AS specialization,
+      patient.full_name AS patient_name
+  FROM prescriptions p
+  LEFT JOIN doctors d
+      ON d.id = p.doctor_id
+  LEFT JOIN users patient
+      ON patient.id = p.patient_id
+  WHERE p.patient_id = $1
+  ORDER BY p.created_at DESC;
       `,
       [req.user.id]
     );
@@ -1758,18 +1761,18 @@ app.get(
 
       const result = await pool.query(
         `
-              SELECT
-                  p.*,
-                  patient.full_name AS patient_name,
-                  doctor.full_name AS doctor_name,
-                  doctor.specialization
-              FROM prescriptions p
-              LEFT JOIN users patient
-                  ON patient.id = p.patient_id
-              LEFT JOIN users doctor
-                  ON doctor.id = p.doctor_id
-              WHERE p.id = $1
-              `,
+        SELECT
+        p.*,
+        patient.full_name AS patient_name,
+        d.name AS doctor_name,
+        d.specialization AS specialization
+    FROM prescriptions p
+    LEFT JOIN doctors d
+        ON d.id = p.doctor_id
+    LEFT JOIN users patient
+        ON patient.id = p.patient_id
+    WHERE p.id = $1;
+        `,
         [id]
       );
 
