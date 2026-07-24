@@ -2089,7 +2089,44 @@ button:hover {
 .profile-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  cursor: pointer;
+  transition: .25s;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+
+.profile-box:hover {
+  background: #f3f6ff;
+}
+
+.navbar-profile-image {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  border: 2px solid #2563eb;
+  flex-shrink: 0;
+}
+
+.navbar-profile-image {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+
+  border: 2px solid #2563eb;
+  overflow: hidden;
+
+  display: block;
+  flex-shrink: 0;
+
+  box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
 }
 
 .profile-box p {
@@ -8307,6 +8344,131 @@ body.dark-mode .delete-btn {
   box-shadow: 0 10px 20px rgba(0, 0, 0, .2);
 }
 
+.upload-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  display: block;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-photo-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.change-photo-btn,
+.delete-photo-btn {
+  width: 180px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.profile-avatar-section {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.profile-photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.change-photo-btn,
+.delete-photo-btn {
+  width: 100%;
+  height: 42px;
+}
+
+.change-photo-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.change-photo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.delete-photo-btn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.delete-photo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+}
+
+.change-photo-btn:disabled,
+.delete-photo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.photo-upload-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: profileSpin 0.8s linear infinite;
+}
+
+@keyframes profileSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-photo-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .change-photo-btn,
+  .delete-photo-btn {
+    width: 100%;
+  }
+}
+
 .profile-details {
   flex: 1;
 }
@@ -8494,20 +8656,7 @@ body.dark-mode .delete-btn {
   height: 40px;
 }
 
-.profile-card {
-  display: flex;
-  gap: 30px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 30px;
-}
 
-.profile-avatar-section {
-  width: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .skeleton-avatar {
   width: 120px;
@@ -8527,15 +8676,7 @@ body.dark-mode .delete-btn {
   margin-top: 14px;
 }
 
-.profile-details {
-  flex: 1;
-}
 
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
-}
 
 .skeleton-label {
   width: 80px;

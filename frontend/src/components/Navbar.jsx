@@ -337,6 +337,7 @@ NOTIFICATIONS
                             <button
                                 className="view-all-btn"
                                 onClick={() => navigate("/notifications")}
+
                             >
                                 View All Notifications
                             </button>
@@ -347,7 +348,10 @@ NOTIFICATIONS
 
                 </div>
 
-                <div className="profile-box">
+                <div className="profile-box"
+                    onClick={() => navigate("/profile")}
+                    title="View Profile"
+                >
 
                     {sessionStorage.getItem("profile_image") ? (
 

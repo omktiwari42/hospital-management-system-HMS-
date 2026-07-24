@@ -4,6 +4,7 @@ import api from "../services/api";
 import ProfileSkeleton from "../components/ProfileSkeleton";
 import { FaEdit, FaTimes } from "react-icons/fa";
 import { FaCamera } from "react-icons/fa";
+import { hmsToast } from "../utils/hmsToast";
 function Profile() {
   const navigate = useNavigate();
 
@@ -81,7 +82,10 @@ function Profile() {
 
       setShowEdit(false);
 
-      getProfile();
+
+      hmsToast.success("Profile updated successfully!", {
+        description: "Your profile information has been saved."
+      });
     } catch (err) {
 
       console.log(err);
@@ -112,9 +116,14 @@ function Profile() {
         ...prev,
         profile_image: res.data.image,
       }));
+
       sessionStorage.setItem("profile_image", res.data.image);
 
       window.dispatchEvent(new Event("userUpdated"));
+      await getProfile();
+      hmsToast.success("Profile photo updated!", {
+        description: "Your new profile picture is now visible."
+      });
 
     } catch (err) {
 
@@ -125,8 +134,44 @@ function Profile() {
       setUploading(false);
 
     }
+  }
+  async function deletePhoto() {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      await api.delete("/profile/delete-image", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setProfile(prev => ({
+        ...prev,
+        profile_image: null,
+      }));
+
+      sessionStorage.removeItem("profile_image");
+
+      window.dispatchEvent(new Event("userUpdated"));
+
+      hmsToast.success("Profile photo removed!", {
+        description: "Your profile picture has been deleted.",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      hmsToast.error("Failed to remove profile photo.");
+
+    }
 
   }
+
+
+
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -159,38 +204,64 @@ function Profile() {
       </div>
 
       <div className="profile-card">
+        <div className="profile-avatar-section">
 
+          <div className="profile-avatar">
 
-        <div className="profile-avatar">
+            {
+              profile.profile_image ? (
+                <img
+                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profile.profile_image}`}
+                  alt="Profile"
+                />
+              ) : (
+                (profile.full_name || "U")
+                  .charAt(0)
+                  .toUpperCase()
+              )
+            }
 
-          {
-            profile.profile_image ?
+            <label className="avatar-upload">
 
-              <img
-                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profile.profile_image}`}
-                alt="Profile"
+              {uploading ? (
+                <span className="upload-spinner"></span>
+              ) : (
+                <FaCamera />
+              )}
+
+              <input
+                id="profile-photo-input"
+                hidden
+                type="file"
+                accept="image/*"
+                onChange={uploadPhoto}
               />
 
-              :
-              (profile.full_name || "U")
-                .charAt(0)
-                .toUpperCase()
-          }
+            </label>
 
-          <label
-            className="avatar-upload"
-          >
+          </div>
 
-            <FaCamera />
+          <div className="profile-photo-actions">
 
-            <input
-              hidden
-              type="file"
-              accept="image/*"
-              onChange={uploadPhoto}
-            />
+            <button
+              className="change-photo-btn"
+              onClick={() =>
+                document.getElementById("profile-photo-input").click()
+              }
+              disabled={uploading}
+            >
+              📷 Change Photo
+            </button>
 
-          </label>
+            <button
+              className="delete-photo-btn"
+              onClick={deletePhoto}
+              disabled={uploading}
+            >
+              🗑️ Remove Photo
+            </button>
+
+          </div>
 
         </div>
 

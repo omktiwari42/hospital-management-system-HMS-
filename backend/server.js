@@ -1058,6 +1058,56 @@ app.post(
 
   }
 );
+app.delete(
+  "/api/profile/delete-image",
+  authenticateToken,
+  async (req, res) => {
+    console.log("DELETE PROFILE IMAGE ROUTE LOADED");
+    try {
+      const result = await pool.query(
+        "SELECT profile_image FROM users WHERE id = $1",
+        [req.user.id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      const profileImage = result.rows[0].profile_image;
+
+      if (profileImage) {
+        const imagePath = path.join(
+          __dirname,
+          "uploads",
+          profileImage
+        );
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      }
+
+      await pool.query(
+        "UPDATE users SET profile_image = NULL WHERE id = $1",
+        [req.user.id]
+      );
+
+      res.json({
+        success: true,
+      });
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete profile image",
+      });
+    }
+  }
+);
 
 app.post("/api/create-order", authenticateToken, async (req, res) => {
   try {
