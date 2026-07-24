@@ -1670,6 +1670,9 @@ app.get(
   }
 );
 app.post("/api/prescriptions", authenticateToken, async (req, res) => {
+  console.log("looged in user");
+  console.log("JWT USER:", req.user);
+  console.log("Patient ID used:", req.user.id);
   try {
     const {
       patient_id,
