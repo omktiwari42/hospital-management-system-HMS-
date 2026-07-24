@@ -47,16 +47,14 @@ NOTIFICATIONS
 
     useEffect(() => {
         function handleUserUpdated() {
-            setProfileImage(sessionStorage.getItem("profile_image"));
+            setProfileImage(sessionStorage.getItem("profile_image") || null);
         }
 
         window.addEventListener("userUpdated", handleUserUpdated);
 
         return () =>
             window.removeEventListener("userUpdated", handleUserUpdated);
-        hmsToast.success("✅ Profile photo updated successfully!", {
-            description: "Your new profile picture is now visible."
-        });
+
     }, []);
     useEffect(() => {
 
@@ -353,18 +351,15 @@ NOTIFICATIONS
                     title="View Profile"
                 >
 
-                    {sessionStorage.getItem("profile_image") ? (
-
+                    {profileImage ? (
                         <img
                             className="navbar-profile-image"
                             src={`${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${profileImage}`}
                             alt="Profile"
+                            onError={() => setProfileImage(null)}
                         />
-
                     ) : (
-
                         <FaUserCircle size={34} />
-
                     )}
 
                     <div>

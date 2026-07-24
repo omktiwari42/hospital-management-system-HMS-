@@ -149,6 +149,8 @@ function Profile() {
 
       await getProfile();
 
+      window.dispatchEvent(new Event("userUpdated"));
+
       hmsToast.success("Profile photo removed!", {
         description: "Your profile picture has been deleted.",
       });
