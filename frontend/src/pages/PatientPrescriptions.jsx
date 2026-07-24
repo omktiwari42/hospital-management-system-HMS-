@@ -6,6 +6,16 @@ function PatientPrescriptions() {
     const [loading, setLoading] = useState(true);
     const [prescriptions, setPrescriptions] = useState([]);
     const [search, setSearch] = useState("");
+    const totalPrescriptions = prescriptions.length;
+
+    const activePrescriptions = prescriptions.filter(
+        p => true
+    ).length;
+
+    const totalMedicines = prescriptions.reduce((total, p) => {
+        if (!p.medicines) return total;
+        return total + p.medicines.split(",").length;
+    }, 0);
 
     useEffect(() => {
         loadPrescriptions();
@@ -73,6 +83,33 @@ function PatientPrescriptions() {
                 />
 
             </div>
+            <div className="prescription-stats">
+
+                <div className="stat-card">
+
+                    <h2>{totalPrescriptions}</h2>
+
+                    <p>Total Prescriptions</p>
+
+                </div>
+
+                <div className="stat-card">
+
+                    <h2>{activePrescriptions}</h2>
+
+                    <p>Active</p>
+
+                </div>
+
+                <div className="stat-card">
+
+                    <h2>{totalMedicines}</h2>
+
+                    <p>Medicines</p>
+
+                </div>
+
+            </div>
 
             {filtered.length === 0 ? (
 
@@ -118,9 +155,15 @@ function PatientPrescriptions() {
                                     </small>
 
                                 </div>
-
-                                <span className="status-badge">
-                                    Active
+                                <span
+                                    className={`status-badge ${item.status === "Completed"
+                                        ? "completed"
+                                        : item.status === "Expired"
+                                            ? "expired"
+                                            : "active"
+                                        }`}
+                                >
+                                    {item.status || "Active"}
                                 </span>
 
                             </div>
@@ -149,16 +192,56 @@ function PatientPrescriptions() {
                                 </div>
 
                             </div>
+                            <div className="info-grid">
 
+                                <div className="info-box">
+                                    <strong>Prescription ID</strong>
+                                    <span>#{item.id}</span>
+                                </div>
+
+                                <div className="info-box">
+                                    <strong>Doctor</strong>
+                                    <span>
+                                        {item.doctor_name || `Doctor ${item.doctor_id}`}
+                                    </span>
+                                </div>
+
+                                <div className="info-box">
+                                    <strong>Duration</strong>
+                                    <span>{item.duration}</span>
+                                </div>
+
+                                <div className="info-box">
+                                    <strong>Date</strong>
+                                    <span>
+                                        {item.created_at
+                                            ? new Date(item.created_at).toLocaleDateString("en-IN")
+                                            : "Today"}
+                                    </span>
+                                </div>
+
+                            </div>
                             <div className="medicine-section">
 
                                 <h4>
                                     💊 Medicines
                                 </h4>
 
-                                <div className="medicine-chip">
+                                <div className="medicine-list">
 
-                                    {item.medicines}
+                                    {(item.medicines || "")
+                                        .split(",")
+
+                                        .map((medicine, index) => (
+
+                                            <span
+                                                key={index}
+                                                className="medicine-chip"
+                                            >
+                                                💊 {medicine.trim()}
+                                            </span>
+
+                                        ))}
 
                                 </div>
 
@@ -192,6 +275,20 @@ function PatientPrescriptions() {
 
                                     {item.notes ||
                                         "No additional notes."}
+
+                                </p>
+
+                            </div>
+                            <div className="followup-card">
+
+                                <h4>
+                                    📅 Follow-up
+                                </h4>
+
+                                <p>
+
+                                    Visit your doctor after
+                                    completing the medicines.
 
                                 </p>
 
