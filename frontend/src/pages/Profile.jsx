@@ -136,9 +136,7 @@ function Profile() {
     }
   }
   async function deletePhoto() {
-
     try {
-
       const token = localStorage.getItem("token");
 
       await api.delete("/profile/delete-image", {
@@ -147,29 +145,26 @@ function Profile() {
         },
       });
 
-      setProfile(prev => ({
-        ...prev,
-        profile_image: null,
-      }));
-
       sessionStorage.removeItem("profile_image");
 
-      window.dispatchEvent(new Event("userUpdated"));
+      await getProfile();
 
       hmsToast.success("Profile photo removed!", {
         description: "Your profile picture has been deleted.",
       });
 
+      setTimeout(() => {
+        window.dispatchEvent(new Event("userUpdated"));
+      }, 100);
+
     } catch (err) {
+      console.error(err);
 
-      console.log(err);
-
-      hmsToast.error("Failed to remove profile photo.");
-
+      hmsToast.error(
+        err.response?.data?.message || "Failed to remove profile photo."
+      );
     }
-
   }
-
 
 
   if (loading) {

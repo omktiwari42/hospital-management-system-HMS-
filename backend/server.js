@@ -1062,16 +1062,14 @@ app.delete(
   "/api/profile/delete-image",
   authenticateToken,
   async (req, res) => {
-    console.log("DELETE PROFILE IMAGE ROUTE LOADED");
-    console.log("JWT USER:", req.user);
-    console.log("USER ID:", req.user.id);
+
 
     try {
       const result = await pool.query(
         "SELECT profile_image FROM users WHERE id = $1",
         [req.user.id]
       );
-      console.log("DB RESULT:", result.rows);
+
 
       if (result.rows.length === 0) {
         return res.status(404).json({
