@@ -2,9 +2,15 @@ const multer = require("multer");
 const notificationRoutes =
   require("./routes/notificationRoutes");
 const createNotification = require("./utils/createNotification");
+const uploadPath = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadPath);
   },
 
   filename: (req, file, cb) => {
@@ -12,11 +18,10 @@ const storage = multer.diskStorage({
       null,
       Date.now() +
       "-" +
-      file.originalname
+      file.originalname.replace(/\s+/g, "_")
     );
   },
 });
-
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -34,6 +39,7 @@ const upload = multer({
     }
   },
 });
+const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 const {
@@ -112,7 +118,7 @@ app.use(
 );
 app.use(
   "/uploads",
-  express.static("uploads")
+  express.static(path.join(__dirname, "uploads"))
 );
 
 app.get("/", (req, res) => {
