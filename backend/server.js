@@ -1766,17 +1766,22 @@ app.get(
         `
         SELECT
         p.*,
-        patient.name AS patient_name,
+        pt.name AS patient_name,
         d.name AS doctor_name,
         d.specialization
-        FROM prescriptions p
-        LEFT JOIN doctors d
+    FROM prescriptions p
+    INNER JOIN patients pt
+        ON pt.id = p.patient_id
+    LEFT JOIN doctors d
         ON d.id = p.doctor_id
-        LEFT JOIN patients patient
-        ON patient.id = p.patient_id
-        WHERE p.id = $1;
+    WHERE
+        p.id = $1
+        AND pt.phone = $2;
         `,
-        [id]
+        [
+          id,
+          req.user.phone,
+        ]
       );
 
       if (result.rows.length === 0) {
