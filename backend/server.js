@@ -1071,6 +1071,7 @@ app.delete(
         "SELECT profile_image FROM users WHERE id = $1",
         [req.user.id]
       );
+      console.log("DB RESULT:", result.rows);
 
       if (result.rows.length === 0) {
         return res.status(404).json({
