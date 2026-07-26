@@ -1,3 +1,5 @@
+import "./../styles/invoice.css";
+
 function InvoiceCard({ invoice }) {
     return (
         <div className="invoice-card">
