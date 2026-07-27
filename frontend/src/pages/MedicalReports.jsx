@@ -9,11 +9,19 @@ function MedicalReports() {
 
     const [reports, setReports] = useState([]);
     const [filteredReports, setFilteredReports] = useState([]);
+    const [patients, setPatients] = useState([]);
+
     const [search, setSearch] = useState("");
+
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+
+    const [selectedPatient, setSelectedPatient] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
 
     useEffect(() => {
         loadReports();
+        loadPatients();
     }, []);
 
     useEffect(() => {
@@ -41,6 +49,52 @@ function MedicalReports() {
         }
     }
 
+    async function loadPatients() {
+        try {
+            const res = await api.get("/patients");
+            setPatients(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function uploadReport() {
+        if (!selectedPatient || !selectedFile) {
+            alert("Please select a patient and a report.");
+            return;
+        }
+
+        try {
+            setUploading(true);
+
+            const formData = new FormData();
+
+            formData.append("report", selectedFile);
+
+            await api.post(
+                `/upload-report/${selectedPatient}`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            alert("Report uploaded successfully.");
+
+            setSelectedPatient("");
+            setSelectedFile(null);
+
+            loadReports();
+        } catch (err) {
+            console.error(err);
+            alert("Upload failed.");
+        } finally {
+            setUploading(false);
+        }
+    }
+
     if (loading) {
         return <MedicalReportsSkeleton />;
     }
@@ -65,6 +119,48 @@ function MedicalReports() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
+            </div>
+
+            <div className="card">
+                <h2>Upload Medical Report</h2>
+
+                <select
+                    value={selectedPatient}
+                    onChange={(e) =>
+                        setSelectedPatient(e.target.value)
+                    }
+                >
+                    <option value="">
+                        Select Patient
+                    </option>
+
+                    {patients.map((patient) => (
+                        <option
+                            key={patient.id}
+                            value={patient.id}
+                        >
+                            {patient.name}
+                        </option>
+                    ))}
+                </select>
+
+                <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) =>
+                        setSelectedFile(e.target.files[0])
+                    }
+                />
+
+                <button
+                    className="save-btn"
+                    onClick={uploadReport}
+                    disabled={uploading}
+                >
+                    {uploading
+                        ? "Uploading..."
+                        : "Upload Report"}
+                </button>
             </div>
 
             <div className="reports-grid">
