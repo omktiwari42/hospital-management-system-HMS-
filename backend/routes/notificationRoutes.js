@@ -115,7 +115,6 @@ router.put("/:id/read", async (req, res) => {
 =========================== */
 
 router.delete("/:id", async (req, res) => {
-    console.log("DELETE HIT", req.params.id);
 
     try {
 
