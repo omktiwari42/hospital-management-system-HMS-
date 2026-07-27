@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import jsPDF from "jspdf";
-import InvoiceCard from "../components/InvoiceCard";
 import { hmsToast } from "../utils/hmsToast";
 import autoTable from "jspdf-autotable";
 import BillingSkeleton from "../components/skeletons/BillingSkeleton";
@@ -19,7 +18,6 @@ function Billing() {
   const [bills, setBills] = useState([]);
   const [filteredBills, setFilteredBills] =
     useState([]);
-  const [showInvoice, setShowInvoice] = useState(false);
 
   const [patientName, setPatientName] =
     useState("");
@@ -501,15 +499,6 @@ function Billing() {
                       >
                         Delete
                       </button>
-                      <button
-                        className="view-btn"
-                        onClick={() => {
-                          setSelectedBill(bill);
-                          setShowInvoice(true);
-                        }}
-                      >
-                        👁 View Invoice
-                      </button>
 
                       <button
                         className="pdf-btn"
@@ -535,44 +524,6 @@ function Billing() {
           </table>
         </div>
       </div>
-      {showInvoice && selectedBill && (
-        <div className="invoice-modal">
-          <div className="invoice-modal-content">
-
-            <button
-              className="close-btn"
-              onClick={() => setShowInvoice(false)}
-            >
-              ✕
-            </button>
-
-            <InvoiceCard
-              invoice={{
-                invoiceNo: `INV-${selectedBill.id}`,
-                date: new Date().toLocaleDateString(),
-                patientName: selectedBill.patient_name,
-                patientPhone: "-",
-                gender: "-",
-                doctor: "-",
-                department: "-",
-                items: [
-                  {
-                    service: "Doctor Consultation",
-                    qty: 1,
-                    price: selectedBill.amount,
-                  },
-                ],
-                subtotal: selectedBill.amount,
-                tax: 0,
-                total: selectedBill.amount,
-                status: selectedBill.payment_status || "Pending",
-              }}
-            />
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
