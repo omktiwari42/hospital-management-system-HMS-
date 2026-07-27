@@ -101,6 +101,12 @@ function MedicalReports() {
         return <MedicalReportsSkeleton />;
     }
 
+    const pdfReports = reports.filter((r) =>
+        r.file?.toLowerCase().endsWith(".pdf")
+    ).length;
+
+    const imageReports = reports.length - pdfReports;
+
     return (
         <div className="page">
             <div className="page-header">
@@ -114,6 +120,27 @@ function MedicalReports() {
                 <h1>📁 Medical Reports</h1>
             </div>
 
+            {/* Statistics */}
+
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>{reports.length}</h3>
+                    <p>Total Reports</p>
+                </div>
+
+                <div className="stat-card">
+                    <h3>{pdfReports}</h3>
+                    <p>PDF Reports</p>
+                </div>
+
+                <div className="stat-card">
+                    <h3>{imageReports}</h3>
+                    <p>Image Reports</p>
+                </div>
+            </div>
+
+            {/* Search */}
+
             <div className="card">
                 <input
                     type="text"
@@ -122,6 +149,8 @@ function MedicalReports() {
                     onChange={(e) => setSearch(e.target.value)}
                 />
             </div>
+
+            {/* Upload */}
 
             <div className="card upload-card">
                 <h2>📤 Upload Medical Report</h2>
@@ -166,6 +195,8 @@ function MedicalReports() {
                     </button>
                 </div>
             </div>
+
+            {/* Reports */}
 
             <div className="reports-grid">
                 {filteredReports.length === 0 ? (
