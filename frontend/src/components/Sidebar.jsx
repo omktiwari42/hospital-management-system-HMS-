@@ -158,7 +158,12 @@ function Sidebar() {
           {!collapsed && <span>Billing</span>}
         </NavLink>
       )}
-
+      {(role === "admin" || role === "doctor") && (
+        <NavLink to="/medical-reports">
+          <FaFlask />
+          {!collapsed && <span>Medical Reports</span>}
+        </NavLink>
+      )}
       {/* Patient Menu */}
       {role === "patient" && (
         <NavLink to="/book-appointment">

@@ -16,7 +16,7 @@ import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import Notifications from "./pages/Notifications";
 import { useState } from "react";
-
+import MedicalReports from "./pages/MedicalReports";
 
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
@@ -57,6 +57,16 @@ function App() {
               <ProtectedRoute>
                 <RoleRoute roles={["admin"]}>
                   <Dashboard />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/medical-reports"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["admin", "doctor"]}>
+                  <MedicalReports />
                 </RoleRoute>
               </ProtectedRoute>
             }
