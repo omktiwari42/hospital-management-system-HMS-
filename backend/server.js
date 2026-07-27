@@ -1861,6 +1861,87 @@ app.get(
     }
   }
 );
+app.get(
+  "/api/reports",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          id,
+          name AS patient_name,
+          report AS file,
+          phone,
+          age,
+          gender
+        FROM patients
+        WHERE report IS NOT NULL
+        ORDER BY id DESC
+      `);
+
+      res.json(result.rows);
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Failed to load reports",
+      });
+    }
+  }
+);
+app.delete(
+  "/api/reports/:id",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await pool.query(
+        "SELECT report FROM patients WHERE id = $1",
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Patient not found",
+        });
+      }
+
+      const reportFile = result.rows[0].report;
+
+      if (reportFile) {
+        const reportPath = path.join(
+          __dirname,
+          "uploads",
+          reportFile
+        );
+
+        if (fs.existsSync(reportPath)) {
+          fs.unlinkSync(reportPath);
+        }
+      }
+
+      await pool.query(
+        "UPDATE patients SET report = NULL WHERE id = $1",
+        [id]
+      );
+
+      res.json({
+        success: true,
+        message: "Medical report deleted successfully",
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete medical report",
+      });
+    }
+  }
+);
 app.post(
   "/api/upload-report/:id",
   authenticateToken,

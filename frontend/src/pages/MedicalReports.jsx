@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import api from "../services/api";
 import ReportCard from "../components/ReportCard";
 import MedicalReportsSkeleton from "../components/skeletons/MedicalReportsSkeleton";
@@ -87,8 +87,6 @@ function MedicalReports() {
 
             setSelectedPatient("");
             setSelectedFile(null);
-
-            document.querySelector('input[type="file"]').value = "";
 
             await loadReports();
         } catch (err) {
@@ -177,6 +175,7 @@ function MedicalReports() {
                         <ReportCard
                             key={report.id}
                             report={report}
+                            onDelete={loadReports}
                         />
                     ))
                 )}

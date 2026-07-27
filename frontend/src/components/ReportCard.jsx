@@ -5,20 +5,24 @@ import {
     FaEye,
     FaTrash,
 } from "react-icons/fa";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import api from "../services/api";
 
-function ReportCard({ report }) {
-    const isPdf = report.file
-        ?.toLowerCase()
-        .endsWith(".pdf");
+function ReportCard({ report, onDelete }) {
+    const isPdf = report.file?.toLowerCase().endsWith(".pdf");
 
-    const fileUrl = `${import.meta.env.VITE_API_URL.replace("/api", "")
-        }/uploads/${report.file}`;
+    const apiUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+    const baseUrl = apiUrl.replace("/api", "");
+
+    const fileUrl = report.file
+        ? `${baseUrl}/uploads/${encodeURIComponent(report.file)}`
+        : "#";
 
     async function deleteReport() {
         const confirmed = window.confirm(
-            "Delete this medical report?"
+            "Are you sure you want to delete this medical report?"
         );
 
         if (!confirmed) return;
@@ -26,16 +30,17 @@ function ReportCard({ report }) {
         try {
             await api.delete(`/reports/${report.id}`);
 
-            toast.success(
-                "Medical report deleted successfully."
-            );
+            toast.success("Medical report deleted successfully.");
 
-            window.location.reload();
+            if (onDelete) {
+                await onDelete();
+            }
         } catch (err) {
             console.error(err);
 
             toast.error(
-                "Failed to delete report."
+                err.response?.data?.message ||
+                "Failed to delete medical report."
             );
         }
     }
@@ -44,19 +49,12 @@ function ReportCard({ report }) {
         <div className="report-card">
             <div className="report-header">
                 <div className="report-icon">
-                    {isPdf ? (
-                        <FaFilePdf />
-                    ) : (
-                        <FaImage />
-                    )}
+                    {isPdf ? <FaFilePdf /> : <FaImage />}
                 </div>
 
                 <div>
                     <h3>{report.patient_name}</h3>
-
-                    <p>
-                        {report.file}
-                    </p>
+                    <p>{report.file || "No report uploaded"}</p>
                 </div>
             </div>
 
@@ -64,11 +62,11 @@ function ReportCard({ report }) {
                 <a
                     href={fileUrl}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="view-btn"
                 >
                     <FaEye />
-                    View
+                    <span>View</span>
                 </a>
 
                 <a
@@ -77,15 +75,16 @@ function ReportCard({ report }) {
                     className="download-btn"
                 >
                     <FaDownload />
-                    Download
+                    <span>Download</span>
                 </a>
 
                 <button
+                    type="button"
                     className="delete-btn"
                     onClick={deleteReport}
                 >
                     <FaTrash />
-                    Delete
+                    <span>Delete</span>
                 </button>
             </div>
         </div>
