@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import api from "../services/api";
 import ReportCard from "../components/ReportCard";
 import MedicalReportsSkeleton from "../components/skeletons/MedicalReportsSkeleton";
@@ -44,6 +45,7 @@ function MedicalReports() {
             setFilteredReports(res.data);
         } catch (err) {
             console.error(err);
+            toast.error("Failed to load medical reports.");
         } finally {
             setLoading(false);
         }
@@ -55,12 +57,13 @@ function MedicalReports() {
             setPatients(res.data);
         } catch (err) {
             console.error(err);
+            toast.error("Failed to load patients.");
         }
     }
 
     async function uploadReport() {
         if (!selectedPatient || !selectedFile) {
-            alert("Please select a patient and a report.");
+            toast.error("Please select a patient and a report.");
             return;
         }
 
@@ -68,7 +71,6 @@ function MedicalReports() {
             setUploading(true);
 
             const formData = new FormData();
-
             formData.append("report", selectedFile);
 
             await api.post(
@@ -81,15 +83,17 @@ function MedicalReports() {
                 }
             );
 
-            alert("Report uploaded successfully.");
+            toast.success("Medical report uploaded successfully.");
 
             setSelectedPatient("");
             setSelectedFile(null);
 
-            loadReports();
+            document.querySelector('input[type="file"]').value = "";
+
+            await loadReports();
         } catch (err) {
             console.error(err);
-            alert("Upload failed.");
+            toast.error("Failed to upload medical report.");
         } finally {
             setUploading(false);
         }
@@ -121,46 +125,48 @@ function MedicalReports() {
                 />
             </div>
 
-            <div className="card">
-                <h2>Upload Medical Report</h2>
+            <div className="card upload-card">
+                <h2>📤 Upload Medical Report</h2>
 
-                <select
-                    value={selectedPatient}
-                    onChange={(e) =>
-                        setSelectedPatient(e.target.value)
-                    }
-                >
-                    <option value="">
-                        Select Patient
-                    </option>
-
-                    {patients.map((patient) => (
-                        <option
-                            key={patient.id}
-                            value={patient.id}
-                        >
-                            {patient.name}
+                <div className="upload-form">
+                    <select
+                        value={selectedPatient}
+                        onChange={(e) =>
+                            setSelectedPatient(e.target.value)
+                        }
+                    >
+                        <option value="">
+                            Select Patient
                         </option>
-                    ))}
-                </select>
 
-                <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) =>
-                        setSelectedFile(e.target.files[0])
-                    }
-                />
+                        {patients.map((patient) => (
+                            <option
+                                key={patient.id}
+                                value={patient.id}
+                            >
+                                {patient.name}
+                            </option>
+                        ))}
+                    </select>
 
-                <button
-                    className="save-btn"
-                    onClick={uploadReport}
-                    disabled={uploading}
-                >
-                    {uploading
-                        ? "Uploading..."
-                        : "Upload Report"}
-                </button>
+                    <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) =>
+                            setSelectedFile(e.target.files[0])
+                        }
+                    />
+
+                    <button
+                        className="save-btn"
+                        onClick={uploadReport}
+                        disabled={uploading}
+                    >
+                        {uploading
+                            ? "Uploading..."
+                            : "Upload Report"}
+                    </button>
+                </div>
             </div>
 
             <div className="reports-grid">
