@@ -1,8 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
-const notificationRoutes =
-  require("./routes/notificationRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const createNotification = require("./utils/createNotification");
 const uploadPath = path.join(__dirname, "uploads");
 
