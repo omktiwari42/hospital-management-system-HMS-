@@ -1,4 +1,3 @@
-import "../styles/patientMedicalHistory.css";
 
 function PatientMedicalHistory() {
     return (
