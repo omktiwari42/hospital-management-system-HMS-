@@ -9741,3 +9741,33 @@ body.dark-mode .followup-card {
   background: #dc2626;
   color: white;
 }
+
+.page {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  margin-bottom: 12px;
+}
+
+.card p {
+  color: #666;
+  line-height: 1.6;
+}
