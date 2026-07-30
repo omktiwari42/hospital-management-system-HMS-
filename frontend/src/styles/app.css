@@ -9771,3 +9771,251 @@ body.dark-mode .followup-card {
   color: #666;
   line-height: 1.6;
 }
+
+.medical-history-page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.page-header p {
+  margin-top: 8px;
+  color: #666;
+}
+
+.primary-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: .25s;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+}
+
+.history-toolbar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box,
+.patient-select {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+
+.search-box input,
+.patient-select select {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.history-card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
+  transition: .25s;
+}
+
+.history-card:hover {
+  transform: translateY(-5px);
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.history-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #2563eb;
+}
+
+.history-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-btn,
+.delete-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.edit-btn {
+  background: #facc15;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.edit-btn:hover,
+.delete-btn:hover {
+  transform: scale(1.08);
+}
+
+.history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.history-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.history-item svg {
+  margin-top: 4px;
+  color: #2563eb;
+}
+
+.history-item h4 {
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.history-item p {
+  color: #666;
+  line-height: 1.5;
+}
+
+.empty-history {
+  background: white;
+  border-radius: 15px;
+  padding: 60px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
+  color: #666;
+  font-size: 18px;
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton {
+  border-radius: 8px;
+  animation: pulse 1.3s infinite;
+  background: linear-gradient(90deg,
+      #f2f2f2,
+      #e8e8e8,
+      #f2f2f2);
+}
+
+.skeleton-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 18px;
+  margin-bottom: 18px;
+}
+
+.skeleton-line {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 12px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: .45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: .45;
+  }
+}
+
+@media (max-width:768px) {
+
+  .medical-history-page {
+    padding: 15px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary-btn {
+    justify-content: center;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+}
