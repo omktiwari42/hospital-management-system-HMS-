@@ -1978,7 +1978,188 @@ app.post(
     }
   }
 );
+/* ===========================
+   PATIENT MEDICAL HISTORY APIs
+=========================== */
 
+// Get medical history by patient ID
+app.get(
+  "/api/patient-history/:patientId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { patientId } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM patient_medical_history
+        WHERE patient_id = $1
+        ORDER BY updated_at DESC
+        `,
+        [patientId]
+      );
+
+      res.json(result.rows);
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Failed to load patient medical history",
+      });
+    }
+  }
+);
+
+// Create medical history
+app.post(
+  "/api/patient-history",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const {
+        patient_id,
+        previous_illnesses,
+        surgeries,
+        family_history,
+        allergies,
+        lifestyle,
+        doctor_notes,
+      } = req.body;
+
+      const result = await pool.query(
+        `
+        INSERT INTO patient_medical_history
+        (
+          patient_id,
+          previous_illnesses,
+          surgeries,
+          family_history,
+          allergies,
+          lifestyle,
+          doctor_notes
+        )
+        VALUES
+        ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING *
+        `,
+        [
+          patient_id,
+          previous_illnesses,
+          surgeries,
+          family_history,
+          allergies,
+          lifestyle,
+          doctor_notes,
+        ]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Failed to create medical history",
+      });
+    }
+  }
+);
+
+// Update medical history
+app.put(
+  "/api/patient-history/:id",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const {
+        previous_illnesses,
+        surgeries,
+        family_history,
+        allergies,
+        lifestyle,
+        doctor_notes,
+      } = req.body;
+
+      const result = await pool.query(
+        `
+        UPDATE patient_medical_history
+        SET
+          previous_illnesses = $1,
+          surgeries = $2,
+          family_history = $3,
+          allergies = $4,
+          lifestyle = $5,
+          doctor_notes = $6,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $7
+        RETURNING *
+        `,
+        [
+          previous_illnesses,
+          surgeries,
+          family_history,
+          allergies,
+          lifestyle,
+          doctor_notes,
+          id,
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          message: "Medical history not found",
+        });
+      }
+
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Failed to update medical history",
+      });
+    }
+  }
+);
+
+// Delete medical history
+app.delete(
+  "/api/patient-history/:id",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await pool.query(
+        `
+        DELETE FROM patient_medical_history
+        WHERE id = $1
+        RETURNING *
+        `,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          message: "Medical history not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Medical history deleted successfully",
+      });
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Failed to delete medical history",
+      });
+    }
+  }
+);
 
 
 const PORT = process.env.PORT || 5000;
