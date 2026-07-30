@@ -1,104 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import {
-    FaSearch,
-    FaPlus,
-    FaUserInjured,
-    FaNotesMedical,
-} from "react-icons/fa";
-
-import MedicalHistoryCard from "../components/MedicalHistoryCard";
-import MedicalHistorySkeleton from "../components/skeletons/MedicalHistorySkeleton";
-
-
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-function PatientMedicalHistory() {
-    const [patients, setPatients] = useState([]);
-    const [selectedPatient, setSelectedPatient] = useState("");
-    const [history, setHistory] = useState([]);
-    const [search, setSearch] = useState("");
-
-    const [loadingPatients, setLoadingPatients] = useState(true);
-    const [loadingHistory, setLoadingHistory] = useState(false);
-
-    useEffect(() => {
-        fetchPatients();
-    }, []);
-
-    useEffect(() => {
-        if (selectedPatient) {
-            fetchHistory(selectedPatient);
-        } else {
-            setHistory([]);
-        }
-    }, [selectedPatient]);
-
-    const token = localStorage.getItem("token");
-
-    const fetchPatients = async () => {
-        try {
-            setLoadingPatients(true);
-
-            const res = await axios.get(
-                `${API}/api/patients`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            setPatients(res.data);
-        } catch (err) {
-            console.log(err);
-            toast.error("Unable to load patients");
-        } finally {
-            setLoadingPatients(false);
-        }
-    };
-
-    const fetchHistory = async (patientId) => {
-        try {
-            setLoadingHistory(true);
-
-            const res = await axios.get(
-                `${API}/api/patient-history/${patientId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            setHistory(res.data);
-        } catch (err) {
-            console.log(err);
-            toast.error("Unable to load medical history");
-        } finally {
-            setLoadingHistory(false);
-        }
-    };
-
-    const filteredHistory = useMemo(() => {
-        return history.filter((item) => {
-            const text = (
-                item.previous_illnesses +
-                item.surgeries +
-                item.family_history +
-                item.allergies +
-                item.lifestyle +
-                item.doctor_notes
-            )
-                .toLowerCase();
-
-            return text.includes(search.toLowerCase());
-        });
-    }, [history, search]);
-
-    return (
+return (
+    <>
         <div className="medical-history-page">
 
             <div className="page-header">
@@ -115,7 +16,18 @@ function PatientMedicalHistory() {
                     </p>
                 </div>
 
-                <button className="primary-btn">
+                <button
+                    className="primary-btn"
+                    onClick={() => {
+                        if (!selectedPatient) {
+                            toast.warning("Please select a patient first.");
+                            return;
+                        }
+
+                        setEditingHistory(null);
+                        setModalOpen(true);
+                    }}
+                >
                     <FaPlus />
                     Add History
                 </button>
@@ -125,18 +37,14 @@ function PatientMedicalHistory() {
             <div className="history-toolbar">
 
                 <div className="search-box">
-
                     <FaSearch />
 
                     <input
                         type="text"
                         placeholder="Search history..."
                         value={search}
-                        onChange={(e) =>
-                            setSearch(e.target.value)
-                        }
+                        onChange={(e) => setSearch(e.target.value)}
                     />
-
                 </div>
 
                 <div className="patient-select">
@@ -145,9 +53,7 @@ function PatientMedicalHistory() {
 
                     <select
                         value={selectedPatient}
-                        onChange={(e) =>
-                            setSelectedPatient(e.target.value)
-                        }
+                        onChange={(e) => setSelectedPatient(e.target.value)}
                     >
                         <option value="">
                             Select Patient
@@ -183,6 +89,10 @@ function PatientMedicalHistory() {
                             onRefresh={() =>
                                 fetchHistory(selectedPatient)
                             }
+                            onEdit={(record) => {
+                                setEditingHistory(record);
+                                setModalOpen(true);
+                            }}
                         />
                     ))}
 
@@ -190,7 +100,17 @@ function PatientMedicalHistory() {
             )}
 
         </div>
-    );
-}
+
+        <MedicalHistoryModal
+            open={modalOpen}
+            history={editingHistory}
+            patientId={selectedPatient}
+            onClose={() => setModalOpen(false)}
+            onSuccess={() => fetchHistory(selectedPatient)}
+        />
+    </>
+);
+
+
 
 export default PatientMedicalHistory;
