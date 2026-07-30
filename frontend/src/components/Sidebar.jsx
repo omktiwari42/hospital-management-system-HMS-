@@ -13,7 +13,7 @@ import {
   FaPlusCircle,
   FaClipboardList,
 } from "react-icons/fa";
-
+import { FaNotesMedical } from "react-icons/fa";
 function Sidebar() {
   // Start collapsed
   const [collapsed, setCollapsed] = useState(true);
@@ -67,6 +67,12 @@ function Sidebar() {
         <NavLink to="/dashboard">
           <FaHome />
           {!collapsed && <span>Dashboard</span>}
+        </NavLink>
+      )}
+      {(role === "admin" || role === "doctor") && (
+        <NavLink to="/patient-medical-history">
+          <FaNotesMedical />
+          {!collapsed && <span>Medical History</span>}
         </NavLink>
       )}
 
