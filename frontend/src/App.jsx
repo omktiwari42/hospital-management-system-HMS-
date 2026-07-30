@@ -17,7 +17,7 @@ import Payment from "./pages/Payment";
 import Notifications from "./pages/Notifications";
 import { useState } from "react";
 import MedicalReports from "./pages/MedicalReports";
-
+import PatientMedicalHistory from "./pages/PatientMedicalHistory";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
 import PharmacistDashboard from "./pages/PharmacistDashboard";
@@ -38,6 +38,16 @@ function App() {
               <PublicRoute>
                 <Login />
               </PublicRoute>
+            }
+          />
+          <Route
+            path="/patient-medical-history"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["admin", "doctor"]}>
+                  <PatientMedicalHistory />
+                </RoleRoute>
+              </ProtectedRoute>
             }
           />
 
