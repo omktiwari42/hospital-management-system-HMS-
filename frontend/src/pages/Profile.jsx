@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Cropper from "react-easy-crop";
+
 import api from "../services/api";
 import ProfileSkeleton from "../components/ProfileSkeleton";
-import { FaEdit, FaTimes, FaCamera } from "react-icons/fa";
+
+import {
+  FaEdit,
+  FaTimes,
+  FaCamera,
+} from "react-icons/fa";
+
 import { hmsToast } from "../utils/hmsToast";
 
 function Profile() {
@@ -11,7 +19,36 @@ function Profile() {
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
-  const [uploading, setUploading] = useState(false);
+
+  /* ===========================
+     PROFILE PHOTO
+  =========================== */
+
+  const [uploading, setUploading] =
+    useState(false);
+
+  const [selectedImage, setSelectedImage] =
+    useState(null);
+
+  const [showCropper, setShowCropper] =
+    useState(false);
+
+  const [crop, setCrop] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [zoom, setZoom] =
+    useState(1);
+
+  const [
+    croppedAreaPixels,
+    setCroppedAreaPixels,
+  ] = useState(null);
+
+  /* ===========================
+     PROFILE FORM
+  =========================== */
 
   const [form, setForm] = useState({
     full_name: "",
@@ -24,6 +61,10 @@ function Profile() {
     medical_history: "",
   });
 
+  /* ===========================
+     LOAD PROFILE
+  =========================== */
+
   useEffect(() => {
     getProfile();
   }, []);
@@ -32,39 +73,60 @@ function Profile() {
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("token");
 
       if (!token) {
         navigate("/login");
         return;
       }
 
-      const response = await api.get("/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(
+        "/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const user = response.data;
+      const user =
+        response.data;
 
       setProfile(user);
 
       setForm({
-        full_name: user.full_name || "",
-        email: user.email || "",
-        gender: user.gender || "",
-        dob: user.dob || "",
-        emergency_contact: user.emergency_contact || "",
-        blood_group: user.blood_group || "",
-        allergies: user.allergies || "",
-        medical_history: user.medical_history || "",
+        full_name:
+          user.full_name || "",
+
+        email:
+          user.email || "",
+
+        gender:
+          user.gender || "",
+
+        dob:
+          user.dob || "",
+
+        emergency_contact:
+          user.emergency_contact || "",
+
+        blood_group:
+          user.blood_group || "",
+
+        allergies:
+          user.allergies || "",
+
+        medical_history:
+          user.medical_history || "",
       });
 
       /*
-       * IMPORTANT:
-       * Always synchronize profile_image with the
-       * authenticated user's database record.
+       * The database is the source of truth.
+       * Synchronize sessionStorage with the
+       * authenticated user's actual profile.
        */
+
       if (user.profile_image) {
         sessionStorage.setItem(
           "profile_image",
@@ -97,11 +159,16 @@ function Profile() {
       );
 
       if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
+        error.response?.status ===
+        401 ||
+        error.response?.status ===
+        403
       ) {
         sessionStorage.clear();
-        localStorage.removeItem("token");
+        localStorage.removeItem(
+          "token"
+        );
+
         navigate("/login");
       }
 
@@ -109,6 +176,10 @@ function Profile() {
       setLoading(false);
     }
   }
+
+  /* ===========================
+     UPDATE PROFILE
+  =========================== */
 
   async function updateProfile() {
     try {
@@ -159,8 +230,13 @@ function Profile() {
     }
   }
 
-  async function uploadPhoto(e) {
-    const file = e.target.files?.[0];
+  /* ===========================
+     SELECT PHOTO
+  =========================== */
+
+  function handleImageSelect(e) {
+    const file =
+      e.target.files?.[0];
 
     if (!file) {
       return;
@@ -173,7 +249,11 @@ function Profile() {
       "image/webp",
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
       hmsToast.error(
         "Invalid image",
         "Please select JPG, PNG, or WEBP."
@@ -183,7 +263,10 @@ function Profile() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    const maxSize =
+      5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
       hmsToast.error(
         "Image too large",
         "Profile photo must be smaller than 5 MB."
@@ -193,35 +276,191 @@ function Profile() {
       return;
     }
 
+    const imageUrl =
+      URL.createObjectURL(file);
+
+    setSelectedImage(
+      imageUrl
+    );
+
+    setShowCropper(true);
+
+    setCrop({
+      x: 0,
+      y: 0,
+    });
+
+    setZoom(1);
+
+    setCroppedAreaPixels(
+      null
+    );
+
+    e.target.value = "";
+  }
+
+  /* ===========================
+     CROP COMPLETE
+  =========================== */
+
+  function onCropComplete(
+    _,
+    croppedPixels
+  ) {
+    setCroppedAreaPixels(
+      croppedPixels
+    );
+  }
+
+  /* ===========================
+     CREATE CROPPED IMAGE
+  =========================== */
+
+  function getCroppedImage(
+    imageSrc,
+    pixelCrop
+  ) {
+    return new Promise(
+      (resolve, reject) => {
+        const image =
+          new Image();
+
+        image.onload = () => {
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
+
+          const ctx =
+            canvas.getContext("2d");
+
+          if (!ctx) {
+            reject(
+              new Error(
+                "Canvas context unavailable"
+              )
+            );
+
+            return;
+          }
+
+          canvas.width =
+            pixelCrop.width;
+
+          canvas.height =
+            pixelCrop.height;
+
+          ctx.drawImage(
+            image,
+            pixelCrop.x,
+            pixelCrop.y,
+            pixelCrop.width,
+            pixelCrop.height,
+            0,
+            0,
+            pixelCrop.width,
+            pixelCrop.height
+          );
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(
+                  new Error(
+                    "Unable to create cropped image"
+                  )
+                );
+
+                return;
+              }
+
+              const file =
+                new File(
+                  [blob],
+                  "profile-photo.jpg",
+                  {
+                    type:
+                      "image/jpeg",
+                  }
+                );
+
+              resolve(file);
+            },
+            "image/jpeg",
+            0.92
+          );
+        };
+
+        image.onerror = () => {
+          reject(
+            new Error(
+              "Unable to load selected image"
+            )
+          );
+        };
+
+        image.src =
+          imageSrc;
+      }
+    );
+  }
+
+  /* ===========================
+     SAVE CROPPED PHOTO
+  =========================== */
+
+  async function saveCroppedPhoto() {
+    if (
+      !selectedImage ||
+      !croppedAreaPixels
+    ) {
+      return;
+    }
+
     try {
       setUploading(true);
+
+      const croppedFile =
+        await getCroppedImage(
+          selectedImage,
+          croppedAreaPixels
+        );
 
       const token =
         localStorage.getItem("token");
 
-      const data = new FormData();
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const data =
+        new FormData();
 
       data.append(
         "image",
-        file
+        croppedFile
       );
 
-      const res = await api.post(
-        "/profile/upload-image",
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res =
+        await api.post(
+          "/profile/upload-image",
+          data,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
       const imageName =
         res.data.image;
 
       setProfile((prev) => ({
         ...prev,
-        profile_image: imageName,
+        profile_image:
+          imageName,
       }));
 
       sessionStorage.setItem(
@@ -238,23 +477,55 @@ function Profile() {
         "Your new profile picture is now visible."
       );
 
-    } catch (err) {
+      closeCropper();
+
+    } catch (error) {
       console.error(
-        "Profile photo upload error:",
-        err
+        "Crop/upload error:",
+        error
       );
 
       hmsToast.error(
-        err.response?.data?.message ||
+        error.response?.data
+          ?.message ||
         "Unable to update your profile photo."
       );
 
     } finally {
       setUploading(false);
-
-      e.target.value = "";
     }
   }
+
+  /* ===========================
+     CLOSE CROPPER
+  =========================== */
+
+  function closeCropper() {
+    if (selectedImage) {
+      URL.revokeObjectURL(
+        selectedImage
+      );
+    }
+
+    setSelectedImage(null);
+
+    setShowCropper(false);
+
+    setCrop({
+      x: 0,
+      y: 0,
+    });
+
+    setZoom(1);
+
+    setCroppedAreaPixels(
+      null
+    );
+  }
+
+  /* ===========================
+     DELETE PHOTO
+  =========================== */
 
   async function deletePhoto() {
     if (!profile.profile_image) {
@@ -271,13 +542,15 @@ function Profile() {
         "/profile/delete-image",
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization:
+              `Bearer ${token}`,
           },
         }
       );
 
       /*
-       * Immediately remove photo from React state.
+       * Immediately remove image
+       * from React state.
        */
       setProfile((prev) => ({
         ...prev,
@@ -285,14 +558,14 @@ function Profile() {
       }));
 
       /*
-       * Remove cached photo.
+       * Remove cached image.
        */
       sessionStorage.removeItem(
         "profile_image"
       );
 
       /*
-       * Tell Navbar to update immediately.
+       * Immediately update Navbar.
        */
       window.dispatchEvent(
         new Event("userUpdated")
@@ -310,7 +583,8 @@ function Profile() {
       );
 
       hmsToast.error(
-        err.response?.data?.message ||
+        err.response?.data
+          ?.message ||
         "Failed to remove profile photo."
       );
 
@@ -319,9 +593,17 @@ function Profile() {
     }
   }
 
+  /* ===========================
+     LOADING
+  =========================== */
+
   if (loading) {
     return <ProfileSkeleton />;
   }
+
+  /* ===========================
+     PROFILE IMAGE URL
+  =========================== */
 
   const profileImageUrl =
     profile.profile_image
@@ -331,8 +613,16 @@ function Profile() {
       )}/uploads/${profile.profile_image}`
       : null;
 
+  /* ===========================
+     UI
+  =========================== */
+
   return (
     <div className="profile-page page">
+
+      {/* ===========================
+          PAGE HEADER
+      =========================== */}
 
       <div className="page-header">
 
@@ -345,7 +635,9 @@ function Profile() {
           ← Back
         </button>
 
-        <h1>My Profile</h1>
+        <h1>
+          My Profile
+        </h1>
 
         <div className="profile-actions">
 
@@ -363,7 +655,15 @@ function Profile() {
 
       </div>
 
+      {/* ===========================
+          PROFILE CARD
+      =========================== */}
+
       <div className="profile-card">
+
+        {/* ===========================
+            AVATAR
+        =========================== */}
 
         <div className="profile-avatar-section">
 
@@ -375,36 +675,52 @@ function Profile() {
           >
 
             {profileImageUrl ? (
+
               <img
                 src={profileImageUrl}
                 alt="Profile"
                 className="profile-avatar-image"
               />
+
             ) : (
+
               <span className="profile-avatar-initial">
-                {(profile.full_name ||
-                  "U")
+
+                {(
+                  profile.full_name ||
+                  "U"
+                )
                   .charAt(0)
                   .toUpperCase()}
+
               </span>
+
             )}
 
             {uploading && (
+
               <div className="profile-avatar-overlay">
+
                 <span className="upload-spinner"></span>
+
               </div>
+
             )}
 
           </div>
+
+          {/* Hidden File Input */}
 
           <input
             id="profile-photo-input"
             hidden
             type="file"
             accept="image/jpeg,image/png,image/jpg,image/webp"
-            onChange={uploadPhoto}
+            onChange={handleImageSelect}
             disabled={uploading}
           />
+
+          {/* Photo Buttons */}
 
           <div className="profile-photo-actions">
 
@@ -428,67 +744,108 @@ function Profile() {
             </button>
 
             {profile.profile_image && (
+
               <button
                 type="button"
                 className="delete-photo-btn"
-                onClick={deletePhoto}
+                onClick={
+                  deletePhoto
+                }
                 disabled={uploading}
               >
                 🗑️ Remove Photo
               </button>
+
             )}
 
           </div>
 
           {uploading && (
+
             <div className="profile-photo-status">
+
               <span className="status-spinner"></span>
+
               Updating profile photo...
+
             </div>
+
           )}
 
         </div>
 
+        {/* ===========================
+            PROFILE DETAILS
+        =========================== */}
+
         <div className="profile-details">
 
           <span className="role-badge">
-            {profile.role || "User"}
+
+            {profile.role ||
+              "User"}
+
           </span>
 
           <div className="profile-grid">
 
             <div className="profile-item">
-              <label>Full Name</label>
+
+              <label>
+                Full Name
+              </label>
+
               <p>
-                {profile.full_name || "-"}
+                {profile.full_name ||
+                  "-"}
               </p>
+
             </div>
 
             <div className="profile-item">
-              <label>Phone Number</label>
+
+              <label>
+                Phone Number
+              </label>
+
               <p>
-                {profile.phone || "-"}
+                {profile.phone ||
+                  "-"}
               </p>
+
             </div>
 
             <div className="profile-item">
-              <label>Email</label>
+
+              <label>
+                Email
+              </label>
+
               <p>
                 {profile.email ||
                   "Not Added"}
               </p>
+
             </div>
 
             <div className="profile-item">
-              <label>Gender</label>
+
+              <label>
+                Gender
+              </label>
+
               <p>
                 {profile.gender ||
                   "Not Added"}
               </p>
+
             </div>
 
             <div className="profile-item">
-              <label>Date of Birth</label>
+
+              <label>
+                Date of Birth
+              </label>
 
               <p>
                 {profile.dob
@@ -498,8 +855,10 @@ function Profile() {
                     "en-IN",
                     {
                       day: "2-digit",
-                      month: "long",
-                      year: "numeric",
+                      month:
+                        "long",
+                      year:
+                        "numeric",
                     }
                   )
                   : "Not Added"}
@@ -508,7 +867,10 @@ function Profile() {
             </div>
 
             <div className="profile-item">
-              <label>Blood Group</label>
+
+              <label>
+                Blood Group
+              </label>
 
               <p>
                 {profile.blood_group ||
@@ -518,7 +880,10 @@ function Profile() {
             </div>
 
             <div className="profile-item">
-              <label>Emergency Contact</label>
+
+              <label>
+                Emergency Contact
+              </label>
 
               <p>
                 {profile.emergency_contact ||
@@ -528,7 +893,10 @@ function Profile() {
             </div>
 
             <div className="profile-item">
-              <label>Role</label>
+
+              <label>
+                Role
+              </label>
 
               <p>
                 {profile.role ||
@@ -538,7 +906,10 @@ function Profile() {
             </div>
 
             <div className="profile-item">
-              <label>Account Status</label>
+
+              <label>
+                Account Status
+              </label>
 
               <p className="status-active">
                 Active
@@ -548,24 +919,36 @@ function Profile() {
 
           </div>
 
+          {/* Allergies */}
+
           <div className="profile-section">
 
-            <h3>🩺 Allergies</h3>
+            <h3>
+              🩺 Allergies
+            </h3>
 
             <div className="profile-box">
+
               {profile.allergies ||
                 "No allergies recorded."}
+
             </div>
 
           </div>
 
+          {/* Medical History */}
+
           <div className="profile-section">
 
-            <h3>📋 Medical History</h3>
+            <h3>
+              📋 Medical History
+            </h3>
 
             <div className="profile-box">
+
               {profile.medical_history ||
                 "No medical history available."}
+
             </div>
 
           </div>
@@ -573,6 +956,10 @@ function Profile() {
         </div>
 
       </div>
+
+      {/* ===========================
+          EDIT PROFILE MODAL
+      =========================== */}
 
       {showEdit && (
 
@@ -598,7 +985,9 @@ function Profile() {
 
             <input
               placeholder="Full Name"
-              value={form.full_name}
+              value={
+                form.full_name
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -610,7 +999,9 @@ function Profile() {
 
             <input
               placeholder="Email"
-              value={form.email}
+              value={
+                form.email
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -622,7 +1013,9 @@ function Profile() {
 
             <input
               placeholder="Gender"
-              value={form.gender}
+              value={
+                form.gender
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -634,7 +1027,9 @@ function Profile() {
 
             <input
               type="date"
-              value={form.dob}
+              value={
+                form.dob
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -675,7 +1070,9 @@ function Profile() {
             <textarea
               rows="3"
               placeholder="Allergies"
-              value={form.allergies}
+              value={
+                form.allergies
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -713,7 +1110,9 @@ function Profile() {
 
               <button
                 className="save-btn"
-                onClick={updateProfile}
+                onClick={
+                  updateProfile
+                }
               >
                 Save Changes
               </button>
@@ -725,6 +1124,131 @@ function Profile() {
         </div>
 
       )}
+
+      {/* ===========================
+          INSTAGRAM STYLE CROPPER
+      =========================== */}
+
+      {showCropper &&
+        selectedImage && (
+
+          <div className="photo-crop-modal">
+
+            <div className="photo-crop-container">
+
+              {/* Header */}
+
+              <div className="photo-crop-header">
+
+                <h2>
+                  Adjust Profile Photo
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={
+                    closeCropper
+                  }
+                  disabled={
+                    uploading
+                  }
+                >
+                  <FaTimes />
+                </button>
+
+              </div>
+
+              {/* Crop Area */}
+
+              <div className="photo-crop-area">
+
+                <Cropper
+                  image={
+                    selectedImage
+                  }
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  objectFit="contain"
+                  onCropChange={
+                    setCrop
+                  }
+                  onZoomChange={
+                    setZoom
+                  }
+                  onCropComplete={
+                    onCropComplete
+                  }
+                />
+
+              </div>
+
+              {/* Zoom */}
+
+              <div className="crop-controls">
+
+                <span>
+                  Zoom
+                </span>
+
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.05"
+                  value={zoom}
+                  onChange={(e) =>
+                    setZoom(
+                      Number(
+                        e.target.value
+                      )
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* Buttons */}
+
+              <div className="photo-crop-actions">
+
+                <button
+                  type="button"
+                  className="crop-cancel-btn"
+                  onClick={
+                    closeCropper
+                  }
+                  disabled={
+                    uploading
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="crop-save-btn"
+                  onClick={
+                    saveCroppedPhoto
+                  }
+                  disabled={
+                    uploading
+                  }
+                >
+                  {uploading
+                    ? "Uploading..."
+                    : "Done"}
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
 
     </div>
   );
