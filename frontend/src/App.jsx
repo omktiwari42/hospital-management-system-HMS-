@@ -1,11 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+
 import "./styles/pro-toast.css";
-import PatientPrescriptions from "./pages/PatientPrescriptions";
+
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
-import PatientBilling from "./pages/PatientBilling";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -15,39 +16,40 @@ import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import Notifications from "./pages/Notifications";
-import { useState } from "react";
+
 import MedicalReports from "./pages/MedicalReports";
 import PatientMedicalHistory from "./pages/PatientMedicalHistory";
+import PatientPrescriptions from "./pages/PatientPrescriptions";
+import PatientBilling from "./pages/PatientBilling";
+import PatientDashboard from "./pages/PatientDashboard";
+import PatientAppointments from "./pages/PatientAppointments";
+import PatientDoctors from "./pages/PatientDoctors";
+import BookAppointment from "./pages/BookAppointment";
+
 import DoctorDashboard from "./pages/DoctorDashboard";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
 import PharmacistDashboard from "./pages/PharmacistDashboard";
 import LabDashboard from "./pages/LabDashboard";
-import PatientDashboard from "./pages/PatientDashboard";
-import BookAppointment from "./pages/BookAppointment";
-import PatientAppointments from "./pages/PatientAppointments";
+
 
 function App() {
   return (
     <div className="layout">
+
       <div className="content">
+
         <Routes>
-          {/* Public Routes */}
+
+          {/* =========================
+                        PUBLIC
+                    ========================= */}
+
           <Route
             path="/"
             element={
               <PublicRoute>
                 <Login />
               </PublicRoute>
-            }
-          />
-          <Route
-            path="/patient-medical-history"
-            element={
-              <ProtectedRoute>
-                <RoleRoute roles={["admin", "doctor"]}>
-                  <PatientMedicalHistory />
-                </RoleRoute>
-              </ProtectedRoute>
             }
           />
 
@@ -60,7 +62,27 @@ function App() {
             }
           />
 
-          {/* Admin */}
+
+          {/* =========================
+                        ADMIN / DOCTOR
+                    ========================= */}
+
+          <Route
+            path="/patient-medical-history"
+            element={
+              <ProtectedRoute>
+                <RoleRoute
+                  roles={[
+                    "admin",
+                    "doctor",
+                  ]}
+                >
+                  <PatientMedicalHistory />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/dashboard"
             element={
@@ -71,26 +93,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/medical-reports"
             element={
               <ProtectedRoute>
-                <RoleRoute roles={["admin", "doctor"]}>
+                <RoleRoute
+                  roles={[
+                    "admin",
+                    "doctor",
+                  ]}
+                >
                   <MedicalReports />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={<Notifications />}
-          />
-          <Route
-            path="/patient-prescriptions"
-            element={
-              <ProtectedRoute>
-                <RoleRoute roles={["patient"]}>
-                  <PatientPrescriptions />
                 </RoleRoute>
               </ProtectedRoute>
             }
@@ -129,7 +143,11 @@ function App() {
             }
           />
 
-          {/* Shared */}
+
+          {/* =========================
+                        SHARED
+                    ========================= */}
+
           <Route
             path="/appointments"
             element={
@@ -157,7 +175,20 @@ function App() {
             }
           />
 
-          {/* Doctor */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* =========================
+                        DOCTOR
+                    ========================= */}
+
           <Route
             path="/doctor-dashboard"
             element={
@@ -169,41 +200,51 @@ function App() {
             }
           />
 
-          {/* Receptionist */}
+
+          {/* =========================
+                        RECEPTIONIST
+                    ========================= */}
+
           <Route
             path="/reception-dashboard"
             element={
               <ProtectedRoute>
-                <RoleRoute roles={["receptionist"]}>
+                <RoleRoute
+                  roles={[
+                    "receptionist",
+                  ]}
+                >
                   <ReceptionDashboard />
                 </RoleRoute>
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/patient-billing"
-            element={
-              <ProtectedRoute>
-                <RoleRoute roles={["patient"]}>
-                  <PatientBilling />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
 
-          {/* Pharmacist */}
+
+          {/* =========================
+                        PHARMACIST
+                    ========================= */}
+
           <Route
             path="/pharmacist-dashboard"
             element={
               <ProtectedRoute>
-                <RoleRoute roles={["pharmacist"]}>
+                <RoleRoute
+                  roles={[
+                    "pharmacist",
+                  ]}
+                >
                   <PharmacistDashboard />
                 </RoleRoute>
               </ProtectedRoute>
             }
           />
 
-          {/* Lab */}
+
+          {/* =========================
+                        LAB
+                    ========================= */}
+
           <Route
             path="/lab-dashboard"
             element={
@@ -215,7 +256,11 @@ function App() {
             }
           />
 
-          {/* Patient */}
+
+          {/* =========================
+                        PATIENT
+                    ========================= */}
+
           <Route
             path="/patient-dashboard"
             element={
@@ -227,7 +272,39 @@ function App() {
             }
           />
 
-          {/* Patient Book Appointment */}
+          <Route
+            path="/patient-doctors"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientDoctors />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/patient-prescriptions"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientPrescriptions />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/patient-billing"
+            element={
+              <ProtectedRoute>
+                <RoleRoute roles={["patient"]}>
+                  <PatientBilling />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/book-appointment"
             element={
@@ -249,8 +326,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
         </Routes>
+
       </div>
+
+
+      {/* =========================
+                TOAST
+            ========================= */}
 
       <ToastContainer
         position="top-right"
@@ -260,6 +344,7 @@ function App() {
         pauseOnHover
         theme="colored"
       />
+
     </div>
   );
 }
