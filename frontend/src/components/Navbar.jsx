@@ -65,7 +65,8 @@ function Navbar() {
         setShowNotifications
     ] = useState(false);
 
-    const notificationRef = useRef(null);
+    const notificationRef =
+        useRef(null);
 
     const [
         notifications,
@@ -89,7 +90,127 @@ function Navbar() {
 
 
     /* =========================
-       PROFILE SYNC
+       LOAD CURRENT PROFILE
+    ========================= */
+
+    useEffect(() => {
+
+        async function loadProfile() {
+
+            try {
+
+                const token =
+                    localStorage.getItem(
+                        "token"
+                    );
+
+                if (!token) {
+                    return;
+                }
+
+                const res =
+                    await api.get(
+                        "/profile",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`,
+                            },
+                        }
+                    );
+
+
+                const user =
+                    res.data || {};
+
+
+                /*
+                 * Always use the database
+                 * value as the source of truth.
+                 */
+
+                setFullName(
+                    user.full_name ||
+                    sessionStorage.getItem(
+                        "full_name"
+                    ) ||
+                    "User"
+                );
+
+
+                setRole(
+                    user.role ||
+                    sessionStorage.getItem(
+                        "role"
+                    ) ||
+                    ""
+                );
+
+
+                if (
+                    user.profile_image
+                ) {
+
+                    setProfileImage(
+                        user.profile_image
+                    );
+
+                    sessionStorage.setItem(
+                        "profile_image",
+                        user.profile_image
+                    );
+
+                    setImageLoading(true);
+
+                } else {
+
+                    setProfileImage(
+                        null
+                    );
+
+                    sessionStorage.removeItem(
+                        "profile_image"
+                    );
+
+                    setImageLoading(
+                        false
+                    );
+
+                }
+
+
+                sessionStorage.setItem(
+                    "full_name",
+                    user.full_name ||
+                    "User"
+                );
+
+
+                sessionStorage.setItem(
+                    "role",
+                    user.role || ""
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Navbar profile error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        loadProfile();
+
+    }, []);
+
+
+    /* =========================
+       REALTIME PROFILE UPDATE
     ========================= */
 
     useEffect(() => {
@@ -111,19 +232,23 @@ function Navbar() {
                     "role"
                 ) || "";
 
-            setProfileImage(image);
 
-            setFullName(name);
+            setProfileImage(
+                image
+            );
 
-            setRole(userRole);
+            setFullName(
+                name
+            );
 
-            /*
-             * Only show the image loading
-             * state when an image exists.
-             */
+            setRole(
+                userRole
+            );
+
             setImageLoading(
                 Boolean(image)
             );
+
         }
 
 
@@ -146,12 +271,14 @@ function Navbar() {
 
 
     /* =========================
-       CLOSE NOTIFICATION DROPDOWN
+       CLOSE NOTIFICATIONS
     ========================= */
 
     useEffect(() => {
 
-        function handleClickOutside(e) {
+        function handleClickOutside(
+            e
+        ) {
 
             if (
                 notificationRef.current &&
@@ -160,7 +287,9 @@ function Navbar() {
                 )
             ) {
 
-                setShowNotifications(false);
+                setShowNotifications(
+                    false
+                );
 
             }
 
@@ -186,7 +315,7 @@ function Navbar() {
 
 
     /* =========================
-       MARK ALL NOTIFICATIONS READ
+       MARK ALL READ
     ========================= */
 
     async function markAllRead() {
@@ -214,7 +343,6 @@ function Navbar() {
         } catch (err) {
 
             console.error(
-                "Mark all read error:",
                 err
             );
 
@@ -231,7 +359,9 @@ function Navbar() {
 
         try {
 
-            setLoadingNotifications(true);
+            setLoadingNotifications(
+                true
+            );
 
 
             const res =
@@ -241,12 +371,16 @@ function Navbar() {
 
 
             const data =
-                Array.isArray(res.data)
+                Array.isArray(
+                    res.data
+                )
                     ? res.data
                     : [];
 
 
-            setNotifications(data);
+            setNotifications(
+                data
+            );
 
 
             setUnreadCount(
@@ -255,6 +389,7 @@ function Navbar() {
                         item.unread
                 ).length
             );
+
 
         } catch (err) {
 
@@ -265,7 +400,9 @@ function Navbar() {
 
         } finally {
 
-            setLoadingNotifications(false);
+            setLoadingNotifications(
+                false
+            );
 
         }
 
@@ -280,22 +417,13 @@ function Navbar() {
 
         loadNotifications();
 
-    }, []);
-
-
-    /* =========================
-       INITIAL UNREAD COUNT
-    ========================= */
-
-    useEffect(() => {
-
         loadUnreadCount();
 
     }, []);
 
 
     /* =========================
-       REALTIME NOTIFICATIONS
+       SSE NOTIFICATIONS
     ========================= */
 
     useRealtimeNotifications(
@@ -310,7 +438,8 @@ function Navbar() {
 
 
             setUnreadCount(
-                (prev) => prev + 1
+                (prev) =>
+                    prev + 1
             );
 
 
@@ -322,17 +451,24 @@ function Navbar() {
 
             audio
                 .play()
-                .catch(() => { });
+                .catch(
+                    () => { }
+                );
 
 
-            setBellAnimation(true);
+            setBellAnimation(
+                true
+            );
 
 
-            setTimeout(() => {
-
-                setBellAnimation(false);
-
-            }, 600);
+            setTimeout(
+                () => {
+                    setBellAnimation(
+                        false
+                    );
+                },
+                600
+            );
 
         }
     );
@@ -348,7 +484,9 @@ function Navbar() {
             !darkMode;
 
 
-        setDarkMode(value);
+        setDarkMode(
+            value
+        );
 
 
         localStorage.setItem(
@@ -371,10 +509,6 @@ function Navbar() {
 
     function logout() {
 
-        /*
-         * Remove every session-specific value.
-         * This also removes profile_image.
-         */
         sessionStorage.clear();
 
         localStorage.removeItem(
@@ -382,16 +516,26 @@ function Navbar() {
         );
 
 
-        setProfileImage(null);
+        setProfileImage(
+            null
+        );
 
-        setFullName("User");
+        setFullName(
+            "User"
+        );
 
-        setRole("");
+        setRole(
+            ""
+        );
 
-        setImageLoading(false);
+        setImageLoading(
+            false
+        );
 
 
-        navigate("/login");
+        navigate(
+            "/login"
+        );
 
     }
 
@@ -412,14 +556,14 @@ function Navbar() {
 
             setUnreadCount(
                 Number(
-                    res.data?.unread || 0
+                    res.data?.unread ||
+                    0
                 )
             );
 
         } catch (err) {
 
             console.log(
-                "Unread count error:",
                 err
             );
 
@@ -437,12 +581,14 @@ function Navbar() {
             ? `${import.meta.env.VITE_API_URL.replace(
                 /\/api\/?$/,
                 ""
-            )}/uploads/${profileImage}`
+            )}/uploads/${encodeURIComponent(
+                profileImage
+            )}`
             : null;
 
 
     /* =========================
-       UI
+       RENDER
     ========================= */
 
     return (
@@ -450,9 +596,7 @@ function Navbar() {
         <header className="top-navbar">
 
 
-            {/* =========================
-                LEFT
-            ========================= */}
+            {/* LEFT */}
 
             <div className="navbar-left">
 
@@ -475,9 +619,7 @@ function Navbar() {
             </div>
 
 
-            {/* =========================
-                RIGHT
-            ========================= */}
+            {/* RIGHT */}
 
             <div className="navbar-right">
 
@@ -500,13 +642,13 @@ function Navbar() {
                 </button>
 
 
-                {/* =========================
-                    NOTIFICATIONS
-                ========================= */}
+                {/* NOTIFICATIONS */}
 
                 <div
                     className="notification-wrapper"
-                    ref={notificationRef}
+                    ref={
+                        notificationRef
+                    }
                 >
 
                     <button
@@ -534,7 +676,6 @@ function Navbar() {
                             }
 
                         }}
-                        aria-label="Notifications"
                     >
 
                         <FaBell />
@@ -544,7 +685,8 @@ function Navbar() {
 
                             <span className="notification-count">
 
-                                {unreadCount > 99
+                                {unreadCount >
+                                    99
                                     ? "99+"
                                     : unreadCount}
 
@@ -555,12 +697,9 @@ function Navbar() {
                     </button>
 
 
-                    {/* NOTIFICATION DROPDOWN */}
-
                     {showNotifications && (
 
                         <div className="notification-dropdown">
-
 
                             <div className="notification-header">
 
@@ -584,17 +723,14 @@ function Navbar() {
                             {loadingNotifications ? (
 
                                 <div className="empty-notification">
-
                                     Loading Notifications...
-
                                 </div>
 
-                            ) : notifications.length === 0 ? (
+                            ) : notifications.length ===
+                                0 ? (
 
                                 <div className="empty-notification">
-
                                     No Notifications
-
                                 </div>
 
                             ) : (
@@ -603,7 +739,9 @@ function Navbar() {
                                     (item) => (
 
                                         <div
-                                            key={item.id}
+                                            key={
+                                                item.id
+                                            }
                                             className={`notification-item ${item.unread
                                                     ? "unread"
                                                     : ""
@@ -654,13 +792,11 @@ function Navbar() {
 
 
                                                 <small>
-
                                                     {item.created_at
                                                         ? new Date(
                                                             item.created_at
                                                         ).toLocaleString()
                                                         : "Just now"}
-
                                                 </small>
 
                                             </div>
@@ -691,14 +827,14 @@ function Navbar() {
                 </div>
 
 
-                {/* =========================
-                    PROFILE
-                ========================= */}
+                {/* PROFILE */}
 
                 <div
                     className="profile-box"
                     onClick={() =>
-                        navigate("/profile")
+                        navigate(
+                            "/profile"
+                        )
                     }
                     title="View Profile"
                     role="button"
@@ -706,8 +842,10 @@ function Navbar() {
                     onKeyDown={(e) => {
 
                         if (
-                            e.key === "Enter" ||
-                            e.key === " "
+                            e.key ===
+                            "Enter" ||
+                            e.key ===
+                            " "
                         ) {
 
                             navigate(
@@ -720,10 +858,7 @@ function Navbar() {
                 >
 
 
-                    {/* FIXED AVATAR */}
-
                     <div className="navbar-profile-avatar">
-
 
                         {profileImageUrl ? (
 
@@ -742,20 +877,18 @@ function Navbar() {
                                         profileImageUrl
                                     }
                                     alt={`${fullName} profile`}
-                                    onLoad={() => {
-
+                                    onLoad={() =>
                                         setImageLoading(
                                             false
-                                        );
-
-                                    }}
+                                        )
+                                    }
                                     onError={() => {
 
-                                        /*
-                                         * Broken image:
-                                         * completely remove it
-                                         * from current session.
-                                         */
+                                        console.error(
+                                            "Profile image failed:",
+                                            profileImageUrl
+                                        );
+
                                         setImageLoading(
                                             false
                                         );
@@ -790,8 +923,6 @@ function Navbar() {
                     </div>
 
 
-                    {/* USER INFORMATION */}
-
                     <div className="navbar-profile-info">
 
                         <strong>
@@ -800,11 +931,9 @@ function Navbar() {
 
 
                         <p>
-
                             {role
                                 ? role.toUpperCase()
                                 : "USER"}
-
                         </p>
 
                     </div>
@@ -812,13 +941,13 @@ function Navbar() {
                 </div>
 
 
-                {/* =========================
-                    LOGOUT
-                ========================= */}
+                {/* LOGOUT */}
 
                 <button
                     className="logout-btn"
-                    onClick={logout}
+                    onClick={
+                        logout
+                    }
                 >
 
                     <FaSignOutAlt />
