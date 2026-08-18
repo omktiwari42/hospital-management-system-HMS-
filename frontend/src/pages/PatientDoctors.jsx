@@ -1,17 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
     FaArrowLeft,
     FaSearch,
     FaUserMd,
     FaCalendarCheck,
     FaStar,
+    FaClock,
+    FaBriefcaseMedical,
+    FaStethoscope,
 } from "react-icons/fa";
 
 import api from "../services/api";
 import DoctorsSkeleton from "../components/skeletons/DoctorsSkeleton";
 
+
 function PatientDoctors() {
+
     const navigate = useNavigate();
 
     const [doctors, setDoctors] = useState([]);
@@ -22,12 +28,23 @@ function PatientDoctors() {
     const [specialization, setSpecialization] =
         useState("");
 
+    const [availability, setAvailability] =
+        useState("");
+
+
+    /* =========================================
+       LOAD DOCTORS
+    ========================================= */
+
     useEffect(() => {
         loadDoctors();
     }, []);
 
+
     async function loadDoctors() {
+
         try {
+
             setLoading(true);
             setError("");
 
@@ -40,7 +57,9 @@ function PatientDoctors() {
                     : [];
 
             setDoctors(data);
+
         } catch (err) {
+
             console.error(
                 "Patient doctors error:",
                 err
@@ -50,85 +69,228 @@ function PatientDoctors() {
                 err.response?.data?.message ||
                 "Unable to load doctors."
             );
+
         } finally {
+
             setLoading(false);
+
         }
     }
 
-    const specializations = useMemo(() => {
-        return [
-            ...new Set(
-                doctors
-                    .map(
-                        (doctor) =>
-                            doctor.specialization
-                    )
-                    .filter(Boolean)
-            ),
-        ].sort();
-    }, [doctors]);
 
-    const filteredDoctors = useMemo(() => {
-        const query =
-            search.trim().toLowerCase();
+    /* =========================================
+       SPECIALIZATIONS
+    ========================================= */
 
-        return doctors.filter((doctor) => {
-            const doctorName =
-                String(
-                    doctor.name || ""
-                ).toLowerCase();
+    const specializations =
+        useMemo(() => {
 
-            const doctorSpecialization =
-                String(
-                    doctor.specialization || ""
-                ).toLowerCase();
+            return [
+                ...new Set(
+                    doctors
+                        .map(
+                            (doctor) =>
+                                doctor.specialization
+                        )
+                        .filter(Boolean)
+                ),
+            ].sort();
 
-            const doctorExperience =
-                String(
-                    doctor.experience || ""
-                ).toLowerCase();
+        }, [doctors]);
 
-            const matchesSearch =
-                !query ||
-                doctorName.includes(query) ||
-                doctorSpecialization.includes(query) ||
-                doctorExperience.includes(query);
 
-            const matchesSpecialization =
-                !specialization ||
-                doctor.specialization ===
-                specialization;
+    /* =========================================
+       AVAILABILITY OPTIONS
+    ========================================= */
 
-            return (
-                matchesSearch &&
-                matchesSpecialization
+    const availabilityOptions =
+        useMemo(() => {
+
+            return [
+                ...new Set(
+                    doctors
+                        .map(
+                            (doctor) =>
+                                doctor.availability
+                        )
+                        .filter(Boolean)
+                ),
+            ].sort();
+
+        }, [doctors]);
+
+
+    /* =========================================
+       FILTER DOCTORS
+    ========================================= */
+
+    const filteredDoctors =
+        useMemo(() => {
+
+            const query =
+                search.trim().toLowerCase();
+
+
+            return doctors.filter(
+                (doctor) => {
+
+                    const name =
+                        String(
+                            doctor.name || ""
+                        ).toLowerCase();
+
+                    const spec =
+                        String(
+                            doctor.specialization ||
+                            ""
+                        ).toLowerCase();
+
+                    const experience =
+                        String(
+                            doctor.experience ||
+                            ""
+                        ).toLowerCase();
+
+
+                    const matchesSearch =
+                        !query ||
+                        name.includes(query) ||
+                        spec.includes(query) ||
+                        experience.includes(query);
+
+
+                    const matchesSpecialization =
+                        !specialization ||
+                        doctor.specialization ===
+                        specialization;
+
+
+                    const matchesAvailability =
+                        !availability ||
+                        doctor.availability ===
+                        availability;
+
+
+                    return (
+                        matchesSearch &&
+                        matchesSpecialization &&
+                        matchesAvailability
+                    );
+                }
             );
-        });
-    }, [
-        doctors,
-        search,
-        specialization,
-    ]);
+
+        }, [
+            doctors,
+            search,
+            specialization,
+            availability,
+        ]);
+
+
+    /* =========================================
+       COUNTS
+    ========================================= */
+
+    const availableCount =
+        doctors.filter(
+            (doctor) =>
+                String(
+                    doctor.availability || ""
+                ).toLowerCase() ===
+                "available"
+        ).length;
+
+
+    /* =========================================
+       BOOK APPOINTMENT
+    ========================================= */
 
     function bookAppointment(doctor) {
-        navigate("/book-appointment", {
-            state: {
-                doctorId: doctor.id,
-                doctorName: doctor.name,
-            },
-        });
+
+        navigate(
+            "/book-appointment",
+            {
+                state: {
+                    doctorId: doctor.id,
+                    doctorName: doctor.name,
+                },
+            }
+        );
+
     }
+
+
+    /* =========================================
+       CLEAR FILTERS
+    ========================================= */
 
     function clearFilters() {
+
         setSearch("");
         setSpecialization("");
+        setAvailability("");
+
     }
+
+
+    /* =========================================
+       STATUS
+    ========================================= */
+
+    function getAvailabilityStatus(
+        doctor
+    ) {
+
+        const status =
+            String(
+                doctor.availability || ""
+            ).toLowerCase();
+
+
+        if (
+            status === "available"
+        ) {
+            return "available";
+        }
+
+
+        if (
+            status === "busy"
+        ) {
+            return "busy";
+        }
+
+
+        if (
+            status === "on leave"
+        ) {
+            return "leave";
+        }
+
+
+        return "unknown";
+    }
+
+
+    /* =========================================
+       LOADING
+    ========================================= */
 
     if (loading) {
-        return <DoctorsSkeleton />;
+
+        return (
+            <DoctorsSkeleton />
+        );
+
     }
 
+
+    /* =========================================
+       ERROR
+    ========================================= */
+
     if (error) {
+
         return (
             <div className="patient-doctors-page">
 
@@ -136,7 +298,7 @@ function PatientDoctors() {
 
                     <button
                         type="button"
-                        className="back-btn"
+                        className="doctor-back-btn"
                         onClick={() =>
                             navigate(
                                 "/patient-dashboard"
@@ -147,23 +309,29 @@ function PatientDoctors() {
                         Back
                     </button>
 
-                    <div>
+                    <div className="patient-doctors-title">
+
+                        <span className="doctor-eyebrow">
+                            Healthcare Specialists
+                        </span>
+
                         <h1>
                             Find a Doctor
                         </h1>
 
                         <p>
-                            Find the right doctor
-                            for your healthcare
-                            needs.
+                            Connect with the right
+                            specialist for your care.
                         </p>
+
                     </div>
 
                 </div>
 
-                <div className="patient-doctors-empty">
 
-                    <div className="empty-icon">
+                <div className="doctor-error-state">
+
+                    <div className="doctor-empty-icon">
                         ⚠️
                     </div>
 
@@ -177,30 +345,40 @@ function PatientDoctors() {
 
                     <button
                         type="button"
-                        className="primary-btn"
+                        className="doctor-primary-btn"
                         onClick={
                             loadDoctors
                         }
                     >
-                        🔄 Try Again
+                        Try Again
                     </button>
 
                 </div>
 
             </div>
         );
+
     }
 
+
+    /* =========================================
+       PAGE
+    ========================================= */
+
     return (
+
         <div className="patient-doctors-page">
 
-            {/* HEADER */}
+
+            {/* =================================
+                HEADER
+            ================================= */}
 
             <div className="patient-doctors-header">
 
                 <button
                     type="button"
-                    className="back-btn"
+                    className="doctor-back-btn"
                     onClick={() =>
                         navigate(
                             "/patient-dashboard"
@@ -211,9 +389,10 @@ function PatientDoctors() {
                     Back
                 </button>
 
+
                 <div className="patient-doctors-title">
 
-                    <span className="patient-doctors-eyebrow">
+                    <span className="doctor-eyebrow">
                         Healthcare Specialists
                     </span>
 
@@ -222,9 +401,9 @@ function PatientDoctors() {
                     </h1>
 
                     <p>
-                        Browse our doctors and
-                        choose the right specialist
-                        for your consultation.
+                        Browse trusted specialists
+                        and book your consultation
+                        in just a few clicks.
                     </p>
 
                 </div>
@@ -232,11 +411,78 @@ function PatientDoctors() {
             </div>
 
 
-            {/* SEARCH / FILTER */}
+            {/* =================================
+                SUMMARY
+            ================================= */}
 
-            <div className="patient-doctors-toolbar">
+            <div className="doctor-summary-grid">
 
-                <div className="doctor-search">
+                <div className="doctor-summary-card">
+
+                    <div className="doctor-summary-icon blue">
+                        <FaUserMd />
+                    </div>
+
+                    <div>
+                        <strong>
+                            {doctors.length}
+                        </strong>
+
+                        <span>
+                            Total Doctors
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div className="doctor-summary-card">
+
+                    <div className="doctor-summary-icon green">
+                        <FaClock />
+                    </div>
+
+                    <div>
+                        <strong>
+                            {availableCount}
+                        </strong>
+
+                        <span>
+                            Available Now
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div className="doctor-summary-card">
+
+                    <div className="doctor-summary-icon purple">
+                        <FaStethoscope />
+                    </div>
+
+                    <div>
+                        <strong>
+                            {specializations.length}
+                        </strong>
+
+                        <span>
+                            Specializations
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {/* =================================
+                FILTER PANEL
+            ================================= */}
+
+            <div className="doctor-filter-panel">
+
+                <div className="doctor-search-box">
 
                     <FaSearch />
 
@@ -252,22 +498,24 @@ function PatientDoctors() {
                     />
 
                     {search && (
+
                         <button
                             type="button"
-                            className="doctor-search-clear"
+                            className="doctor-clear-search"
                             onClick={() =>
                                 setSearch("")
                             }
-                            aria-label="Clear search"
                         >
                             ×
                         </button>
+
                     )}
 
                 </div>
 
 
                 <select
+                    className="doctor-filter-select"
                     value={specialization}
                     onChange={(e) =>
                         setSpecialization(
@@ -281,66 +529,124 @@ function PatientDoctors() {
 
                     {specializations.map(
                         (item) => (
+
                             <option
                                 key={item}
                                 value={item}
                             >
                                 {item}
                             </option>
+
                         )
                     )}
 
                 </select>
 
+
+                <select
+                    className="doctor-filter-select"
+                    value={availability}
+                    onChange={(e) =>
+                        setAvailability(
+                            e.target.value
+                        )
+                    }
+                >
+                    <option value="">
+                        All Availability
+                    </option>
+
+                    {availabilityOptions.map(
+                        (item) => (
+
+                            <option
+                                key={item}
+                                value={item}
+                            >
+                                {item}
+                            </option>
+
+                        )
+                    )}
+
+                </select>
+
+
                 {(search ||
-                    specialization) && (
+                    specialization ||
+                    availability) && (
+
                         <button
                             type="button"
-                            className="clear-doctor-filters"
+                            className="doctor-clear-all"
                             onClick={
                                 clearFilters
                             }
                         >
-                            Clear
+                            Clear Filters
                         </button>
+
                     )}
 
             </div>
 
 
-            {/* RESULT SUMMARY */}
+            {/* =================================
+                RESULTS BAR
+            ================================= */}
 
             <div className="doctor-results-bar">
 
                 <div>
+
                     <strong>
                         {filteredDoctors.length}
-                    </strong>{" "}
-                    doctor
+                    </strong>
+
+                    {" "}doctor
                     {filteredDoctors.length !==
                         1
                         ? "s"
                         : ""}{" "}
-                    available
+                    found
+
                 </div>
 
-                {specialization && (
-                    <span className="active-specialization">
-                        {specialization}
-                    </span>
-                )}
+
+                {(specialization ||
+                    availability) && (
+
+                        <div className="doctor-active-filters">
+
+                            {specialization && (
+                                <span>
+                                    {specialization}
+                                </span>
+                            )}
+
+                            {availability && (
+                                <span>
+                                    {availability}
+                                </span>
+                            )}
+
+                        </div>
+
+                    )}
 
             </div>
 
 
-            {/* DOCTORS */}
+            {/* =================================
+                EMPTY
+            ================================= */}
 
             {filteredDoctors.length ===
                 0 ? (
 
-                <div className="patient-doctors-empty">
+                <div className="doctor-empty-state">
 
-                    <div className="empty-icon">
+                    <div className="doctor-empty-icon">
                         🩺
                     </div>
 
@@ -349,26 +655,34 @@ function PatientDoctors() {
                     </h2>
 
                     <p>
-                        We couldn't find a doctor
-                        matching your search.
+                        We couldn't find a
+                        doctor matching your
+                        current filters.
                     </p>
 
                     {(search ||
-                        specialization) && (
+                        specialization ||
+                        availability) && (
+
                             <button
                                 type="button"
-                                className="secondary-btn"
+                                className="doctor-secondary-btn"
                                 onClick={
                                     clearFilters
                                 }
                             >
                                 Clear Filters
                             </button>
+
                         )}
 
                 </div>
 
             ) : (
+
+                /* =================================
+                   GRID
+                ================================= */
 
                 <div className="patient-doctors-grid">
 
@@ -380,14 +694,26 @@ function PatientDoctors() {
                                     doctor.experience
                                 ) || 0;
 
-                            const isAvailable =
-                                String(
-                                    doctor.availability ||
+
+                            const status =
+                                getAvailabilityStatus(
+                                    doctor
+                                );
+
+
+                            const fee =
+                                doctor.fees !==
+                                    null &&
+                                    doctor.fees !==
+                                    undefined &&
+                                    doctor.fees !==
                                     ""
-                                ).toLowerCase() ===
-                                "available";
+                                    ? `₹${doctor.fees}`
+                                    : "Not listed";
+
 
                             return (
+
                                 <article
                                     className="patient-doctor-card"
                                     key={
@@ -395,110 +721,164 @@ function PatientDoctors() {
                                     }
                                 >
 
-                                    <div className="patient-doctor-top">
+                                    {/* TOP */}
 
-                                        <div className="patient-doctor-avatar">
-                                            <FaUserMd />
+                                    <div className="doctor-card-top">
+
+                                        <div className="doctor-avatar-wrap">
+
+                                            <div className="doctor-avatar">
+
+                                                <FaUserMd />
+
+                                            </div>
+
                                         </div>
 
+
                                         <span
-                                            className={`doctor-availability ${isAvailable
-                                                    ? "available"
-                                                    : "unavailable"
-                                                }`}
+                                            className={`doctor-status ${status}`}
                                         >
-                                            <span className="availability-dot"></span>
+                                            <span className="doctor-status-dot"></span>
 
                                             {doctor.availability ||
                                                 "Not specified"}
+
                                         </span>
 
                                     </div>
 
 
-                                    <div className="patient-doctor-info">
+                                    {/* NAME */}
+
+                                    <div className="doctor-card-heading">
 
                                         <h2>
                                             Dr.{" "}
-                                            {doctor.name ||
-                                                "Doctor"}
+                                            {
+                                                doctor.name ||
+                                                "Doctor"
+                                            }
                                         </h2>
 
-                                        <p className="doctor-specialization">
-                                            {doctor.specialization ||
-                                                "General Physician"}
+                                        <p>
+                                            <FaStethoscope />
+
+                                            {
+                                                doctor.specialization ||
+                                                "General Physician"
+                                            }
                                         </p>
 
                                     </div>
 
 
-                                    <div className="doctor-rating-row">
+                                    {/* TRUST */}
+
+                                    <div className="doctor-trust-row">
 
                                         <span>
                                             <FaStar />
+
                                             Trusted Specialist
                                         </span>
 
                                     </div>
 
 
-                                    <div className="patient-doctor-stats">
+                                    {/* STATS */}
 
-                                        <div>
-                                            <strong>
-                                                {experience}
-                                            </strong>
+                                    <div className="doctor-stats">
 
-                                            <span>
-                                                Years Experience
-                                            </span>
+                                        <div className="doctor-stat">
+
+                                            <div className="doctor-stat-icon">
+                                                <FaBriefcaseMedical />
+                                            </div>
+
+                                            <div>
+                                                <strong>
+                                                    {experience}
+                                                </strong>
+
+                                                <span>
+                                                    Years Experience
+                                                </span>
+                                            </div>
+
                                         </div>
 
-                                        <div>
-                                            <strong>
-                                                ₹
-                                                {doctor.fees ??
-                                                    "—"}
-                                            </strong>
 
-                                            <span>
-                                                Consultation
-                                            </span>
+                                        <div className="doctor-stat">
+
+                                            <div className="doctor-stat-icon">
+                                                ₹
+                                            </div>
+
+                                            <div>
+                                                <strong>
+                                                    {fee}
+                                                </strong>
+
+                                                <span>
+                                                    Consultation
+                                                </span>
+                                            </div>
+
                                         </div>
 
                                     </div>
 
 
-                                    <div className="patient-doctor-contact">
+                                    {/* CONTACT */}
 
-                                        {doctor.email && (
-                                            <div>
-                                                ✉
-                                                <span>
-                                                    {
-                                                        doctor.email
-                                                    }
-                                                </span>
-                                            </div>
-                                        )}
+                                    <div className="doctor-contact-section">
 
                                         {doctor.phone && (
-                                            <div>
-                                                ☎
+
+                                            <div className="doctor-contact-item">
+
                                                 <span>
+                                                    ☎
+                                                </span>
+
+                                                <p>
                                                     {
                                                         doctor.phone
                                                     }
-                                                </span>
+                                                </p>
+
                                             </div>
+
+                                        )}
+
+
+                                        {doctor.email && (
+
+                                            <div className="doctor-contact-item">
+
+                                                <span>
+                                                    ✉
+                                                </span>
+
+                                                <p>
+                                                    {
+                                                        doctor.email
+                                                    }
+                                                </p>
+
+                                            </div>
+
                                         )}
 
                                     </div>
 
 
+                                    {/* ACTION */}
+
                                     <button
                                         type="button"
-                                        className="book-doctor-btn"
+                                        className="doctor-book-btn"
                                         onClick={() =>
                                             bookAppointment(
                                                 doctor
@@ -506,11 +886,15 @@ function PatientDoctors() {
                                         }
                                     >
                                         <FaCalendarCheck />
+
                                         Book Appointment
+
                                     </button>
 
                                 </article>
+
                             );
+
                         }
                     )}
 
@@ -519,6 +903,7 @@ function PatientDoctors() {
             )}
 
         </div>
+
     );
 }
 
