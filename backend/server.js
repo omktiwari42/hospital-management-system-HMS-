@@ -1017,99 +1017,334 @@ app.post(
   authenticateToken,
   upload.single("image"),
   async (req, res) => {
-
     try {
-
       if (!req.file) {
         return res.status(400).json({
+          success: false,
           message: "No image uploaded",
         });
       }
 
-      const imagePath = req.file.filename;
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "image/webp",
+      ];
 
+      if (
+        !allowedTypes.includes(
+          req.file.mimetype
+        )
+      ) {
+        const newFilePath =
+          path.join(
+            uploadPath,
+            req.file.filename
+          );
+
+        if (
+          fs.existsSync(newFilePath)
+        ) {
+          fs.unlinkSync(
+            newFilePath
+          );
+        }
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Only JPG, PNG and WEBP images are allowed",
+        });
+      }
+
+      /*
+       * Get the current photo first.
+       */
+      const oldResult =
+        await pool.query(
+          `
+          SELECT profile_image
+          FROM users
+          WHERE id = $1
+          `,
+          [req.user.id]
+        );
+
+      if (
+        oldResult.rows.length === 0
+      ) {
+
+        const newFilePath =
+          path.join(
+            uploadPath,
+            req.file.filename
+          );
+
+        if (
+          fs.existsSync(
+            newFilePath
+          )
+        ) {
+          fs.unlinkSync(
+            newFilePath
+          );
+        }
+
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+
+      }
+
+      const oldImage =
+        oldResult.rows[0]
+          .profile_image;
+
+      const newImage =
+        req.file.filename;
+
+      /*
+       * Save new image.
+       */
       await pool.query(
         `
-              UPDATE users
-              SET profile_image = $1
-              WHERE id = $2
-              `,
+        UPDATE users
+        SET profile_image = $1
+        WHERE id = $2
+        `,
         [
-          imagePath,
+          newImage,
           req.user.id,
         ]
       );
 
+      /*
+       * Delete old image after
+       * successful DB update.
+       */
+      if (oldImage) {
+
+        const safeOldImage =
+          path.basename(
+            oldImage
+          );
+
+        const oldPath =
+          path.resolve(
+            path.join(
+              uploadPath,
+              safeOldImage
+            )
+          );
+
+        const uploadRoot =
+          path.resolve(
+            uploadPath
+          );
+
+        if (
+          oldPath.startsWith(
+            uploadRoot +
+            path.sep
+          ) &&
+          fs.existsSync(oldPath)
+        ) {
+
+          try {
+            fs.unlinkSync(oldPath);
+          } catch (fileError) {
+            console.error(
+              "Old profile image deletion error:",
+              fileError
+            );
+          }
+
+        }
+
+      }
+
       res.json({
         success: true,
-        image: imagePath,
+        image: newImage,
       });
 
     } catch (err) {
 
-      console.log(err);
+      console.error(
+        "Profile image upload error:",
+        err
+      );
+
+      /*
+       * Remove new file if
+       * something failed.
+       */
+      if (req.file?.filename) {
+
+        const failedPath =
+          path.join(
+            uploadPath,
+            path.basename(
+              req.file.filename
+            )
+          );
+
+        if (
+          fs.existsSync(
+            failedPath
+          )
+        ) {
+
+          try {
+            fs.unlinkSync(
+              failedPath
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Upload cleanup error:",
+              cleanupError
+            );
+          }
+
+        }
+      }
 
       res.status(500).json({
+        success: false,
         message: "Upload failed",
       });
 
     }
-
   }
 );
+
+
 app.delete(
   "/api/profile/delete-image",
   authenticateToken,
   async (req, res) => {
 
-
     try {
-      const result = await pool.query(
-        "SELECT profile_image FROM users WHERE id = $1",
-        [req.user.id]
-      );
 
+      /*
+       * Get photo belonging ONLY
+       * to authenticated user.
+       */
+      const result =
+        await pool.query(
+          `
+          SELECT profile_image
+          FROM users
+          WHERE id = $1
+          `,
+          [req.user.id]
+        );
 
-      if (result.rows.length === 0) {
+      if (
+        result.rows.length === 0
+      ) {
         return res.status(404).json({
           success: false,
           message: "User not found",
         });
       }
 
-      const profileImage = result.rows[0].profile_image;
+      const profileImage =
+        result.rows[0]
+          .profile_image;
 
+      /*
+       * Delete physical file.
+       */
       if (profileImage) {
-        const imagePath = path.join(
-          __dirname,
-          "uploads",
-          profileImage
-        );
 
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
+        const safeFilename =
+          path.basename(
+            profileImage
+          );
+
+        const imagePath =
+          path.resolve(
+            path.join(
+              uploadPath,
+              safeFilename
+            )
+          );
+
+        const uploadsRoot =
+          path.resolve(
+            uploadPath
+          );
+
+        /*
+         * Prevent path traversal.
+         */
+        if (
+          imagePath.startsWith(
+            uploadsRoot +
+            path.sep
+          ) &&
+          fs.existsSync(imagePath)
+        ) {
+
+          try {
+
+            fs.unlinkSync(
+              imagePath
+            );
+
+          } catch (fileError) {
+
+            console.error(
+              "Profile image deletion error:",
+              fileError
+            );
+
+          }
+
         }
+
       }
 
+      /*
+       * ALWAYS clear database,
+       * even if physical file
+       * is already missing.
+       */
       await pool.query(
-        "UPDATE users SET profile_image = NULL WHERE id = $1",
+        `
+        UPDATE users
+        SET profile_image = NULL
+        WHERE id = $1
+        `,
         [req.user.id]
       );
 
       res.json({
         success: true,
+        message:
+          "Profile photo removed successfully",
       });
+
     } catch (err) {
-      console.error(err);
+
+      console.error(
+        "Profile image delete error:",
+        err
+      );
 
       res.status(500).json({
         success: false,
-        message: "Failed to delete profile image",
+        message:
+          "Failed to delete profile image",
       });
+
     }
+
   }
 );
-
 app.post("/api/create-order", authenticateToken, async (req, res) => {
   try {
     const { amount } = req.body;
