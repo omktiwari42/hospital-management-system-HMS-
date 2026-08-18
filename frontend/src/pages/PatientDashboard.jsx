@@ -1,84 +1,96 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import {
+    FaArrowRight,
+    FaCalendarCheck,
+    FaCheckCircle,
+    FaClock,
+    FaFileInvoiceDollar,
+    FaFileMedical,
+    FaFilePrescription,
+    FaHeartbeat,
+    FaTint,
+    FaUserCircle,
+    FaUserMd,
+    FaWalking,
+    FaBed,
+} from "react-icons/fa";
+
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
-import DashboardSkeleton from "./DashboardSkeleton";
+import PatientDashboardSkeleton from "../components/skeletons/PatientDashboardSkeleton";
+
 
 export default function PatientDashboard() {
 
     const navigate = useNavigate();
 
-    /* ==========================
-       LOADING
-    ========================== */
-
     const [loading, setLoading] = useState(true);
 
-    /* ==========================
-       PATIENT DATA
-    ========================== */
-
     const [patient, setPatient] = useState(null);
+
     const [patientName, setPatientName] = useState(
         sessionStorage.getItem("full_name") || ""
     );
+
     const [summary, setSummary] = useState({
         appointments: 0,
         completed: 0,
         pending: 0,
         bills: 0,
         prescriptions: 0,
-        reports: 0
+        reports: 0,
     });
 
     const [appointments, setAppointments] = useState([]);
     const [bills, setBills] = useState([]);
-
     const [nextAppointment, setNextAppointment] = useState(null);
-
     const [recentActivities, setRecentActivities] = useState([]);
-
     const [medicineReminders, setMedicineReminders] = useState([]);
-
     const [healthTips, setHealthTips] = useState([]);
-
     const [countdown, setCountdown] = useState("");
 
-    /* ==========================
+
+    /* =====================================================
        GREETING
-    ========================== */
+    ===================================================== */
 
     const greeting = useMemo(() => {
 
         const hour = new Date().getHours();
 
-        if (hour < 12) return "Good Morning ☀️";
+        if (hour < 12) {
+            return "Good Morning";
+        }
 
-        if (hour < 17) return "Good Afternoon 🌤️";
+        if (hour < 17) {
+            return "Good Afternoon";
+        }
 
-        return "Good Evening 🌙";
+        return "Good Evening";
 
     }, []);
+
 
     const today = useMemo(() => {
 
-        return new Date().toLocaleDateString("en-IN", {
-
-            weekday: "long",
-
-            day: "numeric",
-
-            month: "long",
-
-            year: "numeric"
-
-        });
+        return new Date().toLocaleDateString(
+            "en-IN",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            }
+        );
 
     }, []);
 
-    /* ==========================
+
+    /* =====================================================
        HEALTH SCORE
-    ========================== */
+    ===================================================== */
 
     const healthScore = useMemo(() => {
 
@@ -86,83 +98,311 @@ export default function PatientDashboard() {
 
         score -= summary.pending * 4;
 
-        if (score < 65) score = 65;
+        if (score < 65) {
+            score = 65;
+        }
 
         return score;
 
     }, [summary]);
 
+
     const patientLevel = useMemo(() => {
 
-        if (healthScore >= 95) return "Excellent";
+        if (healthScore >= 95) {
+            return "Excellent";
+        }
 
-        if (healthScore >= 85) return "Very Good";
+        if (healthScore >= 85) {
+            return "Very Good";
+        }
 
-        if (healthScore >= 75) return "Good";
+        if (healthScore >= 75) {
+            return "Good";
+        }
 
         return "Needs Attention";
 
     }, [healthScore]);
 
+
     const completionRate = useMemo(() => {
 
-        if (summary.appointments === 0) return 0;
+        if (summary.appointments === 0) {
+            return 0;
+        }
 
         return Math.round(
-
             (summary.completed / summary.appointments) * 100
-
         );
 
     }, [summary]);
 
-    /* ==========================
+
+    /* =====================================================
        QUICK ACTIONS
-    ========================== */
+    ===================================================== */
 
     const quickActions = [
-
         {
-            icon: "📅",
+            icon: <FaCalendarCheck />,
             title: "Book Appointment",
-            path: "/book-appointment"
+            description: "Schedule a consultation",
+            path: "/book-appointment",
         },
-
         {
-            icon: "👨‍⚕️",
-            title: "Doctors",
-            path: "/patient-doctors"
+            icon: <FaUserMd />,
+            title: "Find a Doctor",
+            description: "Browse specialists",
+            path: "/patient-doctors",
         },
-
         {
-            icon: "💊",
+            icon: <FaFilePrescription />,
             title: "Prescriptions",
-            path: "/patient-prescriptions"
+            description: "View your medicines",
+            path: "/patient-prescriptions",
         },
-
         {
-            icon: "🧾",
-            title: "Bills",
-            path: "/patient-billing"
+            icon: <FaFileInvoiceDollar />,
+            title: "My Bills",
+            description: "View payments",
+            path: "/patient-billing",
         },
-
         {
-            icon: "📋",
+            icon: <FaClock />,
             title: "Appointments",
-            path: "/patient-appointments"
+            description: "Track appointments",
+            path: "/patient-appointments",
         },
-
         {
-            icon: "👤",
+            icon: <FaUserCircle />,
             title: "Profile",
-            path: "/profile"
-        }
-
+            description: "Manage your profile",
+            path: "/profile",
+        },
     ];
 
-    /* ==========================
+
+    /* =====================================================
+       FORMAT APPOINTMENT TIME
+    ===================================================== */
+
+    function formatAppointmentTime(value) {
+
+        if (!value) {
+            return "Time not specified";
+        }
+
+        const text =
+            String(value).trim();
+
+        /*
+         * Already formatted:
+         * 2:00 AM
+         * 02:00 PM
+         */
+        if (
+            /AM|PM/i.test(text)
+        ) {
+            return text;
+        }
+
+        /*
+         * HH:mm
+         * HH:mm:ss
+         */
+        const match =
+            text.match(
+                /^(\d{1,2}):(\d{2})(?::\d{2})?$/
+            );
+
+        if (!match) {
+            return text;
+        }
+
+        let hours =
+            Number(match[1]);
+
+        const minutes =
+            match[2];
+
+        if (
+            Number.isNaN(hours) ||
+            hours < 0 ||
+            hours > 23
+        ) {
+            return text;
+        }
+
+        const suffix =
+            hours >= 12
+                ? "PM"
+                : "AM";
+
+        hours =
+            hours % 12 || 12;
+
+        return `${hours}:${minutes} ${suffix}`;
+    }
+
+
+    /* =====================================================
+       PARSE APPOINTMENT DATE + TIME
+    ===================================================== */
+
+    function parseAppointmentDateTime(
+        appointment
+    ) {
+
+        if (!appointment) {
+            return null;
+        }
+
+        const rawDate =
+            appointment.appointment_date;
+
+        const rawTime =
+            appointment.appointment_time;
+
+
+        if (!rawDate) {
+            return null;
+        }
+
+
+        const dateText =
+            String(rawDate).trim();
+
+
+        /*
+         * API may return:
+         *
+         * 2026-08-19T00:00:00.000Z
+         * 2026-08-19
+         */
+
+        const dateMatch =
+            dateText.match(
+                /^(\d{4})-(\d{2})-(\d{2})/
+            );
+
+
+        if (!dateMatch) {
+            return null;
+        }
+
+
+        const year =
+            Number(dateMatch[1]);
+
+        const month =
+            Number(dateMatch[2]) - 1;
+
+        const day =
+            Number(dateMatch[3]);
+
+
+        if (
+            !Number.isFinite(year) ||
+            !Number.isFinite(month) ||
+            !Number.isFinite(day)
+        ) {
+            return null;
+        }
+
+
+        let hours = 0;
+        let minutes = 0;
+
+
+        if (rawTime) {
+
+            const timeText =
+                String(rawTime)
+                    .trim()
+                    .toUpperCase();
+
+
+            /*
+             * Supports:
+             *
+             * 02:00
+             * 02:00:00
+             * 2:00 AM
+             * 2:00 PM
+             */
+
+            const timeMatch =
+                timeText.match(
+                    /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/
+                );
+
+
+            if (timeMatch) {
+
+                hours =
+                    Number(
+                        timeMatch[1]
+                    );
+
+                minutes =
+                    Number(
+                        timeMatch[2]
+                    );
+
+
+                const meridiem =
+                    timeMatch[3];
+
+
+                if (
+                    meridiem === "PM" &&
+                    hours < 12
+                ) {
+                    hours += 12;
+                }
+
+
+                if (
+                    meridiem === "AM" &&
+                    hours === 12
+                ) {
+                    hours = 0;
+                }
+
+            }
+
+        }
+
+
+        const target =
+            new Date(
+                year,
+                month,
+                day,
+                hours,
+                minutes,
+                0,
+                0
+            );
+
+
+        if (
+            Number.isNaN(
+                target.getTime()
+            )
+        ) {
+            return null;
+        }
+
+
+        return target;
+    }
+
+
+    /* =====================================================
        LOAD DASHBOARD
-    ========================== */
+    ===================================================== */
 
     async function loadDashboard() {
 
@@ -170,112 +410,318 @@ export default function PatientDashboard() {
 
         try {
 
-            const dashboardRes = await api.get("/patient-dashboard");
+            const dashboardRes =
+                await api.get(
+                    "/patient-dashboard"
+                );
+
+            const data =
+                dashboardRes.data || {};
 
 
-            const data = dashboardRes.data;
-            const appointmentList = data.appointments || [];
+            const appointmentList =
+                Array.isArray(
+                    data.appointments
+                )
+                    ? data.appointments
+                    : [];
 
-            const billList = data.bills || [];
 
-            setPatient(data.patient);
-            const updatedName = sessionStorage.getItem("full_name");
+            const billList =
+                Array.isArray(
+                    data.bills
+                )
+                    ? data.bills
+                    : [];
 
-            setPatientName(
+
+            setPatient(
+                data.patient || null
+            );
+
+
+            const updatedName =
+                sessionStorage.getItem(
+                    "full_name"
+                );
+
+
+            const resolvedName =
                 updatedName ||
                 data.patient?.full_name ||
                 data.patient?.name ||
-                ""
-            );
-            setAppointments(appointmentList);
+                "Patient";
 
-            setBills(billList);
-            const prescriptionRes = await api.get("/prescriptions");
 
-            const prescriptionList = prescriptionRes.data || [];
-            setSummary({
-
-                appointments: appointmentList.length,
-
-                completed: appointmentList.filter(
-                    a => a.status === "Completed"
-                ).length,
-
-                pending: appointmentList.filter(
-                    a =>
-                        a.status === "Pending" ||
-                        a.status === "Confirmed"
-                ).length,
-
-                bills: billList.length,
-                prescriptions: prescriptionList.length,
-
-                reports: 0
-
-            });
-
-            const upcoming = appointmentList
-
-                .filter(a =>
-                    a.status !== "Cancelled" &&
-                    a.status !== "Completed"
-                )
-
-                .sort(
-
-                    (a, b) =>
-
-                        new Date(a.appointment_date) -
-
-                        new Date(b.appointment_date)
-
-                );
-
-            setNextAppointment(upcoming[0] || null);
-
-            setRecentActivities(
-
-                appointmentList.slice(0, 6)
-
+            setPatientName(
+                resolvedName
             );
 
-            setMedicineReminders([
 
-                {
+            sessionStorage.setItem(
+                "full_name",
+                resolvedName
+            );
 
-                    medicine: "Vitamin D",
 
-                    time: "09:00 AM"
+            setAppointments(
+                appointmentList
+            );
 
-                },
+            setBills(
+                billList
+            );
 
-                {
 
-                    medicine: "Calcium",
+            /* ---------------------------------------------
+               PRESCRIPTIONS
+            --------------------------------------------- */
 
-                    time: "09:00 PM"
+            let prescriptionList = [];
+
+            try {
+
+                const prescriptionRes =
+                    await api.get(
+                        "/prescriptions"
+                    );
+
+
+                prescriptionList =
+                    Array.isArray(
+                        prescriptionRes.data
+                    )
+                        ? prescriptionRes.data
+                        : [];
+
+            } catch (error) {
+
+                const message =
+                    String(
+                        error?.message || ""
+                    ).toLowerCase();
+
+
+                const aborted =
+                    error?.code ===
+                    "ERR_CANCELED" ||
+                    error?.name ===
+                    "CanceledError" ||
+                    message.includes(
+                        "aborted"
+                    ) ||
+                    message.includes(
+                        "canceled"
+                    );
+
+
+                if (!aborted) {
+
+                    console.error(
+                        "Prescription loading error:",
+                        error
+                    );
 
                 }
 
+            }
+
+
+            /* ---------------------------------------------
+               SUMMARY
+            --------------------------------------------- */
+
+            setSummary({
+
+                appointments:
+                    appointmentList.length,
+
+                completed:
+                    appointmentList.filter(
+                        (appointment) =>
+                            appointment.status ===
+                            "Completed"
+                    ).length,
+
+                pending:
+                    appointmentList.filter(
+                        (appointment) =>
+                            appointment.status ===
+                            "Pending" ||
+                            appointment.status ===
+                            "Confirmed"
+                    ).length,
+
+                bills:
+                    billList.length,
+
+                prescriptions:
+                    prescriptionList.length,
+
+                reports:
+                    0,
+
+            });
+
+
+            /* ---------------------------------------------
+               NEXT APPOINTMENT
+            --------------------------------------------- */
+
+            const upcoming =
+                [...appointmentList]
+                    .filter(
+                        (appointment) =>
+                            appointment.status !==
+                            "Cancelled" &&
+                            appointment.status !==
+                            "Completed"
+                    )
+                    .sort(
+                        (a, b) => {
+
+                            const first =
+                                parseAppointmentDateTime(
+                                    a
+                                );
+
+                            const second =
+                                parseAppointmentDateTime(
+                                    b
+                                );
+
+
+                            if (
+                                !first &&
+                                !second
+                            ) {
+                                return 0;
+                            }
+
+
+                            if (!first) {
+                                return 1;
+                            }
+
+
+                            if (!second) {
+                                return -1;
+                            }
+
+
+                            return (
+                                first.getTime() -
+                                second.getTime()
+                            );
+                        }
+                    );
+
+
+            setNextAppointment(
+                upcoming[0] || null
+            );
+
+
+            /* ---------------------------------------------
+               RECENT ACTIVITY
+            --------------------------------------------- */
+
+            setRecentActivities(
+                appointmentList.slice(0, 6)
+            );
+
+
+            /* ---------------------------------------------
+               MEDICINES
+            --------------------------------------------- */
+
+            setMedicineReminders([
+                {
+                    medicine:
+                        "Vitamin D",
+                    time:
+                        "09:00 AM",
+                },
+                {
+                    medicine:
+                        "Calcium",
+                    time:
+                        "09:00 PM",
+                },
             ]);
+
+
+            /* ---------------------------------------------
+               HEALTH TIPS
+            --------------------------------------------- */
 
             setHealthTips([
-
-                "💧 Drink 2–3 litres of water daily.",
-
-                "🥗 Eat fresh fruits and vegetables.",
-
-                "🚶 Walk at least 30 minutes every day.",
-
-                "😴 Sleep for 7–8 hours.",
-
-                "❤️ Regular health checkups keep you healthy."
-
+                {
+                    icon:
+                        <FaTint />,
+                    title:
+                        "Stay Hydrated",
+                    text:
+                        "Drink 2–3 litres of water daily.",
+                },
+                {
+                    icon:
+                        <FaHeartbeat />,
+                    title:
+                        "Eat Healthy",
+                    text:
+                        "Eat fresh fruits and vegetables.",
+                },
+                {
+                    icon:
+                        <FaWalking />,
+                    title:
+                        "Stay Active",
+                    text:
+                        "Walk at least 30 minutes every day.",
+                },
+                {
+                    icon:
+                        <FaBed />,
+                    title:
+                        "Sleep Well",
+                    text:
+                        "Sleep for 7–8 hours every night.",
+                },
             ]);
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            const message =
+                String(
+                    error?.message || ""
+                ).toLowerCase();
+
+
+            const aborted =
+                error?.code ===
+                "ERR_CANCELED" ||
+                error?.name ===
+                "CanceledError" ||
+                message.includes(
+                    "request aborted"
+                ) ||
+                message.includes(
+                    "aborted"
+                ) ||
+                message.includes(
+                    "canceled"
+                );
+
+
+            if (!aborted) {
+
+                console.error(
+                    "Patient dashboard error:",
+                    error
+                );
+
+            }
 
         } finally {
 
@@ -285,508 +731,1128 @@ export default function PatientDashboard() {
 
     }
 
+
+    /* =====================================================
+       INITIAL LOAD
+    ===================================================== */
+
     useEffect(() => {
 
         loadDashboard();
 
+
         function handleUserUpdated() {
-            setPatientName(sessionStorage.getItem("full_name") || "");
+
+            setPatientName(
+                sessionStorage.getItem(
+                    "full_name"
+                ) || ""
+            );
+
+
             loadDashboard();
+
         }
 
-        window.addEventListener("userUpdated", handleUserUpdated);
+
+        window.addEventListener(
+            "userUpdated",
+            handleUserUpdated
+        );
+
 
         return () => {
-            window.removeEventListener("userUpdated", handleUserUpdated);
+
+            window.removeEventListener(
+                "userUpdated",
+                handleUserUpdated
+            );
+
         };
 
     }, []);
 
-    /* ==========================
-       APPOINTMENT COUNTDOWN
-    ========================== */
+
+    /* =====================================================
+       COUNTDOWN
+    ===================================================== */
 
     useEffect(() => {
 
-        if (!nextAppointment) return;
+        if (!nextAppointment) {
+
+            setCountdown("");
+
+            return;
+
+        }
+
 
         function updateCountdown() {
-            const target = new Date(nextAppointment.appointment_date);
 
-            const diff = target.getTime() - Date.now();
+            const target =
+                parseAppointmentDateTime(
+                    nextAppointment
+                );
 
-            if (isNaN(target.getTime())) {
+
+            if (!target) {
+
                 setCountdown("--");
+
                 return;
+
             }
 
-            if (diff <= 0) {
-                setCountdown("Started");
+
+            const difference =
+                target.getTime() -
+                Date.now();
+
+
+            if (
+                difference <= 0
+            ) {
+
+                setCountdown(
+                    "Started"
+                );
+
                 return;
+
             }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const mins = Math.floor((diff / (1000 * 60)) % 60);
 
-            setCountdown(`${days}d ${hours}h ${mins}m`);
+            const totalMinutes =
+                Math.floor(
+                    difference /
+                    (1000 * 60)
+                );
+
+
+            const days =
+                Math.floor(
+                    totalMinutes /
+                    (60 * 24)
+                );
+
+
+            const hours =
+                Math.floor(
+                    (
+                        totalMinutes %
+                        (60 * 24)
+                    ) / 60
+                );
+
+
+            const minutes =
+                totalMinutes %
+                60;
+
+
+            if (days > 0) {
+
+                setCountdown(
+                    `${days}d ${hours}h`
+                );
+
+            } else if (hours > 0) {
+
+                setCountdown(
+                    `${hours}h ${minutes}m`
+                );
+
+            } else {
+
+                setCountdown(
+                    `${minutes}m`
+                );
+
+            }
+
         }
+
 
         updateCountdown();
 
-        const timer = setInterval(updateCountdown, 60000);
 
-        return () => clearInterval(timer);
+        const timer =
+            setInterval(
+                updateCountdown,
+                60000
+            );
+
+
+        return () => {
+
+            clearInterval(timer);
+
+        };
 
     }, [nextAppointment]);
 
-    // Part 2 starts here with:
-    // return (
+
+    /* =====================================================
+       LOADING
+    ===================================================== */
+
     if (loading) {
+
         return (
             <DashboardLayout>
-                <DashboardSkeleton />
+
+                <PatientDashboardSkeleton />
+
             </DashboardLayout>
         );
+
     }
+
+
+    /* =====================================================
+       UI
+    ===================================================== */
+
     return (
+
         <DashboardLayout>
 
             <div className="patient-dashboard">
 
-                {/* =========================
-                        HEADER
-                    ========================= */}
 
-                <div className="patient-dashboard-header">
+                {/* =================================================
+                    WELCOME
+                ================================================= */}
 
-                    <div>
+                <section className="patient-welcome-card">
+
+                    <div className="patient-welcome-content">
+
+                        <span className="patient-welcome-label">
+                            Patient Portal
+                        </span>
+
 
                         <h1>
-                            {greeting},
-                            <span className="patient-name">
-                                {" "}
-                                {patientName || patient?.full_name || patient?.name || "Patient"}
-                            </span>
+
+                            {greeting},{" "}
+
+                            <strong>
+                                {patientName ||
+                                    patient?.full_name ||
+                                    patient?.name ||
+                                    "Patient"}
+                            </strong>
+
                         </h1>
 
-                        <p>{today}</p>
+
+                        <p>
+                            {today}
+                        </p>
+
+
+                        <span className="patient-welcome-helper">
+                            Manage your appointments,
+                            prescriptions and healthcare
+                            in one place.
+                        </span>
 
                     </div>
 
 
-                </div>
+                    <button
+                        type="button"
+                        className="patient-welcome-action"
 
-                {/* =========================
-                        HEALTH SCORE
-                    ========================= */}
+                        onClick={() =>
+                            navigate(
+                                "/patient-doctors"
+                            )
+                        }
+                    >
 
-                <div className="health-score-card">
+                        <FaUserMd />
 
-                    <div>
+                        Find a Doctor
 
-                        <small>Health Score</small>
+                        <FaArrowRight />
 
-                        <h2>{healthScore}%</h2>
+                    </button>
 
-                        <p>{patientLevel}</p>
+                </section>
+
+
+                {/* =================================================
+                    HEALTH SCORE
+                ================================================= */}
+
+                <section className="patient-health-card">
+
+                    <div className="patient-health-info">
+
+                        <span>
+                            Health Score
+                        </span>
+
+
+                        <strong>
+                            {healthScore}%
+                        </strong>
+
+
+                        <small>
+                            {patientLevel}
+                        </small>
+
+
+                        <p>
+                            Based on your current
+                            appointment activity.
+                        </p>
 
                     </div>
 
-                    <div className="health-circle">
 
-                        <svg width="120" height="120">
+                    <div className="patient-health-circle">
+
+                        <svg
+                            viewBox="0 0 120 120"
+                            aria-hidden="true"
+                        >
 
                             <circle
                                 cx="60"
                                 cy="60"
                                 r="48"
-                                stroke="#e5e7eb"
-                                strokeWidth="10"
-                                fill="none"
+                                className="health-track"
                             />
 
+
                             <circle
                                 cx="60"
                                 cy="60"
                                 r="48"
-                                stroke="#2563eb"
-                                strokeWidth="10"
-                                fill="none"
-                                strokeLinecap="round"
+                                className="health-progress"
+
                                 strokeDasharray="301"
+
                                 strokeDashoffset={
-                                    301 - (301 * healthScore) / 100
+                                    301 -
+                                    (
+                                        301 *
+                                        healthScore
+                                    ) /
+                                    100
                                 }
-                                transform="rotate(-90 60 60)"
                             />
 
                         </svg>
 
-                        <div className="health-percent">
 
+                        <div>
                             {healthScore}%
-
                         </div>
 
                     </div>
 
-                </div>
+                </section>
 
-                {/* =========================
-                        SUMMARY CARDS
-                    ========================= */}
 
-                <div className="dashboard-summary-grid">
+                {/* =================================================
+                    SUMMARY CARDS
+                ================================================= */}
+
+                <section className="patient-summary-grid">
 
                     {[
                         {
-                            title: "Appointments",
-                            value: summary.appointments,
-                            icon: "📅",
-                            color: "#2563eb"
+                            title:
+                                "Appointments",
+                            value:
+                                summary.appointments,
+                            icon:
+                                <FaCalendarCheck />,
+                            type:
+                                "blue",
+                            path:
+                                "/patient-appointments",
                         },
-
                         {
-                            title: "Completed",
-                            value: summary.completed,
-                            icon: "✅",
-                            color: "#16a34a"
+                            title:
+                                "Completed",
+                            value:
+                                summary.completed,
+                            icon:
+                                <FaCheckCircle />,
+                            type:
+                                "green",
                         },
-
                         {
-                            title: "Pending",
-                            value: summary.pending,
-                            icon: "⏳",
-                            color: "#f59e0b"
+                            title:
+                                "Pending",
+                            value:
+                                summary.pending,
+                            icon:
+                                <FaClock />,
+                            type:
+                                "orange",
                         },
-
                         {
-                            title: "Bills",
-                            value: summary.bills,
-                            icon: "🧾",
-                            color: "#dc2626"
+                            title:
+                                "Bills",
+                            value:
+                                summary.bills,
+                            icon:
+                                <FaFileInvoiceDollar />,
+                            type:
+                                "red",
+                            path:
+                                "/patient-billing",
                         },
-
                         {
-                            title: "Prescriptions",
-                            value: summary.prescriptions,
-                            icon: "💊",
-                            color: "#8b5cf6"
+                            title:
+                                "Prescriptions",
+                            value:
+                                summary.prescriptions,
+                            icon:
+                                <FaFilePrescription />,
+                            type:
+                                "purple",
+                            path:
+                                "/patient-prescriptions",
                         },
-
                         {
-                            title: "Reports",
-                            value: summary.reports,
-                            icon: "📄",
-                            color: "#0ea5e9"
-                        }
+                            title:
+                                "Reports",
+                            value:
+                                summary.reports,
+                            icon:
+                                <FaFileMedical />,
+                            type:
+                                "cyan",
+                        },
+                    ].map(
+                        (card) => (
 
-                    ].map((card) => (
+                            <button
+                                type="button"
+                                key={
+                                    card.title
+                                }
+                                className="patient-summary-card"
 
-                        <div
-                            key={card.title}
-                            className="dashboard-card"
-                        >
+                                onClick={() => {
 
-                            <div
-                                className="dashboard-card-icon"
-                                style={{
-                                    background: card.color
+                                    if (
+                                        card.path
+                                    ) {
+
+                                        navigate(
+                                            card.path
+                                        );
+
+                                    }
+
                                 }}
                             >
-                                {card.icon}
-                            </div>
 
-                            <div>
-
-                                <small>{card.title}</small>
-
-                                <h2>{card.value}</h2>
-
-                            </div>
-
-                        </div>
-
-                    ))}
-
-                </div>
-
-                {/* =========================
-                        NEXT APPOINTMENT
-                    ========================= */}
-
-                {nextAppointment && (
-
-                    <div className="next-appointment-card">
-
-                        <div>
-
-                            <h2>
-
-                                Upcoming Appointment
-
-                            </h2>
-
-                            <h3>
-
-                                Dr. {nextAppointment.doctor_name}
-
-                            </h3>
-
-                            <p>
-
-                                {nextAppointment.department}
-
-                            </p>
-
-                            <p>
-
-                                {nextAppointment.appointment_date}
-
-                                {" • "}
-
-                                {nextAppointment.appointment_time}
-
-                            </p>
-
-                        </div>
-
-                        <div className="appointment-countdown">
-
-                            <small>Starts In</small>
-
-                            <h1>{countdown}</h1>
-
-                        </div>
-
-                    </div>
-
-                )}
-
-                {/* =========================
-                        QUICK ACTIONS
-                    ========================= */}
-
-                <h2 className="section-title">
-
-                    Quick Actions
-
-                </h2>
-
-                <div className="quick-action-grid">
-
-                    {quickActions.map((item) => (
-
-                        <div
-
-                            key={item.title}
-
-                            className="quick-action-card"
-
-                            onClick={() => navigate(item.path)}
-
-                        >
-
-                            <div className="quick-icon">
-
-                                {item.icon}
-
-                            </div>
-
-                            <h3>
-
-                                {item.title}
-
-                            </h3>
-
-                        </div>
-
-                    ))}
-
-                </div>
-                {/* =========================
-                RECENT ACTIVITY
-            ========================= */}
-
-                <div className="dashboard-two-column">
-
-                    <div className="dashboard-panel">
-
-                        <div className="panel-header">
-                            <h2>📋 Recent Activity</h2>
-                        </div>
-
-                        {recentActivities.length === 0 ? (
-
-                            <div className="empty-panel">
-                                No recent activities found.
-                            </div>
-
-                        ) : (
-
-                            recentActivities.map((item, index) => (
-
-                                <div
-                                    key={index}
-                                    className="activity-item"
+                                <span
+                                    className={`patient-summary-icon ${card.type}`}
                                 >
+                                    {card.icon}
+                                </span>
 
-                                    <div className="activity-dot"></div>
 
-                                    <div className="activity-content">
+                                <span className="patient-summary-copy">
 
-                                        <h4>
-                                            {item.doctor_name
-                                                ? `Appointment with Dr. ${item.doctor_name}`
-                                                : item.title}
-                                        </h4>
+                                    <small>
+                                        {card.title}
+                                    </small>
 
-                                        <small>
-                                            {item.appointment_date || item.date}
-                                        </small>
 
-                                    </div>
+                                    <strong>
+                                        {card.value}
+                                    </strong>
 
-                                    <span
-                                        className="status-chip"
-                                        style={{
-                                            background:
-                                                item.status === "Completed"
-                                                    ? "#16a34a"
-                                                    : item.status === "Cancelled"
-                                                        ? "#dc2626"
-                                                        : "#2563eb"
-                                        }}
-                                    >
-                                        {item.status}
+                                </span>
+
+                            </button>
+
+                        )
+                    )}
+
+                </section>
+
+
+                {/* =================================================
+                    NEXT APPOINTMENT
+                ================================================= */}
+
+                {
+                    nextAppointment ? (
+
+                        <section className="patient-next-appointment">
+
+                            <div className="next-appointment-main">
+
+                                <span className="section-kicker">
+                                    Upcoming Appointment
+                                </span>
+
+
+                                <h2>
+                                    Dr.{" "}
+                                    {
+                                        nextAppointment
+                                            .doctor_name ||
+                                        "Doctor"
+                                    }
+                                </h2>
+
+
+                                <p className="next-appointment-department">
+                                    {
+                                        nextAppointment
+                                            .department ||
+                                        "Medical Consultation"
+                                    }
+                                </p>
+
+
+                                <div className="next-appointment-details">
+
+                                    <span>
+                                        <FaCalendarCheck />
+
+                                        {
+                                            nextAppointment
+                                                .appointment_date
+                                        }
+                                    </span>
+
+
+                                    <span>
+                                        <FaClock />
+
+                                        {
+                                            formatAppointmentTime(
+                                                nextAppointment
+                                                    .appointment_time
+                                            )
+                                        }
                                     </span>
 
                                 </div>
 
-                            ))
+                            </div>
 
-                        )}
 
-                    </div>
+                            <div className="next-appointment-side">
 
-                    <div className="dashboard-panel">
+                                <span>
+                                    Starts In
+                                </span>
 
-                        <div className="panel-header">
-                            <h2>💊 Medicine Reminders</h2>
-                        </div>
 
-                        {medicineReminders.map((medicine, index) => (
+                                <strong>
+                                    {
+                                        countdown ||
+                                        "--"
+                                    }
+                                </strong>
 
-                            <div
-                                key={index}
-                                className="medicine-card"
-                            >
 
-                                <div>
+                                <button
+                                    type="button"
 
-                                    <h4>{medicine.medicine}</h4>
+                                    onClick={() =>
+                                        navigate(
+                                            "/patient-appointments"
+                                        )
+                                    }
+                                >
 
-                                    <small>
-                                        Take on time
-                                    </small>
+                                    View Appointment
 
-                                </div>
+                                    <FaArrowRight />
 
-                                <div className="medicine-time">
-                                    {medicine.time}
-                                </div>
+                                </button>
 
                             </div>
 
-                        ))}
+                        </section>
 
-                    </div>
+                    ) : (
 
-                </div>
+                        <section className="patient-next-appointment empty">
 
-                {/* =========================
-                HEALTH TIPS
-            ========================= */}
+                            <div>
 
-                <div className="dashboard-panel">
+                                <span className="section-kicker">
+                                    Your Schedule
+                                </span>
 
-                    <div className="panel-header">
-                        <h2>❤️ Health Tips</h2>
-                    </div>
 
-                    <div className="tips-grid">
+                                <h2>
+                                    No Upcoming Appointment
+                                </h2>
 
-                        {healthTips.map((tip, index) => (
 
-                            <div
-                                key={index}
-                                className="tip-card"
-                            >
-                                {tip}
+                                <p>
+                                    Book your next consultation
+                                    with a specialist.
+                                </p>
+
                             </div>
 
-                        ))}
 
-                    </div>
+                            <button
+                                type="button"
 
-                </div>
+                                onClick={() =>
+                                    navigate(
+                                        "/patient-doctors"
+                                    )
+                                }
+                            >
 
-                {/* =========================
-                APPOINTMENT PROGRESS
-            ========================= */}
+                                Find a Doctor
 
-                <div className="dashboard-panel">
+                                <FaArrowRight />
 
-                    <div className="panel-header">
-                        <h2>📈 Appointment Completion</h2>
-                    </div>
+                            </button>
 
-                    <div className="progress-wrapper">
+                        </section>
 
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${completionRate}%`,
-                                    background: "#2563eb",
-                                    height: "100%",
-                                    borderRadius: "999px",
-                                    transition: "width 0.5s ease"
-                                }}
-                            />
+                    )
+                }
+
+
+                {/* =================================================
+                    QUICK ACTIONS
+                ================================================= */}
+
+                <section>
+
+                    <div className="patient-section-heading">
+
+                        <div>
+
+                            <span>
+                                Shortcuts
+                            </span>
+
+
+                            <h2>
+                                Quick Actions
+                            </h2>
+
                         </div>
 
-                        <h3>
-                            {completionRate}% Completed
-                        </h3>
+                    </div>
+
+
+                    <div className="patient-quick-actions">
+
+                        {
+                            quickActions.map(
+                                (item) => (
+
+                                    <button
+                                        type="button"
+
+                                        className="patient-quick-action"
+
+                                        key={
+                                            item.title
+                                        }
+
+                                        onClick={() =>
+                                            navigate(
+                                                item.path
+                                            )
+                                        }
+                                    >
+
+                                        <span className="quick-action-icon">
+
+                                            {
+                                                item.icon
+                                            }
+
+                                        </span>
+
+
+                                        <span className="quick-action-copy">
+
+                                            <strong>
+                                                {
+                                                    item.title
+                                                }
+                                            </strong>
+
+
+                                            <small>
+                                                {
+                                                    item.description
+                                                }
+                                            </small>
+
+                                        </span>
+
+
+                                        <FaArrowRight
+                                            className="quick-action-arrow"
+                                        />
+
+                                    </button>
+
+                                )
+                            )
+                        }
 
                     </div>
 
-                </div>
+                </section>
 
 
+                {/* =================================================
+                    RECENT ACTIVITY + MEDICINES
+                ================================================= */}
 
-                {/* =========================
-                FOOTER
-            ========================= */}
+                <section className="patient-dashboard-columns">
 
-                <div className="dashboard-footer">
 
-                    <p>
-                        © 2026 Hospital Management System
-                    </p>
+                    {/* RECENT ACTIVITY */}
 
-                    <small>
+                    <div className="patient-panel">
+
+                        <div className="patient-panel-header">
+
+                            <div>
+
+                                <span>
+                                    Timeline
+                                </span>
+
+
+                                <h2>
+                                    Recent Activity
+                                </h2>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+
+                                onClick={() =>
+                                    navigate(
+                                        "/patient-appointments"
+                                    )
+                                }
+                            >
+
+                                View All
+
+                                <FaArrowRight />
+
+                            </button>
+
+                        </div>
+
+
+                        {
+                            recentActivities.length ===
+                                0 ? (
+
+                                <div className="patient-empty-panel">
+
+                                    <FaCalendarCheck />
+
+
+                                    <strong>
+                                        No Recent Activity
+                                    </strong>
+
+
+                                    <span>
+                                        Your appointment activity
+                                        will appear here.
+                                    </span>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="patient-activity-list">
+
+                                    {
+                                        recentActivities.map(
+                                            (
+                                                item,
+                                                index
+                                            ) => (
+
+                                                <div
+                                                    className="patient-activity-item"
+
+                                                    key={
+                                                        item.id ||
+                                                        index
+                                                    }
+                                                >
+
+                                                    <span className="activity-icon">
+
+                                                        <FaCalendarCheck />
+
+                                                    </span>
+
+
+                                                    <div>
+
+                                                        <strong>
+
+                                                            {
+                                                                item.doctor_name
+                                                                    ? `Appointment with Dr. ${item.doctor_name}`
+                                                                    : item.title ||
+                                                                    "Appointment"
+                                                            }
+
+                                                        </strong>
+
+
+                                                        <small>
+
+                                                            {
+                                                                item.appointment_date ||
+                                                                item.date ||
+                                                                "Recently"
+                                                            }
+
+                                                        </small>
+
+                                                    </div>
+
+
+                                                    <span
+                                                        className={`activity-status ${String(
+                                                            item.status ||
+                                                            ""
+                                                        ).toLowerCase()}`}
+                                                    >
+
+                                                        {
+                                                            item.status ||
+                                                            "Pending"
+                                                        }
+
+                                                    </span>
+
+                                                </div>
+
+                                            )
+                                        )
+                                    }
+
+                                </div>
+
+                            )
+                        }
+
+                    </div>
+
+
+                    {/* MEDICINES */}
+
+                    <div className="patient-panel">
+
+                        <div className="patient-panel-header">
+
+                            <div>
+
+                                <span>
+                                    Medication
+                                </span>
+
+
+                                <h2>
+                                    Medicine Reminders
+                                </h2>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+
+                                onClick={() =>
+                                    navigate(
+                                        "/patient-prescriptions"
+                                    )
+                                }
+                            >
+
+                                Prescriptions
+
+                                <FaArrowRight />
+
+                            </button>
+
+                        </div>
+
+
+                        {
+                            medicineReminders.length ===
+                                0 ? (
+
+                                <div className="patient-empty-panel">
+
+                                    <FaFilePrescription />
+
+
+                                    <strong>
+                                        No Medicine Reminders
+                                    </strong>
+
+
+                                    <span>
+                                        Your medicine schedule
+                                        will appear here.
+                                    </span>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="patient-medicine-list">
+
+                                    {
+                                        medicineReminders.map(
+                                            (
+                                                medicine,
+                                                index
+                                            ) => (
+
+                                                <div
+                                                    className="patient-medicine-item"
+
+                                                    key={
+                                                        index
+                                                    }
+                                                >
+
+                                                    <span className="medicine-icon">
+
+                                                        <FaFilePrescription />
+
+                                                    </span>
+
+
+                                                    <div>
+
+                                                        <strong>
+                                                            {
+                                                                medicine.medicine
+                                                            }
+                                                        </strong>
+
+
+                                                        <small>
+                                                            Take on time
+                                                        </small>
+
+                                                    </div>
+
+
+                                                    <span className="medicine-time">
+
+                                                        {
+                                                            medicine.time
+                                                        }
+
+                                                    </span>
+
+                                                </div>
+
+                                            )
+                                        )
+                                    }
+
+                                </div>
+
+                            )
+                        }
+
+                    </div>
+
+                </section>
+
+
+                {/* =================================================
+                    HEALTH TIPS
+                ================================================= */}
+
+                <section className="patient-panel">
+
+                    <div className="patient-panel-header">
+
+                        <div>
+
+                            <span>
+                                Wellness
+                            </span>
+
+
+                            <h2>
+                                Health Tips
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="patient-health-tips">
+
+                        {
+                            healthTips.map(
+                                (
+                                    tip,
+                                    index
+                                ) => (
+
+                                    <div
+                                        className="patient-health-tip"
+
+                                        key={
+                                            index
+                                        }
+                                    >
+
+                                        <span>
+                                            {
+                                                tip.icon
+                                            }
+                                        </span>
+
+
+                                        <div>
+
+                                            <strong>
+                                                {
+                                                    tip.title
+                                                }
+                                            </strong>
+
+
+                                            <p>
+                                                {
+                                                    tip.text
+                                                }
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                )
+                            )
+                        }
+
+                    </div>
+
+                </section>
+
+
+                {/* =================================================
+                    APPOINTMENT PROGRESS
+                ================================================= */}
+
+                <section className="patient-panel patient-progress-panel">
+
+                    <div className="patient-panel-header">
+
+                        <div>
+
+                            <span>
+                                Progress
+                            </span>
+
+
+                            <h2>
+                                Appointment Completion
+                            </h2>
+
+                        </div>
+
+
+                        <strong className="progress-percentage">
+                            {completionRate}%
+                        </strong>
+
+                    </div>
+
+
+                    <div className="patient-progress-track">
+
+                        <div
+                            className="patient-progress-fill"
+
+                            style={{
+                                width:
+                                    `${completionRate}%`,
+                            }}
+                        />
+
+                    </div>
+
+
+                    <div className="patient-progress-labels">
+
+                        <span>
+                            {
+                                summary.completed
+                            }{" "}
+                            completed
+                        </span>
+
+
+                        <span>
+                            {
+                                summary.appointments
+                            }{" "}
+                            total
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+                {/* =================================================
+                    FOOTER
+                ================================================= */}
+
+                <footer className="patient-dashboard-footer">
+
+                    <strong>
+                        Hospital Management System
+                    </strong>
+
+
+                    <span>
                         Stay Healthy • Stay Safe ❤️
-                    </small>
+                    </span>
 
-                </div>
+                </footer>
 
             </div>
 
         </DashboardLayout>
-
     );
-
 }
