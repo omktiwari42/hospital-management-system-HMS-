@@ -1,7 +1,8 @@
 import {
-    useState,
-    useRef,
     useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 
 import {
@@ -19,6 +20,8 @@ import {
     FaUserCircle,
     FaSignOutAlt,
     FaSearch,
+    FaTimes,
+    FaChevronRight,
 } from "react-icons/fa";
 
 
@@ -58,6 +61,19 @@ function Navbar() {
 
 
     /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    const [searchQuery, setSearchQuery] =
+        useState("");
+
+    const [showSearchResults, setShowSearchResults] =
+        useState(false);
+
+    const searchRef = useRef(null);
+
+
+    /* =====================================================
        NOTIFICATIONS
     ===================================================== */
 
@@ -91,7 +107,7 @@ function Navbar() {
 
 
     /* =====================================================
-       ABORT ERROR CHECK
+       REQUEST ABORT CHECK
     ===================================================== */
 
     function isRequestAborted(error) {
@@ -116,13 +132,17 @@ function Navbar() {
 
 
     /* =====================================================
-       LOAD CURRENT USER PROFILE
+       LOAD CURRENT PROFILE
     ===================================================== */
 
     async function loadCurrentProfile() {
 
+        /*
+         * IMPORTANT:
+         * Authentication is stored in sessionStorage.
+         */
         const token =
-            localStorage.getItem("token");
+            sessionStorage.getItem("token");
 
 
         const cachedName =
@@ -141,37 +161,27 @@ function Navbar() {
             );
 
 
-        /*
-         * Show cached values immediately.
-         */
+        /* ---------------------------------------------
+           Show cached data immediately
+        --------------------------------------------- */
+
         if (cachedName) {
-
-            setFullName(
-                cachedName
-            );
-
+            setFullName(cachedName);
         }
 
         if (cachedRole) {
-
-            setRole(
-                cachedRole
-            );
-
+            setRole(cachedRole);
         }
 
         if (cachedImage) {
-
-            setProfileImage(
-                cachedImage
-            );
-
+            setProfileImage(cachedImage);
         }
 
 
-        /*
-         * No token.
-         */
+        /* ---------------------------------------------
+           No token
+        --------------------------------------------- */
+
         if (!token) {
 
             setFullName(
@@ -212,15 +222,10 @@ function Navbar() {
                 response.data || {};
 
 
-            /*
-             * Backend returns the user
-             * object directly.
-             */
             const name =
                 user.full_name ||
                 cachedName ||
                 "User";
-
 
             const userRole =
                 user.role ||
@@ -237,9 +242,6 @@ function Navbar() {
             );
 
 
-            /*
-             * Keep session data synchronized.
-             */
             sessionStorage.setItem(
                 "full_name",
                 String(name)
@@ -251,12 +253,7 @@ function Navbar() {
             );
 
 
-            /*
-             * Profile image.
-             */
-            if (
-                user.profile_image
-            ) {
+            if (user.profile_image) {
 
                 setProfileImage(
                     user.profile_image
@@ -273,9 +270,7 @@ function Navbar() {
 
             } else {
 
-                setProfileImage(
-                    null
-                );
+                setProfileImage(null);
 
                 sessionStorage.removeItem(
                     "profile_image"
@@ -289,10 +284,6 @@ function Navbar() {
 
         } catch (error) {
 
-            /*
-             * Ignore normal request
-             * cancellation.
-             */
             if (
                 isRequestAborted(
                     error
@@ -308,40 +299,24 @@ function Navbar() {
             );
 
 
-            /*
-             * Keep cached data.
-             */
             if (cachedName) {
-
-                setFullName(
-                    cachedName
-                );
-
+                setFullName(cachedName);
             }
 
             if (cachedRole) {
-
-                setRole(
-                    cachedRole
-                );
-
+                setRole(cachedRole);
             }
 
             if (cachedImage) {
-
-                setProfileImage(
-                    cachedImage
-                );
-
+                setProfileImage(cachedImage);
             }
 
         }
-
     }
 
 
     /* =====================================================
-       LOAD PROFILE WHEN ROUTE CHANGES
+       RELOAD PROFILE ON ROUTE CHANGE
     ===================================================== */
 
     useEffect(() => {
@@ -378,19 +353,11 @@ function Navbar() {
 
 
             if (name) {
-
-                setFullName(
-                    name
-                );
-
+                setFullName(name);
             }
 
             if (userRole) {
-
-                setRole(
-                    userRole
-                );
-
+                setRole(userRole);
             }
 
             setProfileImage(
@@ -399,7 +366,6 @@ function Navbar() {
 
 
             loadCurrentProfile();
-
         }
 
 
@@ -422,7 +388,343 @@ function Navbar() {
 
 
     /* =====================================================
-       CLOSE NOTIFICATION DROPDOWN
+       SEARCH DATA
+    ===================================================== */
+
+    const searchItems = useMemo(() => {
+
+        const items = [
+
+            {
+                label: "Dashboard",
+                description: "Open your main dashboard",
+                keywords:
+                    "dashboard home admin",
+                path: "/dashboard",
+                roles: ["admin"],
+            },
+
+            {
+                label: "Patient Dashboard",
+                description: "Open your patient dashboard",
+                keywords:
+                    "patient dashboard home",
+                path: "/patient-dashboard",
+                roles: ["patient"],
+            },
+
+            {
+                label: "Doctor Dashboard",
+                description: "Open doctor workspace",
+                keywords:
+                    "doctor dashboard",
+                path: "/doctor-dashboard",
+                roles: ["doctor"],
+            },
+
+            {
+                label: "Reception Dashboard",
+                description: "Open receptionist workspace",
+                keywords:
+                    "reception receptionist dashboard",
+                path: "/reception-dashboard",
+                roles: ["receptionist"],
+            },
+
+            {
+                label: "Pharmacist Dashboard",
+                description: "Open pharmacist workspace",
+                keywords:
+                    "pharmacist pharmacy dashboard",
+                path: "/pharmacist-dashboard",
+                roles: ["pharmacist"],
+            },
+
+            {
+                label: "Lab Dashboard",
+                description: "Open laboratory workspace",
+                keywords:
+                    "lab laboratory dashboard",
+                path: "/lab-dashboard",
+                roles: ["lab"],
+            },
+
+            {
+                label: "Patients",
+                description: "Manage hospital patients",
+                keywords:
+                    "patient patients records",
+                path: "/patients",
+                roles: ["admin"],
+            },
+
+            {
+                label: "Doctors",
+                description: "Manage doctors and specialists",
+                keywords:
+                    "doctor doctors specialist",
+                path: "/doctors",
+                roles: ["admin"],
+            },
+
+            {
+                label: "Find a Doctor",
+                description: "Find specialists and book a visit",
+                keywords:
+                    "doctor doctors specialist patient",
+                path: "/patient-doctors",
+                roles: ["patient"],
+            },
+
+            {
+                label: "Appointments",
+                description: "View and manage appointments",
+                keywords:
+                    "appointment appointments booking",
+                path: "/appointments",
+                roles: [
+                    "admin",
+                    "doctor",
+                    "receptionist",
+                    "pharmacist",
+                    "lab",
+                    "patient",
+                ],
+            },
+
+            {
+                label: "Book Appointment",
+                description: "Schedule a doctor appointment",
+                keywords:
+                    "book appointment doctor consultation",
+                path: "/book-appointment",
+                roles: ["patient"],
+            },
+
+            {
+                label: "My Appointments",
+                description: "View your patient appointments",
+                keywords:
+                    "patient appointments upcoming completed",
+                path: "/patient-appointments",
+                roles: ["patient"],
+            },
+
+            {
+                label: "Medical Reports",
+                description: "View and manage medical reports",
+                keywords:
+                    "reports medical files documents",
+                path: "/medical-reports",
+                roles: [
+                    "admin",
+                    "doctor",
+                ],
+            },
+
+            {
+                label: "Prescriptions",
+                description: "View your medicines and prescriptions",
+                keywords:
+                    "prescription prescriptions medicine medicines",
+                path: "/patient-prescriptions",
+                roles: ["patient"],
+            },
+
+            {
+                label: "Billing",
+                description: "Manage billing and payments",
+                keywords:
+                    "billing bill payment invoice",
+                path: "/billing",
+                roles: ["admin"],
+            },
+
+            {
+                label: "Patient Billing",
+                description: "View your bills and payments",
+                keywords:
+                    "patient billing payment invoice",
+                path: "/patient-billing",
+                roles: ["patient"],
+            },
+
+            {
+                label: "Payment",
+                description: "Open payment page",
+                keywords:
+                    "payment pay transaction razorpay",
+                path: "/payment",
+                roles: [
+                    "admin",
+                    "doctor",
+                    "receptionist",
+                    "pharmacist",
+                    "lab",
+                    "patient",
+                ],
+            },
+
+            {
+                label: "Medical History",
+                description: "Manage patient medical history",
+                keywords:
+                    "medical history illness surgery allergy",
+                path: "/patient-medical-history",
+                roles: [
+                    "admin",
+                    "doctor",
+                ],
+            },
+
+            {
+                label: "Profile",
+                description: "View and edit your profile",
+                keywords:
+                    "profile account personal details",
+                path: "/profile",
+                roles: [
+                    "admin",
+                    "doctor",
+                    "receptionist",
+                    "pharmacist",
+                    "lab",
+                    "patient",
+                ],
+            },
+
+            {
+                label: "Notifications",
+                description: "View your latest notifications",
+                keywords:
+                    "notifications alerts messages",
+                path: "/notifications",
+                roles: [
+                    "admin",
+                    "doctor",
+                    "receptionist",
+                    "pharmacist",
+                    "lab",
+                    "patient",
+                ],
+            },
+
+        ];
+
+
+        const currentRole =
+            String(
+                role || "patient"
+            ).toLowerCase();
+
+
+        return items.filter(
+            (item) =>
+                item.roles.includes(
+                    currentRole
+                )
+        );
+
+    }, [role]);
+
+
+    const filteredSearchItems =
+        useMemo(() => {
+
+            const query =
+                searchQuery
+                    .trim()
+                    .toLowerCase();
+
+
+            if (!query) {
+                return [];
+            }
+
+
+            return searchItems
+                .filter((item) => {
+
+                    return (
+                        item.label
+                            .toLowerCase()
+                            .includes(query) ||
+
+                        item.description
+                            .toLowerCase()
+                            .includes(query) ||
+
+                        item.keywords
+                            .toLowerCase()
+                            .includes(query)
+                    );
+
+                })
+                .slice(0, 7);
+
+        }, [
+            searchItems,
+            searchQuery,
+        ]);
+
+
+    function openSearchResult(path) {
+
+        setSearchQuery("");
+
+        setShowSearchResults(false);
+
+        navigate(path);
+
+    }
+
+
+    /* =====================================================
+       SEARCH OUTSIDE CLICK
+    ===================================================== */
+
+    useEffect(() => {
+
+        function handleSearchOutside(
+            event
+        ) {
+
+            if (
+                searchRef.current &&
+                !searchRef.current.contains(
+                    event.target
+                )
+            ) {
+
+                setShowSearchResults(
+                    false
+                );
+
+            }
+
+        }
+
+
+        document.addEventListener(
+            "mousedown",
+            handleSearchOutside
+        );
+
+
+        return () => {
+
+            document.removeEventListener(
+                "mousedown",
+                handleSearchOutside
+            );
+
+        };
+
+    }, []);
+
+
+    /* =====================================================
+       NOTIFICATION OUTSIDE CLICK
     ===================================================== */
 
     useEffect(() => {
@@ -466,7 +768,7 @@ function Navbar() {
 
 
     /* =====================================================
-       LOAD NOTIFICATIONS
+       NOTIFICATIONS
     ===================================================== */
 
     async function loadNotifications() {
@@ -504,7 +806,6 @@ function Navbar() {
                 ).length
             );
 
-
         } catch (error) {
 
             if (
@@ -532,10 +833,6 @@ function Navbar() {
     }
 
 
-    /* =====================================================
-       LOAD UNREAD COUNT
-    ===================================================== */
-
     async function loadUnreadCount() {
 
         try {
@@ -552,7 +849,6 @@ function Navbar() {
                     0
                 )
             );
-
 
         } catch (error) {
 
@@ -575,13 +871,10 @@ function Navbar() {
     }
 
 
-    /* =====================================================
-       INITIAL NOTIFICATIONS
-    ===================================================== */
-
     useEffect(() => {
 
         loadNotifications();
+
         loadUnreadCount();
 
     }, []);
@@ -690,10 +983,7 @@ function Navbar() {
             );
 
 
-            setUnreadCount(
-                0
-            );
-
+            setUnreadCount(0);
 
         } catch (error) {
 
@@ -729,26 +1019,19 @@ function Navbar() {
         );
 
 
-        setFullName(
-            "User"
-        );
-
-        setRole(
-            ""
-        );
-
-        setProfileImage(
-            null
-        );
+        setFullName("User");
+        setRole("");
+        setProfileImage(null);
 
 
         window.location.href =
             "/login";
+
     }
 
 
     /* =====================================================
-       PROFILE IMAGE URL
+       PROFILE IMAGE
     ===================================================== */
 
     const API_URL =
@@ -772,21 +1055,20 @@ function Navbar() {
 
 
     /* =====================================================
-       OPEN PROFILE
+       PROFILE
     ===================================================== */
 
     function openProfile(event) {
 
         event.preventDefault();
+
         event.stopPropagation();
 
-        setShowNotifications(
-            false
-        );
+        setShowNotifications(false);
 
-        navigate(
-            "/profile"
-        );
+        setShowSearchResults(false);
+
+        navigate("/profile");
 
     }
 
@@ -799,6 +1081,7 @@ function Navbar() {
 
         <header className="top-navbar">
 
+
             {/* =================================================
                 LEFT
             ================================================= */}
@@ -810,14 +1093,244 @@ function Navbar() {
                 </h2>
 
 
-                <div className="navbar-search">
+                {/* =================================================
+                    SEARCH
+                ================================================= */}
 
-                    <FaSearch />
+                <div
+                    className="navbar-search-wrapper"
+                    ref={searchRef}
+                >
 
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                    />
+                    <div
+                        className={`navbar-search ${showSearchResults
+                                ? "is-open"
+                                : ""
+                            }`}
+                    >
+
+                        <FaSearch
+                            className="navbar-search-icon"
+                        />
+
+
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            placeholder="Search pages, appointments..."
+                            autoComplete="off"
+
+                            onFocus={() => {
+
+                                if (
+                                    searchQuery.trim()
+                                ) {
+
+                                    setShowSearchResults(
+                                        true
+                                    );
+
+                                }
+
+                            }}
+
+                            onChange={(event) => {
+
+                                const value =
+                                    event.target.value;
+
+                                setSearchQuery(
+                                    value
+                                );
+
+                                setShowSearchResults(
+                                    value.trim()
+                                        .length > 0
+                                );
+
+                            }}
+
+                            onKeyDown={(event) => {
+
+                                if (
+                                    event.key ===
+                                    "Enter"
+                                ) {
+
+                                    if (
+                                        filteredSearchItems.length >
+                                        0
+                                    ) {
+
+                                        openSearchResult(
+                                            filteredSearchItems[0]
+                                                .path
+                                        );
+
+                                    }
+
+                                    return;
+                                }
+
+
+                                if (
+                                    event.key ===
+                                    "Escape"
+                                ) {
+
+                                    setSearchQuery(
+                                        ""
+                                    );
+
+                                    setShowSearchResults(
+                                        false
+                                    );
+
+                                }
+
+                            }}
+                        />
+
+
+                        {searchQuery && (
+
+                            <button
+                                type="button"
+                                className="navbar-search-clear"
+                                aria-label="Clear search"
+
+                                onClick={() => {
+
+                                    setSearchQuery(
+                                        ""
+                                    );
+
+                                    setShowSearchResults(
+                                        false
+                                    );
+
+                                }}
+                            >
+                                <FaTimes />
+
+                            </button>
+
+                        )}
+
+                    </div>
+
+
+                    {/* =================================================
+                        SEARCH RESULTS
+                    ================================================= */}
+
+                    {showSearchResults && (
+
+                        <div className="navbar-search-dropdown">
+
+                            <div className="navbar-search-dropdown-header">
+
+                                <span>
+                                    Quick Navigation
+                                </span>
+
+                                {filteredSearchItems.length >
+                                    0 && (
+
+                                        <small>
+                                            {filteredSearchItems.length}
+                                            {" "}
+                                            result
+                                            {filteredSearchItems.length !==
+                                                1
+                                                ? "s"
+                                                : ""}
+                                        </small>
+
+                                    )}
+
+                            </div>
+
+
+                            {filteredSearchItems.length >
+                                0 ? (
+
+                                <div className="navbar-search-results">
+
+                                    {filteredSearchItems.map(
+                                        (item) => (
+
+                                            <button
+                                                key={
+                                                    item.path
+                                                }
+                                                type="button"
+                                                className="navbar-search-result"
+
+                                                onClick={() =>
+                                                    openSearchResult(
+                                                        item.path
+                                                    )
+                                                }
+                                            >
+
+                                                <span className="navbar-search-result-icon">
+                                                    <FaSearch />
+                                                </span>
+
+
+                                                <span className="navbar-search-result-content">
+
+                                                    <strong>
+                                                        {
+                                                            item.label
+                                                        }
+                                                    </strong>
+
+                                                    <small>
+                                                        {
+                                                            item.description
+                                                        }
+                                                    </small>
+
+                                                </span>
+
+
+                                                <FaChevronRight
+                                                    className="navbar-search-result-arrow"
+                                                />
+
+                                            </button>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            ) : (
+
+                                <div className="navbar-search-empty">
+
+                                    <span className="navbar-search-empty-icon">
+                                        🔎
+                                    </span>
+
+                                    <strong>
+                                        No results found
+                                    </strong>
+
+                                    <small>
+                                        Try another page,
+                                        feature or keyword.
+                                    </small>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    )}
 
                 </div>
 
@@ -866,10 +1379,12 @@ function Navbar() {
 
                     <button
                         type="button"
+
                         className={`icon-btn navbar-bell ${bellAnimation
                                 ? "ring"
                                 : ""
                             }`}
+
                         onClick={() => {
 
                             const value =
@@ -883,12 +1398,18 @@ function Navbar() {
 
                             if (value) {
 
+                                setShowSearchResults(
+                                    false
+                                );
+
                                 loadNotifications();
+
                                 loadUnreadCount();
 
                             }
 
                         }}
+
                         aria-label="Notifications"
                     >
 
@@ -1029,11 +1550,18 @@ function Navbar() {
                             <button
                                 type="button"
                                 className="view-all-btn"
-                                onClick={() =>
+
+                                onClick={() => {
+
+                                    setShowNotifications(
+                                        false
+                                    );
+
                                     navigate(
                                         "/notifications"
-                                    )
-                                }
+                                    );
+
+                                }}
                             >
                                 View All Notifications
                             </button>
@@ -1055,17 +1583,16 @@ function Navbar() {
                     title="View Profile"
                     aria-label="Open Profile"
 
-                    onPointerDownCapture={(event) => {
+                    onPointerDownCapture={(
+                        event
+                    ) => {
                         event.stopPropagation();
                     }}
 
-                    onClickCapture={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        navigate(
-                            "/profile"
-                        );
+                    onClickCapture={(
+                        event
+                    ) => {
+                        openProfile(event);
                     }}
                 >
 
@@ -1082,10 +1609,14 @@ function Navbar() {
 
                                 <img
                                     className="navbar-profile-image"
+
                                     src={
                                         profileImageUrl
                                     }
-                                    alt={`${fullName} profile`}
+
+                                    alt={
+                                        `${fullName} profile`
+                                    }
 
                                     onLoad={() =>
                                         setImageLoading(
@@ -1099,11 +1630,9 @@ function Navbar() {
                                             false
                                         );
 
-
                                         setProfileImage(
                                             null
                                         );
-
 
                                         sessionStorage.removeItem(
                                             "profile_image"
@@ -1135,7 +1664,6 @@ function Navbar() {
                     <span className="navbar-profile-info">
 
                         <strong>
-
                             {fullName !==
                                 "User"
                                 ? fullName
@@ -1145,16 +1673,13 @@ function Navbar() {
                                     ) ||
                                     "Patient"
                                 )}
-
                         </strong>
 
 
                         <span>
-
                             {role
                                 ? role.toUpperCase()
                                 : "PATIENT"}
-
                         </span>
 
                     </span>

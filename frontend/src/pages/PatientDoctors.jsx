@@ -13,12 +13,13 @@ import {
 } from "react-icons/fa";
 
 import api from "../services/api";
-import DoctorsSkeleton from "../components/skeletons/DoctorsSkeleton";
+import PatientDoctorsSkeleton from "../components/skeletons/PatientDoctorsSkeleton";
 
 
 function PatientDoctors() {
 
     const navigate = useNavigate();
+
 
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -139,11 +140,13 @@ function PatientDoctors() {
                             doctor.name || ""
                         ).toLowerCase();
 
+
                     const spec =
                         String(
                             doctor.specialization ||
                             ""
                         ).toLowerCase();
+
 
                     const experience =
                         String(
@@ -269,6 +272,7 @@ function PatientDoctors() {
 
 
         return "unknown";
+
     }
 
 
@@ -279,7 +283,7 @@ function PatientDoctors() {
     if (loading) {
 
         return (
-            <DoctorsSkeleton />
+            <PatientDoctorsSkeleton />
         );
 
     }
@@ -292,6 +296,7 @@ function PatientDoctors() {
     if (error) {
 
         return (
+
             <div className="patient-doctors-page">
 
                 <div className="patient-doctors-header">
@@ -308,6 +313,7 @@ function PatientDoctors() {
                         <FaArrowLeft />
                         Back
                     </button>
+
 
                     <div className="patient-doctors-title">
 
@@ -356,6 +362,7 @@ function PatientDoctors() {
                 </div>
 
             </div>
+
         );
 
     }
@@ -797,6 +804,7 @@ function PatientDoctors() {
                                             </div>
 
                                             <div>
+
                                                 <strong>
                                                     {experience}
                                                 </strong>
@@ -804,6 +812,7 @@ function PatientDoctors() {
                                                 <span>
                                                     Years Experience
                                                 </span>
+
                                             </div>
 
                                         </div>
@@ -816,6 +825,7 @@ function PatientDoctors() {
                                             </div>
 
                                             <div>
+
                                                 <strong>
                                                     {fee}
                                                 </strong>
@@ -823,6 +833,7 @@ function PatientDoctors() {
                                                 <span>
                                                     Consultation
                                                 </span>
+
                                             </div>
 
                                         </div>
@@ -903,8 +914,8 @@ function PatientDoctors() {
             )}
 
         </div>
-
     );
 }
+
 
 export default PatientDoctors;
