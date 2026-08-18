@@ -33,6 +33,7 @@ import LabDashboard from "./pages/LabDashboard";
 
 
 function App() {
+
   return (
     <div className="layout">
 
@@ -64,24 +65,8 @@ function App() {
 
 
           {/* =================================================
-                        ADMIN / DOCTOR
+                        ADMIN ONLY
                     ================================================= */}
-
-          <Route
-            path="/patient-medical-history"
-            element={
-              <ProtectedRoute>
-                <RoleRoute
-                  roles={[
-                    "admin",
-                    "doctor",
-                  ]}
-                >
-                  <PatientMedicalHistory />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/dashboard"
@@ -89,22 +74,6 @@ function App() {
               <ProtectedRoute>
                 <RoleRoute roles={["admin"]}>
                   <Dashboard />
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/medical-reports"
-            element={
-              <ProtectedRoute>
-                <RoleRoute
-                  roles={[
-                    "admin",
-                    "doctor",
-                  ]}
-                >
-                  <MedicalReports />
                 </RoleRoute>
               </ProtectedRoute>
             }
@@ -145,7 +114,44 @@ function App() {
 
 
           {/* =================================================
-                        SHARED
+                        ADMIN + DOCTOR
+                    ================================================= */}
+
+          <Route
+            path="/patient-medical-history"
+            element={
+              <ProtectedRoute>
+                <RoleRoute
+                  roles={[
+                    "admin",
+                    "doctor",
+                  ]}
+                >
+                  <PatientMedicalHistory />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/medical-reports"
+            element={
+              <ProtectedRoute>
+                <RoleRoute
+                  roles={[
+                    "admin",
+                    "doctor",
+                  ]}
+                >
+                  <MedicalReports />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* =================================================
+                        SHARED AUTHENTICATED
                     ================================================= */}
 
           <Route
@@ -166,18 +172,14 @@ function App() {
             }
           />
 
-
-          {/* =================================================
-                        PROFILE
-                        IMPORTANT:
-                        Profile.jsx handles authentication itself.
-                    ================================================= */}
-
           <Route
             path="/profile"
-            element={<Profile />}
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
           />
-
 
           <Route
             path="/notifications"
@@ -190,7 +192,7 @@ function App() {
 
 
           {/* =================================================
-                        DOCTOR
+                        DOCTOR ONLY
                     ================================================= */}
 
           <Route
@@ -206,18 +208,14 @@ function App() {
 
 
           {/* =================================================
-                        RECEPTIONIST
+                        RECEPTIONIST ONLY
                     ================================================= */}
 
           <Route
             path="/reception-dashboard"
             element={
               <ProtectedRoute>
-                <RoleRoute
-                  roles={[
-                    "receptionist",
-                  ]}
-                >
+                <RoleRoute roles={["receptionist"]}>
                   <ReceptionDashboard />
                 </RoleRoute>
               </ProtectedRoute>
@@ -226,18 +224,14 @@ function App() {
 
 
           {/* =================================================
-                        PHARMACIST
+                        PHARMACIST ONLY
                     ================================================= */}
 
           <Route
             path="/pharmacist-dashboard"
             element={
               <ProtectedRoute>
-                <RoleRoute
-                  roles={[
-                    "pharmacist",
-                  ]}
-                >
+                <RoleRoute roles={["pharmacist"]}>
                   <PharmacistDashboard />
                 </RoleRoute>
               </ProtectedRoute>
@@ -246,7 +240,7 @@ function App() {
 
 
           {/* =================================================
-                        LAB
+                        LAB ONLY
                     ================================================= */}
 
           <Route
@@ -262,7 +256,7 @@ function App() {
 
 
           {/* =================================================
-                        PATIENT
+                        PATIENT ONLY
                     ================================================= */}
 
           <Route
@@ -331,13 +325,18 @@ function App() {
             }
           />
 
+
           {/* =================================================
                         FALLBACK
                     ================================================= */}
 
           <Route
             path="*"
-            element={<Login />}
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
           />
 
         </Routes>
@@ -361,5 +360,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
