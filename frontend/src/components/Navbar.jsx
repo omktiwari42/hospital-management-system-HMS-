@@ -1,13 +1,17 @@
 import {
     useState,
     useRef,
-    useEffect
+    useEffect,
 } from "react";
+
+import {
+    useNavigate,
+    useLocation,
+} from "react-router-dom";
 
 import { hmsToast } from "../utils/hmsToast";
 import api from "../services/api";
 import useRealtimeNotifications from "../hooks/useRealtimeNotifications";
-import { useNavigate } from "react-router-dom";
 
 import {
     FaBell,
@@ -15,13 +19,14 @@ import {
     FaSun,
     FaUserCircle,
     FaSignOutAlt,
-    FaSearch
+    FaSearch,
 } from "react-icons/fa";
 
 
 function Navbar() {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
 
     /* =========================
@@ -38,20 +43,25 @@ function Navbar() {
     ========================= */
 
     const [fullName, setFullName] = useState(
-        sessionStorage.getItem("full_name") || "User"
+        sessionStorage.getItem("full_name") ||
+        "User"
     );
 
     const [role, setRole] = useState(
-        sessionStorage.getItem("role") || ""
+        sessionStorage.getItem("role") ||
+        ""
     );
 
     const [profileImage, setProfileImage] = useState(
-        sessionStorage.getItem("profile_image") || null
+        sessionStorage.getItem("profile_image") ||
+        null
     );
 
     const [imageLoading, setImageLoading] = useState(
         Boolean(
-            sessionStorage.getItem("profile_image")
+            sessionStorage.getItem(
+                "profile_image"
+            )
         )
     );
 
@@ -62,7 +72,7 @@ function Navbar() {
 
     const [
         showNotifications,
-        setShowNotifications
+        setShowNotifications,
     ] = useState(false);
 
     const notificationRef =
@@ -70,184 +80,185 @@ function Navbar() {
 
     const [
         notifications,
-        setNotifications
+        setNotifications,
     ] = useState([]);
 
     const [
         loadingNotifications,
-        setLoadingNotifications
+        setLoadingNotifications,
     ] = useState(false);
 
     const [
         unreadCount,
-        setUnreadCount
+        setUnreadCount,
     ] = useState(0);
 
     const [
         bellAnimation,
-        setBellAnimation
+        setBellAnimation,
     ] = useState(false);
 
 
     /* =========================
-       LOAD CURRENT PROFILE
+       LOAD CURRENT USER PROFILE
     ========================= */
 
-    useEffect(() => {
+    async function loadCurrentProfile() {
 
-        async function loadProfile() {
+        const token =
+            localStorage.getItem("token");
 
-            try {
+        /*
+         * Not logged in.
+         */
+        if (!token) {
 
-                const token =
-                    localStorage.getItem(
-                        "token"
-                    );
+            setProfileImage(null);
 
-                if (!token) {
-                    return;
-                }
+            setFullName("User");
 
-                const res =
-                    await api.get(
-                        "/profile",
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
+            setRole("");
+
+            setImageLoading(false);
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await api.get(
+                    "/profile",
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`,
+                        },
+                    }
+                );
 
 
-                const user =
-                    res.data || {};
+            const user =
+                response.data || {};
 
+
+            /*
+             * Full name
+             */
+            const name =
+                user.full_name ||
+                "User";
+
+            setFullName(name);
+
+            sessionStorage.setItem(
+                "full_name",
+                name
+            );
+
+
+            /*
+             * Role
+             */
+            const userRole =
+                user.role || "";
+
+            setRole(userRole);
+
+            sessionStorage.setItem(
+                "role",
+                userRole
+            );
+
+
+            /*
+             * Profile image
+             *
+             * DATABASE IS THE SOURCE OF TRUTH.
+             */
+            if (user.profile_image) {
+
+                setProfileImage(
+                    user.profile_image
+                );
+
+                sessionStorage.setItem(
+                    "profile_image",
+                    user.profile_image
+                );
 
                 /*
-                 * Always use the database
-                 * value as the source of truth.
+                 * Image exists, so start image loading.
                  */
+                setImageLoading(true);
 
-                setFullName(
-                    user.full_name ||
-                    sessionStorage.getItem(
-                        "full_name"
-                    ) ||
-                    "User"
+            } else {
+
+                /*
+                 * No image in database.
+                 */
+                setProfileImage(null);
+
+                sessionStorage.removeItem(
+                    "profile_image"
                 );
 
+                setImageLoading(false);
 
-                setRole(
-                    user.role ||
-                    sessionStorage.getItem(
-                        "role"
-                    ) ||
-                    ""
-                );
+            }
 
+        } catch (error) {
 
-                if (
-                    user.profile_image
-                ) {
+            console.error(
+                "Navbar profile loading error:",
+                error
+            );
 
-                    setProfileImage(
-                        user.profile_image
-                    );
+            /*
+             * Only clear the profile UI for
+             * authentication failures.
+             */
+            if (
+                error.response?.status === 401 ||
+                error.response?.status === 403
+            ) {
 
-                    sessionStorage.setItem(
-                        "profile_image",
-                        user.profile_image
-                    );
+                setProfileImage(null);
 
-                    setImageLoading(true);
-
-                } else {
-
-                    setProfileImage(
-                        null
-                    );
-
-                    sessionStorage.removeItem(
-                        "profile_image"
-                    );
-
-                    setImageLoading(
-                        false
-                    );
-
-                }
-
-
-                sessionStorage.setItem(
-                    "full_name",
-                    user.full_name ||
-                    "User"
-                );
-
-
-                sessionStorage.setItem(
-                    "role",
-                    user.role || ""
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Navbar profile error:",
-                    error
-                );
+                setImageLoading(false);
 
             }
 
         }
 
-
-        loadProfile();
-
-    }, []);
+    }
 
 
     /* =========================
-       REALTIME PROFILE UPDATE
+       LOAD PROFILE AFTER LOGIN
+       AND ON ROUTE CHANGE
+    ========================= */
+
+    useEffect(() => {
+
+        loadCurrentProfile();
+
+    }, [location.pathname]);
+
+
+    /* =========================
+       PROFILE UPDATED EVENT
     ========================= */
 
     useEffect(() => {
 
         function handleUserUpdated() {
 
-            const image =
-                sessionStorage.getItem(
-                    "profile_image"
-                ) || null;
-
-            const name =
-                sessionStorage.getItem(
-                    "full_name"
-                ) || "User";
-
-            const userRole =
-                sessionStorage.getItem(
-                    "role"
-                ) || "";
-
-
-            setProfileImage(
-                image
-            );
-
-            setFullName(
-                name
-            );
-
-            setRole(
-                userRole
-            );
-
-            setImageLoading(
-                Boolean(image)
-            );
+            /*
+             * Refresh directly from DB.
+             * Do not depend only on sessionStorage.
+             */
+            loadCurrentProfile();
 
         }
 
@@ -271,25 +282,21 @@ function Navbar() {
 
 
     /* =========================
-       CLOSE NOTIFICATIONS
+       CLICK OUTSIDE NOTIFICATIONS
     ========================= */
 
     useEffect(() => {
 
-        function handleClickOutside(
-            e
-        ) {
+        function handleClickOutside(event) {
 
             if (
                 notificationRef.current &&
                 !notificationRef.current.contains(
-                    e.target
+                    event.target
                 )
             ) {
 
-                setShowNotifications(
-                    false
-                );
+                setShowNotifications(false);
 
             }
 
@@ -332,7 +339,7 @@ function Navbar() {
                     prev.map(
                         (item) => ({
                             ...item,
-                            unread: false
+                            unread: false,
                         })
                     )
             );
@@ -340,10 +347,11 @@ function Navbar() {
 
             setUnreadCount(0);
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
-                err
+                "Mark all read error:",
+                error
             );
 
         }
@@ -359,12 +367,10 @@ function Navbar() {
 
         try {
 
-            setLoadingNotifications(
-                true
-            );
+            setLoadingNotifications(true);
 
 
-            const res =
+            const response =
                 await api.get(
                     "/notifications"
                 );
@@ -372,15 +378,13 @@ function Navbar() {
 
             const data =
                 Array.isArray(
-                    res.data
+                    response.data
                 )
-                    ? res.data
+                    ? response.data
                     : [];
 
 
-            setNotifications(
-                data
-            );
+            setNotifications(data);
 
 
             setUnreadCount(
@@ -390,18 +394,48 @@ function Navbar() {
                 ).length
             );
 
-
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 "Notification Error:",
-                err
+                error
             );
 
         } finally {
 
-            setLoadingNotifications(
-                false
+            setLoadingNotifications(false);
+
+        }
+
+    }
+
+
+    /* =========================
+       UNREAD COUNT
+    ========================= */
+
+    async function loadUnreadCount() {
+
+        try {
+
+            const response =
+                await api.get(
+                    "/notifications/count"
+                );
+
+
+            setUnreadCount(
+                Number(
+                    response.data?.unread ||
+                    0
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unread count error:",
+                error
             );
 
         }
@@ -416,14 +450,13 @@ function Navbar() {
     useEffect(() => {
 
         loadNotifications();
-
         loadUnreadCount();
 
     }, []);
 
 
     /* =========================
-       SSE NOTIFICATIONS
+       REALTIME SSE
     ========================= */
 
     useRealtimeNotifications(
@@ -432,7 +465,7 @@ function Navbar() {
             setNotifications(
                 (prev) => [
                     notification,
-                    ...prev
+                    ...prev,
                 ]
             );
 
@@ -451,24 +484,17 @@ function Navbar() {
 
             audio
                 .play()
-                .catch(
-                    () => { }
-                );
+                .catch(() => { });
 
 
-            setBellAnimation(
-                true
-            );
+            setBellAnimation(true);
 
 
-            setTimeout(
-                () => {
-                    setBellAnimation(
-                        false
-                    );
-                },
-                600
-            );
+            setTimeout(() => {
+
+                setBellAnimation(false);
+
+            }, 600);
 
         }
     );
@@ -484,9 +510,7 @@ function Navbar() {
             !darkMode;
 
 
-        setDarkMode(
-            value
-        );
+        setDarkMode(value);
 
 
         localStorage.setItem(
@@ -516,58 +540,16 @@ function Navbar() {
         );
 
 
-        setProfileImage(
-            null
-        );
+        setProfileImage(null);
 
-        setFullName(
-            "User"
-        );
+        setFullName("User");
 
-        setRole(
-            ""
-        );
+        setRole("");
 
-        setImageLoading(
-            false
-        );
+        setImageLoading(false);
 
 
-        navigate(
-            "/login"
-        );
-
-    }
-
-
-    /* =========================
-       UNREAD COUNT
-    ========================= */
-
-    async function loadUnreadCount() {
-
-        try {
-
-            const res =
-                await api.get(
-                    "/notifications/count"
-                );
-
-
-            setUnreadCount(
-                Number(
-                    res.data?.unread ||
-                    0
-                )
-            );
-
-        } catch (err) {
-
-            console.log(
-                err
-            );
-
-        }
+        navigate("/login");
 
     }
 
@@ -588,7 +570,7 @@ function Navbar() {
 
 
     /* =========================
-       RENDER
+       UI
     ========================= */
 
     return (
@@ -596,7 +578,9 @@ function Navbar() {
         <header className="top-navbar">
 
 
-            {/* LEFT */}
+            {/* =========================
+                LEFT
+            ========================= */}
 
             <div className="navbar-left">
 
@@ -619,7 +603,9 @@ function Navbar() {
             </div>
 
 
-            {/* RIGHT */}
+            {/* =========================
+                RIGHT
+            ========================= */}
 
             <div className="navbar-right">
 
@@ -634,15 +620,18 @@ function Navbar() {
                     aria-label="Toggle dark mode"
                 >
 
-                    {darkMode
-                        ? <FaSun />
-                        : <FaMoon />
-                    }
+                    {darkMode ? (
+                        <FaSun />
+                    ) : (
+                        <FaMoon />
+                    )}
 
                 </button>
 
 
-                {/* NOTIFICATIONS */}
+                {/* =========================
+                    NOTIFICATIONS
+                ========================= */}
 
                 <div
                     className="notification-wrapper"
@@ -670,12 +659,12 @@ function Navbar() {
                             if (value) {
 
                                 loadNotifications();
-
                                 loadUnreadCount();
 
                             }
 
                         }}
+                        aria-label="Notifications"
                     >
 
                         <FaBell />
@@ -685,8 +674,7 @@ function Navbar() {
 
                             <span className="notification-count">
 
-                                {unreadCount >
-                                    99
+                                {unreadCount > 99
                                     ? "99+"
                                     : unreadCount}
 
@@ -700,6 +688,7 @@ function Navbar() {
                     {showNotifications && (
 
                         <div className="notification-dropdown">
+
 
                             <div className="notification-header">
 
@@ -723,14 +712,18 @@ function Navbar() {
                             {loadingNotifications ? (
 
                                 <div className="empty-notification">
+
                                     Loading Notifications...
+
                                 </div>
 
                             ) : notifications.length ===
                                 0 ? (
 
                                 <div className="empty-notification">
+
                                     No Notifications
+
                                 </div>
 
                             ) : (
@@ -764,7 +757,7 @@ function Navbar() {
                                                         "🧪",
 
                                                     general:
-                                                        "🔔"
+                                                        "🔔",
 
                                                 }[
                                                     item.type
@@ -792,11 +785,13 @@ function Navbar() {
 
 
                                                 <small>
+
                                                     {item.created_at
                                                         ? new Date(
                                                             item.created_at
                                                         ).toLocaleString()
                                                         : "Just now"}
+
                                                 </small>
 
                                             </div>
@@ -827,24 +822,24 @@ function Navbar() {
                 </div>
 
 
-                {/* PROFILE */}
+                {/* =========================
+                    PROFILE
+                ========================= */}
 
                 <div
                     className="profile-box"
                     onClick={() =>
-                        navigate(
-                            "/profile"
-                        )
+                        navigate("/profile")
                     }
                     title="View Profile"
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => {
+                    onKeyDown={(event) => {
 
                         if (
-                            e.key ===
+                            event.key ===
                             "Enter" ||
-                            e.key ===
+                            event.key ===
                             " "
                         ) {
 
@@ -859,6 +854,7 @@ function Navbar() {
 
 
                     <div className="navbar-profile-avatar">
+
 
                         {profileImageUrl ? (
 
@@ -877,11 +873,13 @@ function Navbar() {
                                         profileImageUrl
                                     }
                                     alt={`${fullName} profile`}
-                                    onLoad={() =>
+                                    onLoad={() => {
+
                                         setImageLoading(
                                             false
-                                        )
-                                    }
+                                        );
+
+                                    }}
                                     onError={() => {
 
                                         console.error(
@@ -906,7 +904,7 @@ function Navbar() {
                                         display:
                                             imageLoading
                                                 ? "none"
-                                                : "block"
+                                                : "block",
                                     }}
                                 />
 
@@ -941,7 +939,9 @@ function Navbar() {
                 </div>
 
 
-                {/* LOGOUT */}
+                {/* =========================
+                    LOGOUT
+                ========================= */}
 
                 <button
                     className="logout-btn"
