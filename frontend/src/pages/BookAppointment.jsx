@@ -13,7 +13,6 @@ import api from "../services/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import DatePicker from "react-datepicker";
-
 import "react-datepicker/dist/react-datepicker.css";
 
 import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkeleton";
@@ -22,12 +21,11 @@ import BookAppointmentSkeleton from "../components/skeletons/BookAppointmentSkel
 export default function BookAppointment() {
 
     const navigate = useNavigate();
-
     const location = useLocation();
 
 
     /* =========================
-       LOADING / BOOKING
+       STATE
     ========================= */
 
     const [loading, setLoading] =
@@ -36,35 +34,17 @@ export default function BookAppointment() {
     const [booking, setBooking] =
         useState(false);
 
+    const [showAppointmentPopup, setShowAppointmentPopup] =
+        useState(false);
 
-    /* =========================
-       POPUPS
-    ========================= */
+    const [popupMessage, setPopupMessage] =
+        useState("");
 
-    const [
-        showAppointmentPopup,
-        setShowAppointmentPopup,
-    ] = useState(false);
+    const [paymentSuccess, setPaymentSuccess] =
+        useState(false);
 
-    const [
-        popupMessage,
-        setPopupMessage,
-    ] = useState("");
-
-    const [
-        paymentSuccess,
-        setPaymentSuccess,
-    ] = useState(false);
-
-    const [
-        paymentMessage,
-        setPaymentMessage,
-    ] = useState("");
-
-
-    /* =========================
-       PROFILE / DOCTORS
-    ========================= */
+    const [paymentMessage, setPaymentMessage] =
+        useState("");
 
     const [profile, setProfile] =
         useState({});
@@ -72,43 +52,26 @@ export default function BookAppointment() {
     const [doctors, setDoctors] =
         useState([]);
 
-    const [
-        selectedDoctor,
-        setSelectedDoctor,
-    ] = useState(null);
+    const [selectedDoctor, setSelectedDoctor] =
+        useState(null);
+
+    const [appointmentDateTime, setAppointmentDateTime] =
+        useState(new Date());
+
+    const [form, setForm] = useState({
+        doctor_name: "",
+        department: "",
+        reason: "",
+    });
 
 
     /* =========================
-       DATE / TIME
-    ========================= */
-
-    const [
-        appointmentDateTime,
-        setAppointmentDateTime,
-    ] = useState(new Date());
-
-
-    /* =========================
-       FORM
-    ========================= */
-
-    const [form, setForm] =
-        useState({
-            doctor_name: "",
-            department: "",
-            reason: "",
-        });
-
-
-    /* =========================
-       LOAD PROFILE + DOCTORS
+       LOAD DATA
     ========================= */
 
     useEffect(() => {
-
         loadData();
-
-    }, [location.state]);
+    }, []);
 
 
     async function loadData() {
@@ -116,7 +79,6 @@ export default function BookAppointment() {
         try {
 
             setLoading(true);
-
 
             const [
                 profileRes,
@@ -126,102 +88,67 @@ export default function BookAppointment() {
                 api.get("/doctors"),
             ]);
 
-
             const profileData =
                 profileRes.data || {};
 
             const doctorsData =
-                Array.isArray(
-                    doctorsRes.data
-                )
+                Array.isArray(doctorsRes.data)
                     ? doctorsRes.data
                     : [];
 
-
-            setProfile(
-                profileData
-            );
-
-            setDoctors(
-                doctorsData
-            );
+            setProfile(profileData);
+            setDoctors(doctorsData);
 
 
             /* =========================
-               PRESELECT DOCTOR
+               RESTORE SELECTED DOCTOR
             ========================= */
 
-            const selectedDoctorId =
+            const passedDoctorId =
                 location.state?.doctorId;
 
-            const selectedDoctorName =
+            const passedDoctorName =
                 location.state?.doctorName;
 
 
             if (
-                selectedDoctorId ||
-                selectedDoctorName
+                passedDoctorId ||
+                passedDoctorName
             ) {
 
                 const doctor =
-                    doctorsData.find(
-                        (item) => {
+                    doctorsData.find((item) => {
 
-                            const idMatch =
-                                selectedDoctorId &&
-                                String(
-                                    item.id
-                                ) ===
-                                String(
-                                    selectedDoctorId
-                                );
+                        const byId =
+                            passedDoctorId &&
+                            String(item.id) ===
+                            String(passedDoctorId);
 
+                        const byName =
+                            passedDoctorName &&
+                            item.name ===
+                            passedDoctorName;
 
-                            const nameMatch =
-                                selectedDoctorName &&
-                                item.name ===
-                                selectedDoctorName;
-
-
-                            return (
-                                idMatch ||
-                                nameMatch
-                            );
-
-                        }
-                    );
+                        return (
+                            byId ||
+                            byName
+                        );
+                    });
 
 
                 if (doctor) {
 
-                    setSelectedDoctor(
+                    selectDoctor(
                         doctor
                     );
-
-
-                    setForm(
-                        (prev) => ({
-                            ...prev,
-
-                            doctor_name:
-                                doctor.name ||
-                                "",
-
-                            department:
-                                doctor.specialization ||
-                                "",
-                        })
-                    );
-
                 }
-
             }
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 "Book appointment load error:",
-                err
+                error
             );
 
         } finally {
@@ -229,17 +156,32 @@ export default function BookAppointment() {
             setLoading(false);
 
         }
-
     }
 
 
     /* =========================
-       DOCTOR CHANGE
+       SELECT DOCTOR
     ========================= */
 
-    function handleDoctorChange(
-        e
-    ) {
+    function selectDoctor(doctor) {
+
+        setSelectedDoctor(
+            doctor || null
+        );
+
+        setForm((prev) => ({
+            ...prev,
+
+            doctor_name:
+                doctor?.name || "",
+
+            department:
+                doctor?.specialization || "",
+        }));
+    }
+
+
+    function handleDoctorChange(e) {
 
         const doctor =
             doctors.find(
@@ -248,26 +190,9 @@ export default function BookAppointment() {
                     e.target.value
             );
 
-
-        setSelectedDoctor(
-            doctor || null
+        selectDoctor(
+            doctor
         );
-
-
-        setForm(
-            (prev) => ({
-                ...prev,
-
-                doctor_name:
-                    doctor?.name ||
-                    "",
-
-                department:
-                    doctor?.specialization ||
-                    "",
-            })
-        );
-
     }
 
 
@@ -275,36 +200,44 @@ export default function BookAppointment() {
        FORM CHANGE
     ========================= */
 
-    function handleChange(
-        e
-    ) {
+    function handleChange(e) {
 
         const {
             name,
             value,
         } = e.target;
 
-
-        setForm(
-            (prev) => ({
-                ...prev,
-                [name]: value,
-            })
-        );
-
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     }
 
 
     /* =========================
-       CLEAR FORM
+       GO BACK TO DOCTORS
+    ========================= */
+
+    function goBackToDoctors() {
+
+        /*
+         * Direct route first.
+         * This does not depend on browser
+         * history.
+         */
+        navigate(
+            "/patient-doctors"
+        );
+    }
+
+
+    /* =========================
+       CLEAR
     ========================= */
 
     function clearForm() {
 
-        setSelectedDoctor(
-            null
-        );
-
+        setSelectedDoctor(null);
 
         setForm({
             doctor_name: "",
@@ -312,11 +245,9 @@ export default function BookAppointment() {
             reason: "",
         });
 
-
         setAppointmentDateTime(
             new Date()
         );
-
     }
 
 
@@ -324,12 +255,9 @@ export default function BookAppointment() {
        BOOK APPOINTMENT
     ========================= */
 
-    async function bookAppointment(
-        e
-    ) {
+    async function bookAppointment(e) {
 
         e.preventDefault();
-
 
         if (booking) {
             return;
@@ -343,7 +271,6 @@ export default function BookAppointment() {
             );
 
             return;
-
         }
 
 
@@ -354,7 +281,6 @@ export default function BookAppointment() {
             );
 
             return;
-
         }
 
 
@@ -366,25 +292,23 @@ export default function BookAppointment() {
         ) {
 
             alert(
-                "Please select a valid appointment date and time."
+                "Please select a valid date and time."
             );
 
             return;
-
         }
 
 
         if (
-            appointmentDateTime <
+            appointmentDateTime <=
             new Date()
         ) {
 
             alert(
-                "Please select a future date and time."
+                "Please select a future appointment time."
             );
 
             return;
-
         }
 
 
@@ -394,11 +318,10 @@ export default function BookAppointment() {
         ) {
 
             alert(
-                "Razorpay Checkout could not be loaded. Please refresh the page and try again."
+                "Razorpay Checkout could not be loaded. Please refresh and try again."
             );
 
             return;
-
         }
 
 
@@ -408,7 +331,7 @@ export default function BookAppointment() {
 
 
             /* =========================
-               FORMAT DATE
+               DATE
             ========================= */
 
             const appointment_date =
@@ -418,7 +341,7 @@ export default function BookAppointment() {
 
 
             /* =========================
-               FORMAT TIME
+               TIME
             ========================= */
 
             const appointment_time =
@@ -456,12 +379,6 @@ export default function BookAppointment() {
                 );
 
 
-            console.log(
-                "BOOK RESPONSE:",
-                response.data
-            );
-
-
             /* =========================
                CREATE RAZORPAY ORDER
             ========================= */
@@ -477,7 +394,7 @@ export default function BookAppointment() {
 
 
             /* =========================
-               RAZORPAY OPTIONS
+               RAZORPAY
             ========================= */
 
             const options = {
@@ -501,10 +418,6 @@ export default function BookAppointment() {
                 order_id:
                     order.data.id,
 
-
-                /* =====================
-                   PAYMENT SUCCESS
-                ===================== */
 
                 handler:
                     async function (
@@ -532,83 +445,57 @@ export default function BookAppointment() {
                                 );
 
 
-                            console.log(
-                                "PAYMENT VERIFY:",
-                                verify.data
-                            );
-
-
                             setPaymentMessage(
                                 "Appointment Booked Successfully!"
                             );
-
 
                             setPaymentSuccess(
                                 true
                             );
 
-
                             setBooking(
                                 false
                             );
-
-
-                            clearForm();
 
 
                             if (
                                 verify.data
-                                    .invoiceUrl
+                                    ?.invoiceUrl
                             ) {
 
                                 window.open(
-                                    verify.data
-                                        .invoiceUrl,
+                                    verify.data.invoiceUrl,
                                     "_blank"
                                 );
-
                             }
 
 
-                            setTimeout(
-                                () => {
+                            setTimeout(() => {
 
-                                    window.location.replace(
-                                        "/patient-appointments"
-                                    );
+                                window.location.replace(
+                                    "/patient-appointments"
+                                );
 
-                                },
-                                1500
-                            );
+                            }, 1500);
 
-                        } catch (err) {
+                        } catch (error) {
 
                             console.error(
                                 "Payment verification error:",
-                                err
+                                error
                             );
 
-
-                            setBooking(
-                                false
-                            );
-
+                            setBooking(false);
 
                             alert(
-                                err.response
+                                error.response
                                     ?.data
                                     ?.message ||
                                 "Payment verification failed."
                             );
-
                         }
-
                     },
 
-
-                /* =====================
-                   PREFILL
-                ===================== */
 
                 prefill: {
 
@@ -627,39 +514,22 @@ export default function BookAppointment() {
                 },
 
 
-                /* =====================
-                   THEME
-                ===================== */
-
                 theme: {
                     color:
                         "#2563eb",
                 },
 
 
-                /* =====================
-                   MODAL
-                ===================== */
-
                 modal: {
 
-                    ondismiss:
-                        function () {
+                    ondismiss: () => {
 
-                            setBooking(
-                                false
-                            );
+                        setBooking(false);
 
-                        },
-
+                    },
                 },
-
             };
 
-
-            /* =========================
-               OPEN RAZORPAY
-            ========================= */
 
             const razorpay =
                 new window.Razorpay(
@@ -669,20 +539,14 @@ export default function BookAppointment() {
 
             razorpay.on(
                 "payment.failed",
-                function (
-                    paymentError
-                ) {
+                (paymentError) => {
 
                     console.error(
-                        "Razorpay payment failed:",
+                        "Payment failed:",
                         paymentError
                     );
 
-
-                    setBooking(
-                        false
-                    );
-
+                    setBooking(false);
 
                     alert(
                         paymentError
@@ -690,7 +554,6 @@ export default function BookAppointment() {
                             ?.description ||
                         "Payment failed. Please try again."
                     );
-
                 }
             );
 
@@ -706,18 +569,13 @@ export default function BookAppointment() {
 
 
             if (
-                error.response
-                    ?.status ===
-                400 &&
-                error.response
-                    ?.data
-                    ?.message
+                error.response?.status === 400 &&
+                error.response?.data?.message
             ) {
 
                 setPopupMessage(
                     error.response.data.message
                 );
-
 
                 setShowAppointmentPopup(
                     true
@@ -731,18 +589,10 @@ export default function BookAppointment() {
                         ?.message ||
                     "Failed to book appointment."
                 );
-
             }
 
-        } finally {
-
-            /*
-             * Razorpay may still be open.
-             * It controls its own loading state
-             * until dismissed or completed.
-             */
+            setBooking(false);
         }
-
     }
 
 
@@ -751,16 +601,14 @@ export default function BookAppointment() {
     ========================= */
 
     if (loading) {
-
         return (
             <BookAppointmentSkeleton />
         );
-
     }
 
 
     /* =========================
-       PAGE
+       UI
     ========================= */
 
     return (
@@ -769,9 +617,7 @@ export default function BookAppointment() {
 
             <div className="book-appointment-page">
 
-                {/* =========================
-                    HEADER
-                ========================= */}
+                {/* HEADER */}
 
                 <div className="book-appointment-header">
 
@@ -796,10 +642,8 @@ export default function BookAppointment() {
                     <button
                         type="button"
                         className="booking-back-btn"
-                        onClick={() =>
-                            navigate(
-                                "/patient-doctors"
-                            )
+                        onClick={
+                            goBackToDoctors
                         }
                     >
                         ← Back to Doctors
@@ -808,9 +652,73 @@ export default function BookAppointment() {
                 </div>
 
 
-                {/* =========================
-                    FORM
-                ========================= */}
+                {/* SELECTED DOCTOR */}
+
+                {selectedDoctor && (
+
+                    <div className="selected-doctor-banner">
+
+                        <div className="selected-doctor-icon">
+                            🩺
+                        </div>
+
+                        <div className="selected-doctor-info">
+
+                            <span>
+                                Selected Doctor
+                            </span>
+
+                            <strong>
+                                Dr.{" "}
+                                {selectedDoctor.name}
+                            </strong>
+
+                            <small>
+                                {
+                                    selectedDoctor.specialization
+                                }
+                            </small>
+
+                        </div>
+
+                        <div className="selected-doctor-meta">
+
+                            <div>
+                                <span>
+                                    Fee
+                                </span>
+
+                                <strong>
+                                    ₹
+                                    {
+                                        selectedDoctor.fees ??
+                                        "—"
+                                    }
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    Experience
+                                </span>
+
+                                <strong>
+                                    {
+                                        selectedDoctor.experience ??
+                                        0
+                                    }{" "}
+                                    Years
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )}
+
+
+                {/* FORM */}
 
                 <form
                     className="appointment-form"
@@ -818,6 +726,20 @@ export default function BookAppointment() {
                         bookAppointment
                     }
                 >
+
+                    <div className="appointment-form-title">
+
+                        <h2>
+                            Appointment Details
+                        </h2>
+
+                        <p>
+                            Please provide the
+                            required details below.
+                        </p>
+
+                    </div>
+
 
                     {/* PATIENT */}
 
@@ -885,11 +807,8 @@ export default function BookAppointment() {
                                 Select Doctor
                             </option>
 
-
                             {doctors.map(
-                                (
-                                    doctor
-                                ) => (
+                                (doctor) => (
 
                                     <option
                                         key={
@@ -899,7 +818,9 @@ export default function BookAppointment() {
                                             doctor.name
                                         }
                                     >
-                                        {doctor.name}
+                                        {
+                                            doctor.name
+                                        }
                                         {" • "}
                                         {
                                             doctor.specialization
@@ -975,7 +896,7 @@ export default function BookAppointment() {
                     </div>
 
 
-                    {/* DATE / TIME */}
+                    {/* DATE */}
 
                     <div className="form-group">
 
@@ -991,14 +912,11 @@ export default function BookAppointment() {
                                 date
                             ) => {
 
-                                if (
-                                    date
-                                ) {
+                                if (date) {
 
                                     setAppointmentDateTime(
                                         date
                                     );
-
                                 }
 
                             }}
@@ -1046,7 +964,7 @@ export default function BookAppointment() {
                     </div>
 
 
-                    {/* BUTTONS */}
+                    {/* ACTIONS */}
 
                     <div className="appointment-buttons">
 
@@ -1071,11 +989,9 @@ export default function BookAppointment() {
                                 booking
                             }
                         >
-
                             {booking
                                 ? "Processing..."
                                 : "Book Appointment & Pay"}
-
                         </button>
 
                     </div>
@@ -1083,9 +999,7 @@ export default function BookAppointment() {
                 </form>
 
 
-                {/* =========================
-                    EXISTING APPOINTMENT POPUP
-                ========================= */}
+                {/* EXISTING APPOINTMENT POPUP */}
 
                 {showAppointmentPopup && (
 
@@ -1097,16 +1011,15 @@ export default function BookAppointment() {
                                 ⚠️
                             </div>
 
-
                             <h2>
                                 Appointment Already Exists
                             </h2>
 
-
                             <p>
-                                {popupMessage}
+                                {
+                                    popupMessage
+                                }
                             </p>
-
 
                             <div className="popup-buttons">
 
@@ -1119,9 +1032,9 @@ export default function BookAppointment() {
                                             false
                                         );
 
-                                        window.location.href =
-                                            "/patient-appointments";
-
+                                        navigate(
+                                            "/patient-appointments"
+                                        );
                                     }}
                                 >
                                     View My Appointments
@@ -1149,9 +1062,7 @@ export default function BookAppointment() {
                 )}
 
 
-                {/* =========================
-                    PAYMENT SUCCESS
-                ========================= */}
+                {/* PAYMENT SUCCESS */}
 
                 {paymentSuccess && (
 
@@ -1160,14 +1071,14 @@ export default function BookAppointment() {
                         <div className="payment-success-card">
 
                             <div className="success-check">
-                                ✔
+                                ✓
                             </div>
 
-
                             <h2>
-                                {paymentMessage}
+                                {
+                                    paymentMessage
+                                }
                             </h2>
-
 
                             <p>
                                 Payment verified successfully.
@@ -1183,7 +1094,5 @@ export default function BookAppointment() {
             </div>
 
         </DashboardLayout>
-
     );
-
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 import PrescriptionSkeleton from "../components/PrescriptionSkeleton";
 import { hmsToast } from "../utils/hmsToast";
@@ -9,10 +9,6 @@ function PatientPrescriptions() {
     const [prescriptions, setPrescriptions] = useState([]);
     const [search, setSearch] = useState("");
 
-    /* =========================
-       LOAD PRESCRIPTIONS
-    ========================= */
-
     useEffect(() => {
         loadPrescriptions();
     }, []);
@@ -22,33 +18,31 @@ function PatientPrescriptions() {
             setLoading(true);
             setError("");
 
-            const token =
-                localStorage.getItem("token");
+            const token = localStorage.getItem("token");
 
             if (!token) {
                 setError(
                     "Your session has expired. Please login again."
                 );
+                setLoading(false);
                 return;
             }
 
-            const res =
-                await api.get(
-                    "/prescriptions",
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
+            const response = await api.get(
+                "/prescriptions",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-            const data =
-                Array.isArray(res.data)
-                    ? res.data
-                    : [];
-
-            setPrescriptions(data);
+            if (Array.isArray(response.data)) {
+                setPrescriptions(response.data);
+            } else {
+                setPrescriptions([]);
+            }
 
         } catch (err) {
             console.error(
@@ -58,7 +52,7 @@ function PatientPrescriptions() {
 
             setError(
                 err.response?.data?.message ||
-                "Unable to load prescriptions. Please try again."
+                "Unable to load prescriptions."
             );
 
         } finally {
@@ -66,44 +60,48 @@ function PatientPrescriptions() {
         }
     }
 
-    /* =========================
-       STATISTICS
-    ========================= */
-
     const totalPrescriptions =
         prescriptions.length;
 
     const activePrescriptions =
         prescriptions.filter((item) => {
-            const status =
-                String(
-                    item.status || "Active"
-                ).toLowerCase();
+            const status = String(
+                item.status || "Active"
+            ).toLowerCase();
 
-            return (
-                status !== "completed" &&
-                status !== "expired" &&
-                status !== "cancelled"
-            );
+            if (status === "completed") {
+                return false;
+            }
+
+            if (status === "expired") {
+                return false;
+            }
+
+            if (status === "cancelled") {
+                return false;
+            }
+
+            return true;
         }).length;
 
     const totalMedicines =
         prescriptions.reduce(
             (total, item) => {
-
                 if (!item.medicines) {
                     return total;
                 }
 
-                const medicines =
-                    String(
-                        item.medicines
+                const medicines = String(
+                    item.medicines
+                )
+                    .split(",")
+                    .map((medicine) =>
+                        medicine.trim()
                     )
-                        .split(",")
-                        .map((medicine) =>
-                            medicine.trim()
-                        )
-                        .filter(Boolean);
+                    .filter(
+                        (medicine) =>
+                            medicine.length > 0
+                    );
 
                 return (
                     total +
@@ -113,120 +111,87 @@ function PatientPrescriptions() {
             0
         );
 
-    /* =========================
-       SEARCH
-    ========================= */
+    const searchText =
+        search.trim().toLowerCase();
 
-    const filtered =
-        useMemo(() => {
-
-            const query =
-                search
-                    .trim()
-                    .toLowerCase();
-
-            if (!query) {
-                return prescriptions;
+    const filteredPrescriptions =
+        prescriptions.filter((item) => {
+            if (!searchText) {
+                return true;
             }
 
-            return prescriptions.filter(
-                (item) => {
+            const medicineText =
+                String(
+                    item.medicines || ""
+                ).toLowerCase();
 
-                    const medicines =
-                        String(
-                            item.medicines ||
-                            ""
-                        ).toLowerCase();
+            const doctorText =
+                String(
+                    item.doctor_name || ""
+                ).toLowerCase();
 
-                    const notes =
-                        String(
-                            item.notes ||
-                            ""
-                        ).toLowerCase();
+            const specializationText =
+                String(
+                    item.specialization || ""
+                ).toLowerCase();
 
-                    const doctor =
-                        String(
-                            item.doctor_name ||
-                            ""
-                        ).toLowerCase();
+            const dosageText =
+                String(
+                    item.dosage || ""
+                ).toLowerCase();
 
-                    const specialization =
-                        String(
-                            item.specialization ||
-                            ""
-                        ).toLowerCase();
+            const durationText =
+                String(
+                    item.duration || ""
+                ).toLowerCase();
 
-                    const dosage =
-                        String(
-                            item.dosage ||
-                            ""
-                        ).toLowerCase();
+            const notesText =
+                String(
+                    item.notes || ""
+                ).toLowerCase();
 
-                    const duration =
-                        String(
-                            item.duration ||
-                            ""
-                        ).toLowerCase();
+            const idText =
+                String(
+                    item.id || ""
+                ).toLowerCase();
 
-                    const id =
-                        String(
-                            item.id || ""
-                        );
-
-                    return (
-                        medicines.includes(
-                            query
-                        ) ||
-                        notes.includes(
-                            query
-                        ) ||
-                        doctor.includes(
-                            query
-                        ) ||
-                        specialization.includes(
-                            query
-                        ) ||
-                        dosage.includes(
-                            query
-                        ) ||
-                        duration.includes(
-                            query
-                        ) ||
-                        id.includes(query)
-                    );
-                }
+            return (
+                medicineText.includes(
+                    searchText
+                ) ||
+                doctorText.includes(
+                    searchText
+                ) ||
+                specializationText.includes(
+                    searchText
+                ) ||
+                dosageText.includes(
+                    searchText
+                ) ||
+                durationText.includes(
+                    searchText
+                ) ||
+                notesText.includes(
+                    searchText
+                ) ||
+                idText.includes(
+                    searchText
+                )
             );
+        });
 
-        }, [
-            prescriptions,
-            search,
-        ]);
-
-    /* =========================
-       STATUS CLASS
-    ========================= */
-
-    function getStatusClass(
-        status
-    ) {
+    function getStatusClass(status) {
         const value =
             String(
                 status || "Active"
             ).toLowerCase();
 
-        if (
-            value === "completed"
-        ) {
+        if (value === "completed") {
             return "completed";
         }
 
         if (
-            value === "expired"
-        ) {
-            return "expired";
-        }
-
-        if (
+            value === "expired" ||
             value === "cancelled"
         ) {
             return "expired";
@@ -235,16 +200,14 @@ function PatientPrescriptions() {
         return "active";
     }
 
-    /* =========================
-       PDF DOWNLOAD
-    ========================= */
+    function printPrescription() {
+        window.print();
+    }
 
     async function downloadPDF(
         prescriptionId
     ) {
-
         try {
-
             const token =
                 localStorage.getItem(
                     "token"
@@ -255,6 +218,7 @@ function PatientPrescriptions() {
                     "Session expired",
                     "Please login again."
                 );
+
                 return;
             }
 
@@ -263,7 +227,6 @@ function PatientPrescriptions() {
                     `${import.meta.env.VITE_API_URL}/prescriptions/${prescriptionId}/pdf`,
                     {
                         method: "GET",
-
                         headers: {
                             Authorization:
                                 `Bearer ${token}`,
@@ -272,24 +235,8 @@ function PatientPrescriptions() {
                 );
 
             if (!response.ok) {
-
-                let message =
-                    "Failed to download prescription PDF.";
-
-                try {
-                    const data =
-                        await response.json();
-
-                    message =
-                        data.message ||
-                        message;
-
-                } catch {
-                    // Response may not be JSON.
-                }
-
                 throw new Error(
-                    message
+                    "Unable to download prescription PDF."
                 );
             }
 
@@ -325,11 +272,10 @@ function PatientPrescriptions() {
 
             hmsToast.success(
                 "PDF downloaded",
-                `Prescription #${prescriptionId} has been downloaded.`
+                `Prescription #${prescriptionId} downloaded successfully.`
             );
 
         } catch (err) {
-
             console.error(
                 "PDF download error:",
                 err
@@ -338,22 +284,10 @@ function PatientPrescriptions() {
             hmsToast.error(
                 "Download failed",
                 err.message ||
-                "Unable to download prescription PDF."
+                "Unable to download PDF."
             );
         }
     }
-
-    /* =========================
-       PRINT
-    ========================= */
-
-    function printPrescription() {
-        window.print();
-    }
-
-    /* =========================
-       LOADING
-    ========================= */
 
     if (loading) {
         return (
@@ -361,12 +295,7 @@ function PatientPrescriptions() {
         );
     }
 
-    /* =========================
-       ERROR
-    ========================= */
-
     if (error) {
-
         return (
             <div className="prescription-page">
 
@@ -404,53 +333,43 @@ function PatientPrescriptions() {
         );
     }
 
-    /* =========================
-       UI
-    ========================= */
-
     return (
         <div className="prescription-page">
-
-            {/* =========================
-                HEADER
-            ========================= */}
 
             <div className="prescription-header">
 
                 <div>
-
                     <h1>
                         💊 My Prescriptions
                     </h1>
 
                     <p>
-                        View prescriptions
+                        View all prescriptions
                         uploaded by your doctors.
                     </p>
-
                 </div>
 
                 <div className="prescription-search-wrapper">
 
                     <input
                         className="prescription-search"
-                        placeholder="Search medicines, doctors, notes..."
+                        type="text"
+                        placeholder="Search medicines..."
                         value={search}
-                        onChange={(e) =>
+                        onChange={(e) => {
                             setSearch(
                                 e.target.value
-                            )
-                        }
+                            );
+                        }}
                     />
 
                     {search && (
                         <button
                             type="button"
-                            onClick={() =>
-                                setSearch("")
-                            }
                             className="prescription-search-clear"
-                            aria-label="Clear search"
+                            onClick={() => {
+                                setSearch("");
+                            }}
                         >
                             ×
                         </button>
@@ -460,10 +379,6 @@ function PatientPrescriptions() {
 
             </div>
 
-
-            {/* =========================
-                STATISTICS
-            ========================= */}
 
             <div className="prescription-stats">
 
@@ -508,75 +423,74 @@ function PatientPrescriptions() {
             </div>
 
 
-            {/* =========================
-                SEARCH RESULT INFO
-            ========================= */}
-
             {search && (
                 <div
                     style={{
-                        marginBottom: "18px",
-                        color: "#64748b",
-                        fontSize: "14px",
+                        marginBottom:
+                            "18px",
+                        color:
+                            "#64748b",
+                        fontSize:
+                            "14px",
                     }}
                 >
                     Showing{" "}
                     <strong>
-                        {filtered.length}
+                        {
+                            filteredPrescriptions.length
+                        }
                     </strong>{" "}
                     result
-                    {filtered.length !== 1
+                    {filteredPrescriptions.length !==
+                        1
                         ? "s"
                         : ""}{" "}
-                    for "
+                    for{" "}
                     <strong>
-                        {search}
-                    </strong>"
+                        "{search}"
+                    </strong>
                 </div>
             )}
 
 
-            {/* =========================
-                EMPTY STATE
-            ========================= */}
-
-            {filtered.length === 0 ? (
+            {filteredPrescriptions.length ===
+                0 ? (
 
                 <div className="empty-prescription">
 
                     <div
                         style={{
-                            fontSize: "52px",
-                            marginBottom: "15px",
+                            fontSize: "50px",
+                            marginBottom:
+                                "15px",
                         }}
                     >
-                        {prescriptions.length === 0
+                        {prescriptions.length ===
+                            0
                             ? "💊"
                             : "🔍"}
                     </div>
 
                     <h2>
-
-                        {prescriptions.length === 0
+                        {prescriptions.length ===
+                            0
                             ? "No Prescriptions Yet"
                             : "No Prescriptions Found"}
-
                     </h2>
 
                     <p>
-
-                        {prescriptions.length === 0
+                        {prescriptions.length ===
+                            0
                             ? "Your prescriptions will appear here when your doctor adds them."
-                            : "Try searching with a different medicine, doctor, or keyword."}
-
+                            : "Try another medicine, doctor, or keyword."}
                     </p>
 
                     {search && (
                         <button
                             type="button"
-                            onClick={() =>
-                                setSearch("")
-                            }
+                            onClick={() => {
+                                setSearch("");
+                            }}
                         >
                             Clear Search
                         </button>
@@ -586,13 +500,9 @@ function PatientPrescriptions() {
 
             ) : (
 
-                /* =========================
-                   PRESCRIPTION GRID
-                ========================= */
-
                 <div className="prescription-grid">
 
-                    {filtered.map(
+                    {filteredPrescriptions.map(
                         (item) => {
 
                             const medicines =
@@ -602,11 +512,17 @@ function PatientPrescriptions() {
                                 )
                                     .split(",")
                                     .map(
-                                        (medicine) =>
+                                        (
+                                            medicine
+                                        ) =>
                                             medicine.trim()
                                     )
                                     .filter(
-                                        Boolean
+                                        (
+                                            medicine
+                                        ) =>
+                                            medicine.length >
+                                            0
                                     );
 
                             const status =
@@ -614,59 +530,58 @@ function PatientPrescriptions() {
                                 "Active";
 
                             return (
-
                                 <div
                                     className="prescription-card"
-                                    key={item.id}
+                                    key={
+                                        item.id
+                                    }
                                 >
-
-                                    {/* =====================
-                                        TOP
-                                    ===================== */}
 
                                     <div className="prescription-top">
 
                                         <div>
 
                                             <h2>
-                                                🩺 Prescription #
-                                                {item.id}
+                                                🩺
+                                                Prescription
+                                                #
+                                                {
+                                                    item.id
+                                                }
                                             </h2>
 
                                             <small>
-
                                                 {item.created_at
                                                     ? new Date(
                                                         item.created_at
                                                     ).toLocaleDateString(
                                                         "en-IN",
                                                         {
-                                                            day: "2-digit",
-                                                            month: "short",
-                                                            year: "numeric",
+                                                            day:
+                                                                "2-digit",
+                                                            month:
+                                                                "short",
+                                                            year:
+                                                                "numeric",
                                                         }
                                                     )
                                                     : "Recently Added"}
-
                                             </small>
 
                                         </div>
-
 
                                         <span
                                             className={`status-badge ${getStatusClass(
                                                 status
                                             )}`}
                                         >
-                                            {status}
+                                            {
+                                                status
+                                            }
                                         </span>
 
                                     </div>
 
-
-                                    {/* =====================
-                                        DOCTOR
-                                    ===================== */}
 
                                     <div className="doctor-card">
 
@@ -674,28 +589,27 @@ function PatientPrescriptions() {
                                             👨‍⚕️
                                         </div>
 
-
                                         <div>
 
                                             <h3>
                                                 Dr.{" "}
-                                                {item.doctor_name ||
-                                                    `Doctor ${item.doctor_id}`}
+                                                {
+                                                    item.doctor_name ||
+                                                    `Doctor ${item.doctor_id}`
+                                                }
                                             </h3>
 
                                             <p>
-                                                {item.specialization ||
-                                                    "General Physician"}
+                                                {
+                                                    item.specialization ||
+                                                    "General Physician"
+                                                }
                                             </p>
 
                                         </div>
 
                                     </div>
 
-
-                                    {/* =====================
-                                        INFORMATION
-                                    ===================== */}
 
                                     <div className="info-grid">
 
@@ -706,7 +620,10 @@ function PatientPrescriptions() {
                                             </strong>
 
                                             <span>
-                                                #{item.id}
+                                                #
+                                                {
+                                                    item.id
+                                                }
                                             </span>
 
                                         </div>
@@ -719,8 +636,10 @@ function PatientPrescriptions() {
                                             </strong>
 
                                             <span>
-                                                {item.doctor_name ||
-                                                    `Doctor ${item.doctor_id}`}
+                                                {
+                                                    item.doctor_name ||
+                                                    `Doctor ${item.doctor_id}`
+                                                }
                                             </span>
 
                                         </div>
@@ -733,8 +652,10 @@ function PatientPrescriptions() {
                                             </strong>
 
                                             <span>
-                                                {item.duration ||
-                                                    "Not specified"}
+                                                {
+                                                    item.duration ||
+                                                    "Not specified"
+                                                }
                                             </span>
 
                                         </div>
@@ -747,7 +668,6 @@ function PatientPrescriptions() {
                                             </strong>
 
                                             <span>
-
                                                 {item.created_at
                                                     ? new Date(
                                                         item.created_at
@@ -755,7 +675,6 @@ function PatientPrescriptions() {
                                                         "en-IN"
                                                     )
                                                     : "Today"}
-
                                             </span>
 
                                         </div>
@@ -763,14 +682,11 @@ function PatientPrescriptions() {
                                     </div>
 
 
-                                    {/* =====================
-                                        MEDICINES
-                                    ===================== */}
-
                                     <div className="medicine-section">
 
                                         <h4>
-                                            💊 Medicines
+                                            💊
+                                            Medicines
                                         </h4>
 
                                         <div className="medicine-list">
@@ -782,29 +698,29 @@ function PatientPrescriptions() {
                                                     (
                                                         medicine,
                                                         index
-                                                    ) => (
+                                                    ) => {
 
-                                                        <span
-                                                            key={
-                                                                index
-                                                            }
-                                                            className="medicine-chip"
-                                                        >
-                                                            💊{" "}
-                                                            {
-                                                                medicine
-                                                            }
-                                                        </span>
-
-                                                    )
+                                                        return (
+                                                            <span
+                                                                key={
+                                                                    index
+                                                                }
+                                                                className="medicine-chip"
+                                                            >
+                                                                💊{" "}
+                                                                {
+                                                                    medicine
+                                                                }
+                                                            </span>
+                                                        );
+                                                    }
                                                 )
 
                                             ) : (
 
-                                                <span
-                                                    className="medicine-chip"
-                                                >
-                                                    No medicines listed
+                                                <span className="medicine-chip">
+                                                    No medicines
+                                                    listed
                                                 </span>
 
                                             )}
@@ -814,17 +730,15 @@ function PatientPrescriptions() {
                                     </div>
 
 
-                                    {/* =====================
-                                        DOSAGE + DURATION
-                                    ===================== */}
-
                                     <div className="dosage-section">
 
                                         <div className="dosage-box">
 
                                             💊{" "}
-                                            {item.dosage ||
-                                                "Dosage not specified"}
+                                            {
+                                                item.dosage ||
+                                                "Dosage not specified"
+                                            }
 
                                         </div>
 
@@ -832,17 +746,15 @@ function PatientPrescriptions() {
                                         <div className="duration-box">
 
                                             📅{" "}
-                                            {item.duration ||
-                                                "Duration not specified"}
+                                            {
+                                                item.duration ||
+                                                "Duration not specified"
+                                            }
 
                                         </div>
 
                                     </div>
 
-
-                                    {/* =====================
-                                        NOTES
-                                    ===================== */}
 
                                     <div className="notes-box">
 
@@ -851,39 +763,33 @@ function PatientPrescriptions() {
                                         </strong>
 
                                         <p>
-
-                                            {item.notes ||
-                                                "No additional notes."}
-
+                                            {
+                                                item.notes ||
+                                                "No additional notes."
+                                            }
                                         </p>
 
                                     </div>
 
-
-                                    {/* =====================
-                                        FOLLOW UP
-                                    ===================== */}
 
                                     <div className="followup-card">
 
                                         <h4>
-                                            📅 Follow-up
+                                            📅
+                                            Follow-up
                                         </h4>
 
                                         <p>
-
-                                            Visit your doctor
-                                            after completing
-                                            the medicines.
-
+                                            Visit your
+                                            doctor
+                                            after
+                                            completing
+                                            the
+                                            medicines.
                                         </p>
 
                                     </div>
 
-
-                                    {/* =====================
-                                        MEDICINE TIMING
-                                    ===================== */}
 
                                     <div className="prescription-footer">
 
@@ -904,10 +810,6 @@ function PatientPrescriptions() {
                                         </div>
 
 
-                                        {/* =================
-                                            ACTIONS
-                                        ================= */}
-
                                         <div className="prescription-buttons">
 
                                             <button
@@ -922,13 +824,15 @@ function PatientPrescriptions() {
 
                                             <button
                                                 type="button"
-                                                onClick={() =>
+                                                onClick={() => {
                                                     downloadPDF(
                                                         item.id
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                             >
-                                                ⬇ Download PDF
+                                                ⬇
+                                                Download
+                                                PDF
                                             </button>
 
                                         </div>
@@ -936,7 +840,6 @@ function PatientPrescriptions() {
                                     </div>
 
                                 </div>
-
                             );
                         }
                     )}
