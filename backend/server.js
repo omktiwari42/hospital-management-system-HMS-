@@ -124,6 +124,13 @@ app.use(
 app.get("/", (req, res) => {
   res.send("Backend is Running");
 });
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "HMS backend",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 /* ===========================
    PATIENTS APIs
