@@ -74,7 +74,7 @@ function Profile() {
       setLoading(true);
 
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       if (!token) {
         navigate("/login");
@@ -184,7 +184,7 @@ function Profile() {
   async function updateProfile() {
     try {
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       await api.put(
         "/profile",
@@ -427,7 +427,7 @@ function Profile() {
         );
 
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       if (!token) {
         navigate("/login");
@@ -536,7 +536,7 @@ function Profile() {
       setUploading(true);
 
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       await api.delete(
         "/profile/delete-image",
