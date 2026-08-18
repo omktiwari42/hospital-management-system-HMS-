@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+
 import {
   FaBars,
   FaHome,
@@ -8,187 +9,446 @@ import {
   FaCalendarCheck,
   FaMoneyBillWave,
   FaPills,
-  FaFlask,
   FaUserCircle,
   FaPlusCircle,
   FaClipboardList,
+  FaNotesMedical,
+  FaFileMedical,
+  FaCreditCard,
+  FaBell,
+  FaChevronRight,
 } from "react-icons/fa";
-import { FaNotesMedical } from "react-icons/fa";
+
 function Sidebar() {
-  // Start collapsed
-  const [collapsed, setCollapsed] = useState(true);
+  /* =====================================================
+     SIDEBAR STATE
+  ===================================================== */
+
+  const [collapsed, setCollapsed] =
+    useState(true);
 
   const [role, setRole] = useState(
     sessionStorage.getItem("role") || ""
   );
 
+
+  /* =====================================================
+     ROLE SYNC
+  ===================================================== */
+
   useEffect(() => {
+
     function syncRole() {
-      setRole(sessionStorage.getItem("role") || "");
+      setRole(
+        sessionStorage.getItem("role") || ""
+      );
     }
 
-    window.addEventListener("storage", syncRole);
-    window.addEventListener("userUpdated", syncRole);
+    window.addEventListener(
+      "storage",
+      syncRole
+    );
+
+    window.addEventListener(
+      "userUpdated",
+      syncRole
+    );
 
     return () => {
-      window.removeEventListener("storage", syncRole);
-      window.removeEventListener("userUpdated", syncRole);
+
+      window.removeEventListener(
+        "storage",
+        syncRole
+      );
+
+      window.removeEventListener(
+        "userUpdated",
+        syncRole
+      );
     };
+
   }, []);
 
-  // Auto close after 3 seconds whenever opened
-  useEffect(() => {
-    if (!collapsed) {
-      const timer = setTimeout(() => {
-        setCollapsed(true);
-      }, 5000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [collapsed]);
+  /* =====================================================
+     TOGGLE
+     NO AUTO CLOSE
+  ===================================================== */
 
-  const toggleSidebar = () => {
-    setCollapsed((prev) => !prev);
-  };
+  function toggleSidebar() {
+    setCollapsed(
+      (previous) => !previous
+    );
+  }
+
+
+  /* =====================================================
+     ROLE
+  ===================================================== */
+
+  const currentRole =
+    String(role || "")
+      .trim()
+      .toLowerCase();
+
+
+  /* =====================================================
+     SIDEBAR LINK
+  ===================================================== */
+
+  function SidebarLink({
+    to,
+    icon,
+    label,
+    end = false,
+  }) {
+
+    return (
+      <NavLink
+        to={to}
+        end={end}
+        title={label}
+        className={({ isActive }) =>
+          isActive
+            ? "sidebar-link active"
+            : "sidebar-link"
+        }
+      >
+
+        <span className="sidebar-link-icon">
+          {icon}
+        </span>
+
+
+        {!collapsed && (
+          <>
+            <span className="sidebar-link-text">
+              {label}
+            </span>
+
+            <FaChevronRight
+              className="sidebar-link-arrow"
+            />
+          </>
+        )}
+
+      </NavLink>
+    );
+  }
+
+
+  /* =====================================================
+     SIDEBAR
+  ===================================================== */
 
   return (
-    <aside className={collapsed ? "sidebar collapsed" : "sidebar"}>
-      <button
-        className="menu-btn"
-        onClick={toggleSidebar}
-      >
-        <FaBars />
-      </button>
 
-      {!collapsed && <h2 className="logo">🏥 HMS</h2>}
+    <aside
+      className={
+        collapsed
+          ? "sidebar collapsed"
+          : "sidebar expanded"
+      }
+    >
 
-      {/* Admin Dashboard */}
-      {role === "admin" && (
-        <NavLink to="/dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-      )}
-      {(role === "admin" || role === "doctor") && (
-        <NavLink to="/patient-medical-history">
-          <FaNotesMedical />
-          {!collapsed && <span>Medical History</span>}
-        </NavLink>
-      )}
+      {/* =================================================
+                HEADER
+            ================================================= */}
 
-      {/* Doctor Dashboard */}
-      {role === "doctor" && (
-        <NavLink to="/doctor-dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-      )}
+      <div className="sidebar-header">
 
-      {/* Reception Dashboard */}
-      {role === "receptionist" && (
-        <NavLink to="/reception-dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-      )}
+        <button
+          type="button"
+          className="menu-btn"
+          onClick={toggleSidebar}
+          aria-label={
+            collapsed
+              ? "Open sidebar"
+              : "Close sidebar"
+          }
+          title={
+            collapsed
+              ? "Open menu"
+              : "Close menu"
+          }
+        >
+          <FaBars />
+        </button>
 
-      {/* Pharmacist Dashboard */}
-      {role === "pharmacist" && (
-        <NavLink to="/pharmacist-dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-      )}
+      </div>
 
-      {/* Lab Dashboard */}
-      {role === "lab" && (
-        <NavLink to="/lab-dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
-      )}
 
-      {/* Patient Dashboard */}
-      {role === "patient" && (
-        <NavLink to="/patient-dashboard">
-          <FaHome />
-          {!collapsed && <span>Dashboard</span>}
-        </NavLink>
+      {/* =================================================
+                ROLE
+            ================================================= */}
+
+      {!collapsed && (
+        <div className="sidebar-role">
+
+          <span className="sidebar-role-dot"></span>
+
+          <span>
+            {currentRole
+              ? currentRole
+                .charAt(0)
+                .toUpperCase() +
+              currentRole.slice(1)
+              : "User"}
+          </span>
+
+        </div>
       )}
 
-      {(role === "admin" || role === "receptionist") && (
-        <NavLink to="/patients">
-          <FaUserInjured />
-          {!collapsed && <span>Patients</span>}
-        </NavLink>
-      )}
 
-      {(role === "admin" || role === "receptionist") && (
-        <NavLink to="/appointments">
-          <FaCalendarCheck />
-          {!collapsed && <span>Appointments</span>}
-        </NavLink>
-      )}
+      {/* =================================================
+                NAVIGATION
+            ================================================= */}
 
-      {(role === "admin" || role === "doctor") && (
-        <NavLink to="/doctors">
-          <FaUserMd />
-          {!collapsed && <span>Doctors</span>}
-        </NavLink>
-      )}
+      <nav className="sidebar-nav">
 
-      {(role === "admin" || role === "doctor") && (
-        <NavLink to="/prescriptions">
-          <FaPills />
-          {!collapsed && <span>Prescriptions</span>}
-        </NavLink>
-      )}
 
-      {(role === "admin" || role === "pharmacist") && (
-        <NavLink to="/pharmacy">
-          <FaPills />
-          {!collapsed && <span>Pharmacy</span>}
-        </NavLink>
-      )}
+        {/* =================================================
+                    ADMIN
+                ================================================= */}
 
-      {(role === "admin" || role === "lab") && (
-        <NavLink to="/laboratory">
-          <FaFlask />
-          {!collapsed && <span>Laboratory</span>}
-        </NavLink>
-      )}
+        {currentRole === "admin" && (
+          <>
 
-      {role === "admin" && (
-        <NavLink to="/billing">
-          <FaMoneyBillWave />
-          {!collapsed && <span>Billing</span>}
-        </NavLink>
-      )}
-      {(role === "admin" || role === "doctor") && (
-        <NavLink to="/medical-reports">
-          <FaFlask />
-          {!collapsed && <span>Medical Reports</span>}
-        </NavLink>
-      )}
-      {/* Patient Menu */}
-      {role === "patient" && (
-        <NavLink to="/book-appointment">
-          <FaPlusCircle />
-          {!collapsed && <span>Book Appointment</span>}
-        </NavLink>
-      )}
+            <SidebarLink
+              to="/dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
 
-      {role === "patient" && (
-        <NavLink to="/patient-appointments">
-          <FaClipboardList />
-          {!collapsed && <span>My Appointments</span>}
-        </NavLink>
-      )}
+            <SidebarLink
+              to="/patients"
+              icon={<FaUserInjured />}
+              label="Patients"
+            />
 
-      <NavLink to="/profile">
-        <FaUserCircle />
-        {!collapsed && <span>Profile</span>}
-      </NavLink>
+            <SidebarLink
+              to="/doctors"
+              icon={<FaUserMd />}
+              label="Doctors"
+            />
+
+            <SidebarLink
+              to="/appointments"
+              icon={<FaCalendarCheck />}
+              label="Appointments"
+            />
+
+            <SidebarLink
+              to="/billing"
+              icon={<FaMoneyBillWave />}
+              label="Billing"
+            />
+
+            <SidebarLink
+              to="/medical-reports"
+              icon={<FaFileMedical />}
+              label="Medical Reports"
+            />
+
+            <SidebarLink
+              to="/patient-medical-history"
+              icon={<FaNotesMedical />}
+              label="Medical History"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    DOCTOR
+                ================================================= */}
+
+        {currentRole === "doctor" && (
+          <>
+
+            <SidebarLink
+              to="/doctor-dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
+
+            <SidebarLink
+              to="/appointments"
+              icon={<FaCalendarCheck />}
+              label="Appointments"
+            />
+
+            <SidebarLink
+              to="/patient-medical-history"
+              icon={<FaNotesMedical />}
+              label="Medical History"
+            />
+
+            <SidebarLink
+              to="/medical-reports"
+              icon={<FaFileMedical />}
+              label="Medical Reports"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    RECEPTIONIST
+                ================================================= */}
+
+        {currentRole === "receptionist" && (
+          <>
+
+            <SidebarLink
+              to="/reception-dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
+
+            <SidebarLink
+              to="/patients"
+              icon={<FaUserInjured />}
+              label="Patients"
+            />
+
+            <SidebarLink
+              to="/appointments"
+              icon={<FaCalendarCheck />}
+              label="Appointments"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    PHARMACIST
+                ================================================= */}
+
+        {currentRole === "pharmacist" && (
+          <>
+
+            <SidebarLink
+              to="/pharmacist-dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
+
+            <SidebarLink
+              to="/appointments"
+              icon={<FaCalendarCheck />}
+              label="Appointments"
+            />
+
+            <SidebarLink
+              to="/payment"
+              icon={<FaCreditCard />}
+              label="Payments"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    LAB
+                ================================================= */}
+
+        {currentRole === "lab" && (
+          <>
+
+            <SidebarLink
+              to="/lab-dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
+
+            <SidebarLink
+              to="/medical-reports"
+              icon={<FaFileMedical />}
+              label="Medical Reports"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    PATIENT
+                ================================================= */}
+
+        {currentRole === "patient" && (
+          <>
+
+            <SidebarLink
+              to="/patient-dashboard"
+              icon={<FaHome />}
+              label="Dashboard"
+              end
+            />
+
+            <SidebarLink
+              to="/patient-doctors"
+              icon={<FaUserMd />}
+              label="Find a Doctor"
+            />
+
+            <SidebarLink
+              to="/book-appointment"
+              icon={<FaPlusCircle />}
+              label="Book Appointment"
+            />
+
+            <SidebarLink
+              to="/patient-appointments"
+              icon={<FaClipboardList />}
+              label="My Appointments"
+            />
+
+            <SidebarLink
+              to="/patient-prescriptions"
+              icon={<FaPills />}
+              label="Prescriptions"
+            />
+
+            <SidebarLink
+              to="/patient-billing"
+              icon={<FaMoneyBillWave />}
+              label="Billing"
+            />
+
+          </>
+        )}
+
+
+        {/* =================================================
+                    SHARED
+                ================================================= */}
+
+        <div className="sidebar-divider"></div>
+
+        <SidebarLink
+          to="/notifications"
+          icon={<FaBell />}
+          label="Notifications"
+        />
+
+        <SidebarLink
+          to="/profile"
+          icon={<FaUserCircle />}
+          label="Profile"
+        />
+
+      </nav>
+
     </aside>
   );
 }

@@ -17,7 +17,6 @@ import {
     FaBell,
     FaMoon,
     FaSun,
-    FaUserCircle,
     FaSignOutAlt,
     FaSearch,
     FaTimes,
@@ -33,11 +32,15 @@ function Navbar() {
 
     /* =====================================================
        DARK MODE
+       STORED IN SESSION STORAGE
     ===================================================== */
 
-    const [darkMode, setDarkMode] = useState(
-        localStorage.getItem("darkMode") === "true"
-    );
+    const [darkMode, setDarkMode] = useState(() => {
+        return (
+            sessionStorage.getItem("darkMode") ===
+            "true"
+        );
+    });
 
 
     /* =====================================================
@@ -45,18 +48,30 @@ function Navbar() {
     ===================================================== */
 
     const [fullName, setFullName] = useState(
-        sessionStorage.getItem("full_name") || "User"
+        sessionStorage.getItem("full_name") ||
+        "User"
     );
 
     const [role, setRole] = useState(
         sessionStorage.getItem("role") || ""
     );
 
-    const [profileImage, setProfileImage] = useState(
-        sessionStorage.getItem("profile_image") || null
-    );
+
+    /* =====================================================
+       PROFILE IMAGE
+    ===================================================== */
+
+    const [profileImage, setProfileImage] =
+        useState(
+            sessionStorage.getItem(
+                "profile_image"
+            ) || null
+        );
 
     const [imageLoading, setImageLoading] =
+        useState(false);
+
+    const [imageError, setImageError] =
         useState(false);
 
 
@@ -67,8 +82,10 @@ function Navbar() {
     const [searchQuery, setSearchQuery] =
         useState("");
 
-    const [showSearchResults, setShowSearchResults] =
-        useState(false);
+    const [
+        showSearchResults,
+        setShowSearchResults,
+    ] = useState(false);
 
     const searchRef = useRef(null);
 
@@ -107,6 +124,30 @@ function Navbar() {
 
 
     /* =====================================================
+       APPLY DARK MODE GLOBALLY
+    ===================================================== */
+
+    useEffect(() => {
+
+        document.documentElement.classList.toggle(
+            "dark-mode",
+            darkMode
+        );
+
+        document.body.classList.toggle(
+            "dark-mode",
+            darkMode
+        );
+
+        sessionStorage.setItem(
+            "darkMode",
+            String(darkMode)
+        );
+
+    }, [darkMode]);
+
+
+    /* =====================================================
        REQUEST ABORT CHECK
     ===================================================== */
 
@@ -116,34 +157,28 @@ function Navbar() {
             return false;
         }
 
-        const message =
-            String(
-                error.message || ""
-            ).toLowerCase();
+        const message = String(
+            error.message || ""
+        ).toLowerCase();
 
         return (
             error.code === "ERR_CANCELED" ||
             error.name === "CanceledError" ||
             message.includes("request aborted") ||
-            message === "canceled" ||
-            message.includes("aborted")
+            message.includes("aborted") ||
+            message.includes("canceled")
         );
     }
 
 
     /* =====================================================
-       LOAD CURRENT PROFILE
+       LOAD PROFILE
     ===================================================== */
 
     async function loadCurrentProfile() {
 
-        /*
-         * IMPORTANT:
-         * Authentication is stored in sessionStorage.
-         */
         const token =
             sessionStorage.getItem("token");
-
 
         const cachedName =
             sessionStorage.getItem(
@@ -162,7 +197,7 @@ function Navbar() {
 
 
         /* ---------------------------------------------
-           Show cached data immediately
+           USE CACHE IMMEDIATELY
         --------------------------------------------- */
 
         if (cachedName) {
@@ -175,29 +210,26 @@ function Navbar() {
 
         if (cachedImage) {
             setProfileImage(cachedImage);
+            setImageError(false);
+            setImageLoading(true);
+        } else {
+            setProfileImage(null);
+            setImageError(false);
+            setImageLoading(false);
         }
 
 
         /* ---------------------------------------------
-           No token
+           NO TOKEN
         --------------------------------------------- */
 
         if (!token) {
-
             setFullName(
                 cachedName || "User"
             );
 
             setRole(
                 cachedRole || ""
-            );
-
-            setProfileImage(
-                cachedImage || null
-            );
-
-            setImageLoading(
-                false
             );
 
             return;
@@ -253,31 +285,38 @@ function Navbar() {
             );
 
 
+            /* -----------------------------------------
+               PROFILE IMAGE
+            ----------------------------------------- */
+
             if (user.profile_image) {
 
-                setProfileImage(
-                    user.profile_image
-                );
+                const image =
+                    String(
+                        user.profile_image
+                    ).trim();
+
+                setProfileImage(image);
+
+                setImageError(false);
+
+                setImageLoading(true);
 
                 sessionStorage.setItem(
                     "profile_image",
-                    user.profile_image
-                );
-
-                setImageLoading(
-                    true
+                    image
                 );
 
             } else {
 
                 setProfileImage(null);
 
+                setImageError(false);
+
+                setImageLoading(false);
+
                 sessionStorage.removeItem(
                     "profile_image"
-                );
-
-                setImageLoading(
-                    false
                 );
 
             }
@@ -285,13 +324,10 @@ function Navbar() {
         } catch (error) {
 
             if (
-                isRequestAborted(
-                    error
-                )
+                isRequestAborted(error)
             ) {
                 return;
             }
-
 
             console.error(
                 "Navbar profile loading error:",
@@ -299,24 +335,154 @@ function Navbar() {
             );
 
 
-            if (cachedName) {
-                setFullName(cachedName);
-            }
+            /* -----------------------------------------
+               FALLBACK TO CACHE
+            ----------------------------------------- */
 
-            if (cachedRole) {
-                setRole(cachedRole);
-            }
+            setFullName(
+                cachedName || "User"
+            );
 
-            if (cachedImage) {
-                setProfileImage(cachedImage);
-            }
+            setRole(
+                cachedRole || ""
+            );
 
+            setProfileImage(
+                cachedImage || null
+            );
+
+            setImageError(false);
+
+            setImageLoading(
+                Boolean(cachedImage)
+            );
         }
     }
 
 
     /* =====================================================
-       RELOAD PROFILE ON ROUTE CHANGE
+       PROFILE IMAGE SAFETY TIMEOUT
+       MAX 2.5 SECONDS
+    ===================================================== */
+
+    useEffect(() => {
+
+        if (!profileImage) {
+            setImageLoading(false);
+            return;
+        }
+
+
+        setImageLoading(true);
+        setImageError(false);
+
+
+        const timer = setTimeout(() => {
+
+            setImageLoading(false);
+
+            setImageError(true);
+
+        }, 2500);
+
+
+        return () => {
+            clearTimeout(timer);
+        };
+
+    }, [profileImage]);
+
+
+    /* =====================================================
+       API / IMAGE URL
+    ===================================================== */
+
+    const API_URL =
+        import.meta.env.VITE_API_URL ||
+        "https://hospital-backend-8pek.onrender.com/api";
+
+
+    const backendUrl =
+        API_URL.replace(
+            /\/api\/?$/,
+            ""
+        );
+
+
+    const profileImageUrl = useMemo(() => {
+
+        if (!profileImage) {
+            return null;
+        }
+
+
+        const value =
+            String(
+                profileImage
+            ).trim();
+
+
+        if (!value) {
+            return null;
+        }
+
+
+        /* Full URL */
+
+        if (
+            value.startsWith(
+                "http://"
+            ) ||
+            value.startsWith(
+                "https://"
+            ) ||
+            value.startsWith(
+                "blob:"
+            ) ||
+            value.startsWith(
+                "data:image/"
+            )
+        ) {
+            return value;
+        }
+
+
+        /* /uploads/photo.jpg */
+
+        if (
+            value.startsWith(
+                "/uploads/"
+            )
+        ) {
+            return `${backendUrl}${value}`;
+        }
+
+
+        /* uploads/photo.jpg */
+
+        if (
+            value.startsWith(
+                "uploads/"
+            )
+        ) {
+            return `${backendUrl}/${value}`;
+        }
+
+
+        /* filename only */
+
+        return `${backendUrl}/uploads/${encodeURIComponent(
+            value
+        )}`;
+
+    }, [
+        profileImage,
+        backendUrl,
+    ]);
+
+
+    /* =====================================================
+       LOAD PROFILE WHEN ROUTE CHANGES
     ===================================================== */
 
     useEffect(() => {
@@ -329,7 +495,7 @@ function Navbar() {
 
 
     /* =====================================================
-       PROFILE UPDATED EVENT
+       USER UPDATED
     ===================================================== */
 
     useEffect(() => {
@@ -360,9 +526,23 @@ function Navbar() {
                 setRole(userRole);
             }
 
-            setProfileImage(
-                image || null
-            );
+
+            if (image) {
+
+                setProfileImage(image);
+
+                setImageError(false);
+
+                setImageLoading(true);
+
+            } else {
+
+                setProfileImage(null);
+
+                setImageError(false);
+
+                setImageLoading(false);
+            }
 
 
             loadCurrentProfile();
@@ -388,7 +568,7 @@ function Navbar() {
 
 
     /* =====================================================
-       SEARCH DATA
+       SEARCH ITEMS
     ===================================================== */
 
     const searchItems = useMemo(() => {
@@ -397,7 +577,8 @@ function Navbar() {
 
             {
                 label: "Dashboard",
-                description: "Open your main dashboard",
+                description:
+                    "Open your main dashboard",
                 keywords:
                     "dashboard home admin",
                 path: "/dashboard",
@@ -405,8 +586,10 @@ function Navbar() {
             },
 
             {
-                label: "Patient Dashboard",
-                description: "Open your patient dashboard",
+                label:
+                    "Patient Dashboard",
+                description:
+                    "Open your patient dashboard",
                 keywords:
                     "patient dashboard home",
                 path: "/patient-dashboard",
@@ -414,8 +597,10 @@ function Navbar() {
             },
 
             {
-                label: "Doctor Dashboard",
-                description: "Open doctor workspace",
+                label:
+                    "Doctor Dashboard",
+                description:
+                    "Open doctor workspace",
                 keywords:
                     "doctor dashboard",
                 path: "/doctor-dashboard",
@@ -423,8 +608,10 @@ function Navbar() {
             },
 
             {
-                label: "Reception Dashboard",
-                description: "Open receptionist workspace",
+                label:
+                    "Reception Dashboard",
+                description:
+                    "Open receptionist workspace",
                 keywords:
                     "reception receptionist dashboard",
                 path: "/reception-dashboard",
@@ -432,8 +619,10 @@ function Navbar() {
             },
 
             {
-                label: "Pharmacist Dashboard",
-                description: "Open pharmacist workspace",
+                label:
+                    "Pharmacist Dashboard",
+                description:
+                    "Open pharmacist workspace",
                 keywords:
                     "pharmacist pharmacy dashboard",
                 path: "/pharmacist-dashboard",
@@ -441,8 +630,10 @@ function Navbar() {
             },
 
             {
-                label: "Lab Dashboard",
-                description: "Open laboratory workspace",
+                label:
+                    "Lab Dashboard",
+                description:
+                    "Open laboratory workspace",
                 keywords:
                     "lab laboratory dashboard",
                 path: "/lab-dashboard",
@@ -451,7 +642,8 @@ function Navbar() {
 
             {
                 label: "Patients",
-                description: "Manage hospital patients",
+                description:
+                    "Manage hospital patients",
                 keywords:
                     "patient patients records",
                 path: "/patients",
@@ -460,7 +652,8 @@ function Navbar() {
 
             {
                 label: "Doctors",
-                description: "Manage doctors and specialists",
+                description:
+                    "Manage doctors and specialists",
                 keywords:
                     "doctor doctors specialist",
                 path: "/doctors",
@@ -468,19 +661,23 @@ function Navbar() {
             },
 
             {
-                label: "Find a Doctor",
-                description: "Find specialists and book a visit",
+                label:
+                    "Find a Doctor",
+                description:
+                    "Find specialists",
                 keywords:
-                    "doctor doctors specialist patient",
+                    "doctor specialist",
                 path: "/patient-doctors",
                 roles: ["patient"],
             },
 
             {
-                label: "Appointments",
-                description: "View and manage appointments",
+                label:
+                    "Appointments",
+                description:
+                    "View and manage appointments",
                 keywords:
-                    "appointment appointments booking",
+                    "appointment booking",
                 path: "/appointments",
                 roles: [
                     "admin",
@@ -488,13 +685,14 @@ function Navbar() {
                     "receptionist",
                     "pharmacist",
                     "lab",
-                    "patient",
                 ],
             },
 
             {
-                label: "Book Appointment",
-                description: "Schedule a doctor appointment",
+                label:
+                    "Book Appointment",
+                description:
+                    "Schedule a consultation",
                 keywords:
                     "book appointment doctor consultation",
                 path: "/book-appointment",
@@ -502,19 +700,23 @@ function Navbar() {
             },
 
             {
-                label: "My Appointments",
-                description: "View your patient appointments",
+                label:
+                    "My Appointments",
+                description:
+                    "View your appointments",
                 keywords:
-                    "patient appointments upcoming completed",
+                    "patient appointment upcoming",
                 path: "/patient-appointments",
                 roles: ["patient"],
             },
 
             {
-                label: "Medical Reports",
-                description: "View and manage medical reports",
+                label:
+                    "Medical Reports",
+                description:
+                    "View medical reports",
                 keywords:
-                    "reports medical files documents",
+                    "medical reports files",
                 path: "/medical-reports",
                 roles: [
                     "admin",
@@ -523,53 +725,44 @@ function Navbar() {
             },
 
             {
-                label: "Prescriptions",
-                description: "View your medicines and prescriptions",
+                label:
+                    "Prescriptions",
+                description:
+                    "View prescriptions",
                 keywords:
-                    "prescription prescriptions medicine medicines",
+                    "medicine prescription",
                 path: "/patient-prescriptions",
                 roles: ["patient"],
             },
 
             {
                 label: "Billing",
-                description: "Manage billing and payments",
+                description:
+                    "Manage billing",
                 keywords:
-                    "billing bill payment invoice",
+                    "billing invoice payment",
                 path: "/billing",
                 roles: ["admin"],
             },
 
             {
-                label: "Patient Billing",
-                description: "View your bills and payments",
+                label:
+                    "Patient Billing",
+                description:
+                    "View your bills",
                 keywords:
-                    "patient billing payment invoice",
+                    "patient bill invoice payment",
                 path: "/patient-billing",
                 roles: ["patient"],
             },
 
             {
-                label: "Payment",
-                description: "Open payment page",
+                label:
+                    "Medical History",
+                description:
+                    "View patient history",
                 keywords:
-                    "payment pay transaction razorpay",
-                path: "/payment",
-                roles: [
-                    "admin",
-                    "doctor",
-                    "receptionist",
-                    "pharmacist",
-                    "lab",
-                    "patient",
-                ],
-            },
-
-            {
-                label: "Medical History",
-                description: "Manage patient medical history",
-                keywords:
-                    "medical history illness surgery allergy",
+                    "medical history allergy surgery",
                 path: "/patient-medical-history",
                 roles: [
                     "admin",
@@ -578,26 +771,12 @@ function Navbar() {
             },
 
             {
-                label: "Profile",
-                description: "View and edit your profile",
+                label:
+                    "Notifications",
+                description:
+                    "View notifications",
                 keywords:
-                    "profile account personal details",
-                path: "/profile",
-                roles: [
-                    "admin",
-                    "doctor",
-                    "receptionist",
-                    "pharmacist",
-                    "lab",
-                    "patient",
-                ],
-            },
-
-            {
-                label: "Notifications",
-                description: "View your latest notifications",
-                keywords:
-                    "notifications alerts messages",
+                    "notification alert message",
                 path: "/notifications",
                 roles: [
                     "admin",
@@ -609,6 +788,23 @@ function Navbar() {
                 ],
             },
 
+            {
+                label:
+                    "Profile",
+                description:
+                    "Manage your profile",
+                keywords:
+                    "profile account user",
+                path: "/profile",
+                roles: [
+                    "admin",
+                    "doctor",
+                    "receptionist",
+                    "pharmacist",
+                    "lab",
+                    "patient",
+                ],
+            },
         ];
 
 
@@ -619,7 +815,7 @@ function Navbar() {
 
 
         return items.filter(
-            (item) =>
+            item =>
                 item.roles.includes(
                     currentRole
                 )
@@ -643,23 +839,19 @@ function Navbar() {
 
 
             return searchItems
-                .filter((item) => {
+                .filter(item =>
+                    item.label
+                        .toLowerCase()
+                        .includes(query) ||
 
-                    return (
-                        item.label
-                            .toLowerCase()
-                            .includes(query) ||
+                    item.description
+                        .toLowerCase()
+                        .includes(query) ||
 
-                        item.description
-                            .toLowerCase()
-                            .includes(query) ||
-
-                        item.keywords
-                            .toLowerCase()
-                            .includes(query)
-                    );
-
-                })
+                    item.keywords
+                        .toLowerCase()
+                        .includes(query)
+                )
                 .slice(0, 7);
 
         }, [
@@ -672,10 +864,11 @@ function Navbar() {
 
         setSearchQuery("");
 
-        setShowSearchResults(false);
+        setShowSearchResults(
+            false
+        );
 
         navigate(path);
-
     }
 
 
@@ -699,9 +892,7 @@ function Navbar() {
                 setShowSearchResults(
                     false
                 );
-
             }
-
         }
 
 
@@ -743,9 +934,7 @@ function Navbar() {
                 setShowNotifications(
                     false
                 );
-
             }
-
         }
 
 
@@ -775,9 +964,7 @@ function Navbar() {
 
         try {
 
-            setLoadingNotifications(
-                true
-            );
+            setLoadingNotifications(true);
 
 
             const response =
@@ -794,28 +981,22 @@ function Navbar() {
                     : [];
 
 
-            setNotifications(
-                data
-            );
+            setNotifications(data);
 
 
             setUnreadCount(
                 data.filter(
-                    (item) =>
-                        item.unread
+                    item => item.unread
                 ).length
             );
 
         } catch (error) {
 
             if (
-                isRequestAborted(
-                    error
-                )
+                isRequestAborted(error)
             ) {
                 return;
             }
-
 
             console.error(
                 "Notification Error:",
@@ -827,9 +1008,7 @@ function Navbar() {
             setLoadingNotifications(
                 false
             );
-
         }
-
     }
 
 
@@ -853,28 +1032,22 @@ function Navbar() {
         } catch (error) {
 
             if (
-                isRequestAborted(
-                    error
-                )
+                isRequestAborted(error)
             ) {
                 return;
             }
-
 
             console.error(
                 "Unread count error:",
                 error
             );
-
         }
-
     }
 
 
     useEffect(() => {
 
         loadNotifications();
-
         loadUnreadCount();
 
     }, []);
@@ -885,10 +1058,10 @@ function Navbar() {
     ===================================================== */
 
     useRealtimeNotifications(
-        (notification) => {
+        notification => {
 
             setNotifications(
-                (previous) => [
+                previous => [
                     notification,
                     ...previous,
                 ]
@@ -896,32 +1069,17 @@ function Navbar() {
 
 
             setUnreadCount(
-                (previous) =>
+                previous =>
                     previous + 1
             );
 
 
-            const audio =
-                new Audio(
-                    "/notification.mp3"
-                );
-
-
-            audio
-                .play()
-                .catch(() => { });
-
-
-            setBellAnimation(
-                true
-            );
+            setBellAnimation(true);
 
 
             setTimeout(() => {
 
-                setBellAnimation(
-                    false
-                );
+                setBellAnimation(false);
 
             }, 600);
 
@@ -935,26 +1093,9 @@ function Navbar() {
 
     function toggleDarkMode() {
 
-        const value =
-            !darkMode;
-
-
         setDarkMode(
-            value
+            previous => !previous
         );
-
-
-        localStorage.setItem(
-            "darkMode",
-            String(value)
-        );
-
-
-        document.body.classList.toggle(
-            "dark-mode",
-            value
-        );
-
     }
 
 
@@ -972,12 +1113,11 @@ function Navbar() {
 
 
             setNotifications(
-                (previous) =>
+                previous =>
                     previous.map(
-                        (item) => ({
+                        item => ({
                             ...item,
-                            unread:
-                                false,
+                            unread: false,
                         })
                     )
             );
@@ -988,21 +1128,16 @@ function Navbar() {
         } catch (error) {
 
             if (
-                isRequestAborted(
-                    error
-                )
+                isRequestAborted(error)
             ) {
                 return;
             }
-
 
             console.error(
                 "Mark all read error:",
                 error
             );
-
         }
-
     }
 
 
@@ -1022,55 +1157,50 @@ function Navbar() {
         setFullName("User");
         setRole("");
         setProfileImage(null);
+        setImageLoading(false);
+        setImageError(false);
 
 
         window.location.href =
             "/login";
-
     }
 
 
     /* =====================================================
-       PROFILE IMAGE
-    ===================================================== */
-
-    const API_URL =
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000/api";
-
-
-    const backendUrl =
-        API_URL.replace(
-            /\/api\/?$/,
-            ""
-        );
-
-
-    const profileImageUrl =
-        profileImage
-            ? `${backendUrl}/uploads/${encodeURIComponent(
-                profileImage
-            )}`
-            : null;
-
-
-    /* =====================================================
-       PROFILE
+       PROFILE NAVIGATION
     ===================================================== */
 
     function openProfile(event) {
 
         event.preventDefault();
-
         event.stopPropagation();
 
-        setShowNotifications(false);
 
-        setShowSearchResults(false);
+        setShowNotifications(
+            false
+        );
+
+        setShowSearchResults(
+            false
+        );
+
 
         navigate("/profile");
-
     }
+
+
+    /* =====================================================
+       FALLBACK AVATAR
+    ===================================================== */
+
+    const avatarLetter =
+        fullName &&
+            fullName !== "User"
+            ? fullName
+                .trim()
+                .charAt(0)
+                .toUpperCase()
+            : "U";
 
 
     /* =====================================================
@@ -1080,7 +1210,6 @@ function Navbar() {
     return (
 
         <header className="top-navbar">
-
 
             {/* =================================================
                 LEFT
@@ -1093,9 +1222,7 @@ function Navbar() {
                 </h2>
 
 
-                {/* =================================================
-                    SEARCH
-                ================================================= */}
+                {/* SEARCH */}
 
                 <div
                     className="navbar-search-wrapper"
@@ -1129,12 +1256,10 @@ function Navbar() {
                                     setShowSearchResults(
                                         true
                                     );
-
                                 }
-
                             }}
 
-                            onChange={(event) => {
+                            onChange={event => {
 
                                 const value =
                                     event.target.value;
@@ -1144,13 +1269,12 @@ function Navbar() {
                                 );
 
                                 setShowSearchResults(
-                                    value.trim()
-                                        .length > 0
+                                    value.trim().length >
+                                    0
                                 );
-
                             }}
 
-                            onKeyDown={(event) => {
+                            onKeyDown={event => {
 
                                 if (
                                     event.key ===
@@ -1166,7 +1290,6 @@ function Navbar() {
                                             filteredSearchItems[0]
                                                 .path
                                         );
-
                                     }
 
                                     return;
@@ -1178,16 +1301,12 @@ function Navbar() {
                                     "Escape"
                                 ) {
 
-                                    setSearchQuery(
-                                        ""
-                                    );
+                                    setSearchQuery("");
 
                                     setShowSearchResults(
                                         false
                                     );
-
                                 }
-
                             }}
                         />
 
@@ -1197,32 +1316,24 @@ function Navbar() {
                             <button
                                 type="button"
                                 className="navbar-search-clear"
-                                aria-label="Clear search"
 
                                 onClick={() => {
 
-                                    setSearchQuery(
-                                        ""
-                                    );
+                                    setSearchQuery("");
 
                                     setShowSearchResults(
                                         false
                                     );
-
                                 }}
                             >
                                 <FaTimes />
-
                             </button>
-
                         )}
 
                     </div>
 
 
-                    {/* =================================================
-                        SEARCH RESULTS
-                    ================================================= */}
+                    {/* SEARCH DROPDOWN */}
 
                     {showSearchResults && (
 
@@ -1234,20 +1345,18 @@ function Navbar() {
                                     Quick Navigation
                                 </span>
 
-                                {filteredSearchItems.length >
-                                    0 && (
-
-                                        <small>
-                                            {filteredSearchItems.length}
-                                            {" "}
-                                            result
-                                            {filteredSearchItems.length !==
-                                                1
-                                                ? "s"
-                                                : ""}
-                                        </small>
-
-                                    )}
+                                <small>
+                                    {
+                                        filteredSearchItems.length
+                                    }{" "}
+                                    result
+                                    {
+                                        filteredSearchItems.length !==
+                                            1
+                                            ? "s"
+                                            : ""
+                                    }
+                                </small>
 
                             </div>
 
@@ -1258,7 +1367,7 @@ function Navbar() {
                                 <div className="navbar-search-results">
 
                                     {filteredSearchItems.map(
-                                        (item) => (
+                                        item => (
 
                                             <button
                                                 key={
@@ -1301,7 +1410,6 @@ function Navbar() {
                                                 />
 
                                             </button>
-
                                         )
                                     )}
 
@@ -1311,7 +1419,7 @@ function Navbar() {
 
                                 <div className="navbar-search-empty">
 
-                                    <span className="navbar-search-empty-icon">
+                                    <span>
                                         🔎
                                     </span>
 
@@ -1320,16 +1428,13 @@ function Navbar() {
                                     </strong>
 
                                     <small>
-                                        Try another page,
-                                        feature or keyword.
+                                        Try another keyword.
                                     </small>
 
                                 </div>
-
                             )}
 
                         </div>
-
                     )}
 
                 </div>
@@ -1344,9 +1449,7 @@ function Navbar() {
             <div className="navbar-right">
 
 
-                {/* =================================================
-                    DARK MODE
-                ================================================= */}
+                {/* DARK MODE */}
 
                 <button
                     type="button"
@@ -1354,7 +1457,11 @@ function Navbar() {
                     onClick={
                         toggleDarkMode
                     }
-                    aria-label="Toggle dark mode"
+                    aria-label={
+                        darkMode
+                            ? "Switch to light mode"
+                            : "Switch to dark mode"
+                    }
                 >
 
                     {darkMode ? (
@@ -1366,20 +1473,15 @@ function Navbar() {
                 </button>
 
 
-                {/* =================================================
-                    NOTIFICATIONS
-                ================================================= */}
+                {/* NOTIFICATIONS */}
 
                 <div
                     className="notification-wrapper"
-                    ref={
-                        notificationRef
-                    }
+                    ref={notificationRef}
                 >
 
                     <button
                         type="button"
-
                         className={`icon-btn navbar-bell ${bellAnimation
                                 ? "ring"
                                 : ""
@@ -1390,11 +1492,9 @@ function Navbar() {
                             const value =
                                 !showNotifications;
 
-
                             setShowNotifications(
                                 value
                             );
-
 
                             if (value) {
 
@@ -1403,32 +1503,25 @@ function Navbar() {
                                 );
 
                                 loadNotifications();
-
                                 loadUnreadCount();
-
                             }
-
                         }}
-
-                        aria-label="Notifications"
                     >
 
                         <FaBell />
 
 
-                        {unreadCount >
-                            0 && (
+                        {unreadCount > 0 && (
 
-                                <span className="notification-count">
-
-                                    {unreadCount >
-                                        99
+                            <span className="notification-count">
+                                {
+                                    unreadCount > 99
                                         ? "99+"
-                                        : unreadCount}
+                                        : unreadCount
+                                }
+                            </span>
 
-                                </span>
-
-                            )}
+                        )}
 
                     </button>
 
@@ -1463,8 +1556,7 @@ function Navbar() {
                                     Loading Notifications...
                                 </div>
 
-                            ) : notifications.length ===
-                                0 ? (
+                            ) : notifications.length === 0 ? (
 
                                 <div className="empty-notification">
                                     No Notifications
@@ -1473,7 +1565,7 @@ function Navbar() {
                             ) : (
 
                                 notifications.map(
-                                    (item) => (
+                                    item => (
 
                                         <div
                                             key={
@@ -1490,19 +1582,14 @@ function Navbar() {
                                                 {{
                                                     appointment:
                                                         "📅",
-
                                                     payment:
                                                         "💳",
-
                                                     prescription:
                                                         "💊",
-
                                                     report:
                                                         "🧪",
-
                                                     general:
                                                         "🔔",
-
                                                 }[
                                                     item.type
                                                 ] ||
@@ -1514,36 +1601,34 @@ function Navbar() {
                                             <div className="notification-content">
 
                                                 <h4>
-                                                    {String(
+                                                    {
                                                         item.title ||
                                                         "Notification"
-                                                    )}
+                                                    }
                                                 </h4>
 
-
                                                 <p>
-                                                    {String(
+                                                    {
                                                         item.message ||
                                                         ""
-                                                    )}
+                                                    }
                                                 </p>
 
-
                                                 <small>
-                                                    {item.created_at
-                                                        ? new Date(
-                                                            item.created_at
-                                                        ).toLocaleString()
-                                                        : "Just now"}
+                                                    {
+                                                        item.created_at
+                                                            ? new Date(
+                                                                item.created_at
+                                                            ).toLocaleString()
+                                                            : "Just now"
+                                                    }
                                                 </small>
 
                                             </div>
 
                                         </div>
-
                                     )
                                 )
-
                             )}
 
 
@@ -1560,74 +1645,77 @@ function Navbar() {
                                     navigate(
                                         "/notifications"
                                     );
-
                                 }}
                             >
                                 View All Notifications
                             </button>
 
                         </div>
-
                     )}
 
                 </div>
 
 
-                {/* =================================================
-                    PROFILE
-                ================================================= */}
+                {/* PROFILE */}
 
                 <button
                     type="button"
                     className="profile-box"
-                    title="View Profile"
+                    title="Open Profile"
                     aria-label="Open Profile"
 
-                    onPointerDownCapture={(
-                        event
-                    ) => {
-                        event.stopPropagation();
-                    }}
-
-                    onClickCapture={(
-                        event
-                    ) => {
-                        openProfile(event);
-                    }}
+                    onClick={
+                        openProfile
+                    }
                 >
 
                     <span className="navbar-profile-avatar">
 
-                        {profileImageUrl ? (
+                        {profileImageUrl &&
+                            !imageError ? (
 
                             <>
-
                                 {imageLoading && (
-                                    <span className="navbar-profile-skeleton" />
+                                    <span
+                                        className="navbar-profile-skeleton"
+                                        aria-hidden="true"
+                                    />
                                 )}
 
-
                                 <img
-                                    className="navbar-profile-image"
-
                                     src={
                                         profileImageUrl
                                     }
 
-                                    alt={
-                                        `${fullName} profile`
-                                    }
+                                    alt={`${fullName} profile`}
 
-                                    onLoad={() =>
-                                        setImageLoading(
-                                            false
-                                        )
-                                    }
+                                    className="navbar-profile-image"
 
-                                    onError={() => {
+                                    onLoad={() => {
 
                                         setImageLoading(
                                             false
+                                        );
+
+                                        setImageError(
+                                            false
+                                        );
+
+                                    }}
+
+                                    onError={event => {
+
+                                        console.error(
+                                            "Profile image failed:",
+                                            event.currentTarget.src
+                                        );
+
+                                        setImageLoading(
+                                            false
+                                        );
+
+                                        setImageError(
+                                            true
                                         );
 
                                         setProfileImage(
@@ -1639,22 +1727,14 @@ function Navbar() {
                                         );
 
                                     }}
-
-                                    style={{
-                                        display:
-                                            imageLoading
-                                                ? "none"
-                                                : "block",
-                                    }}
                                 />
-
                             </>
 
                         ) : (
 
-                            <FaUserCircle
-                                className="navbar-default-avatar"
-                            />
+                            <span className="navbar-avatar-fallback">
+                                {avatarLetter}
+                            </span>
 
                         )}
 
@@ -1664,22 +1744,15 @@ function Navbar() {
                     <span className="navbar-profile-info">
 
                         <strong>
-                            {fullName !==
-                                "User"
-                                ? fullName
-                                : (
-                                    sessionStorage.getItem(
-                                        "full_name"
-                                    ) ||
-                                    "Patient"
-                                )}
+                            {fullName}
                         </strong>
 
-
                         <span>
-                            {role
-                                ? role.toUpperCase()
-                                : "PATIENT"}
+                            {
+                                role
+                                    ? role.toUpperCase()
+                                    : "PATIENT"
+                            }
                         </span>
 
                     </span>
@@ -1687,9 +1760,7 @@ function Navbar() {
                 </button>
 
 
-                {/* =================================================
-                    LOGOUT
-                ================================================= */}
+                {/* LOGOUT */}
 
                 <button
                     type="button"

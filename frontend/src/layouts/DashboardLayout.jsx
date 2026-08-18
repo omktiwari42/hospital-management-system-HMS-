@@ -3,15 +3,27 @@ import Navbar from "../components/Navbar";
 
 function DashboardLayout({ children }) {
     return (
-        <div className="layout">
+        <div className="hms-shell">
+
+            {/* =========================
+                SIDEBAR
+            ========================= */}
 
             <Sidebar />
 
-            <div className="main-content">
 
+            {/* =========================
+                MAIN AREA
+            ========================= */}
+
+            <div className="hms-main">
+
+                {/* Navbar stays inside main area */}
                 <Navbar />
 
-                <main className="page-content">
+
+                {/* Page content */}
+                <main className="hms-page">
                     {children}
                 </main>
 
