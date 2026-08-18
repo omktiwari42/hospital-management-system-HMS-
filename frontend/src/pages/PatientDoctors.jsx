@@ -4,6 +4,8 @@ import {
     FaArrowLeft,
     FaSearch,
     FaUserMd,
+    FaCalendarCheck,
+    FaStar,
 } from "react-icons/fa";
 
 import api from "../services/api";
@@ -89,9 +91,7 @@ function PatientDoctors() {
             const matchesSearch =
                 !query ||
                 doctorName.includes(query) ||
-                doctorSpecialization.includes(
-                    query
-                ) ||
+                doctorSpecialization.includes(query) ||
                 doctorExperience.includes(query);
 
             const matchesSpecialization =
@@ -111,15 +111,17 @@ function PatientDoctors() {
     ]);
 
     function bookAppointment(doctor) {
-        navigate(
-            "/book-appointment",
-            {
-                state: {
-                    doctorName: doctor.name,
-                    doctorId: doctor.id,
-                },
-            }
-        );
+        navigate("/book-appointment", {
+            state: {
+                doctorId: doctor.id,
+                doctorName: doctor.name,
+            },
+        });
+    }
+
+    function clearFilters() {
+        setSearch("");
+        setSpecialization("");
     }
 
     if (loading) {
@@ -129,9 +131,11 @@ function PatientDoctors() {
     if (error) {
         return (
             <div className="patient-doctors-page">
+
                 <div className="patient-doctors-header">
 
                     <button
+                        type="button"
                         className="back-btn"
                         onClick={() =>
                             navigate(
@@ -149,8 +153,9 @@ function PatientDoctors() {
                         </h1>
 
                         <p>
-                            Browse available doctors
-                            and specialties.
+                            Find the right doctor
+                            for your healthcare
+                            needs.
                         </p>
                     </div>
 
@@ -171,6 +176,7 @@ function PatientDoctors() {
                     </p>
 
                     <button
+                        type="button"
                         className="primary-btn"
                         onClick={
                             loadDoctors
@@ -180,6 +186,7 @@ function PatientDoctors() {
                     </button>
 
                 </div>
+
             </div>
         );
     }
@@ -187,9 +194,12 @@ function PatientDoctors() {
     return (
         <div className="patient-doctors-page">
 
+            {/* HEADER */}
+
             <div className="patient-doctors-header">
 
                 <button
+                    type="button"
                     className="back-btn"
                     onClick={() =>
                         navigate(
@@ -201,20 +211,30 @@ function PatientDoctors() {
                     Back
                 </button>
 
-                <div>
+                <div className="patient-doctors-title">
+
+                    <span className="patient-doctors-eyebrow">
+                        Healthcare Specialists
+                    </span>
+
                     <h1>
                         Find a Doctor
                     </h1>
 
                     <p>
-                        Find the right doctor for
-                        your healthcare needs.
+                        Browse our doctors and
+                        choose the right specialist
+                        for your consultation.
                     </p>
+
                 </div>
 
             </div>
 
-            <div className="patient-doctors-filters">
+
+            {/* SEARCH / FILTER */}
+
+            <div className="patient-doctors-toolbar">
 
                 <div className="doctor-search">
 
@@ -222,7 +242,7 @@ function PatientDoctors() {
 
                     <input
                         type="text"
-                        placeholder="Search doctor or specialization..."
+                        placeholder="Search by doctor name, specialization or experience..."
                         value={search}
                         onChange={(e) =>
                             setSearch(
@@ -231,7 +251,21 @@ function PatientDoctors() {
                         }
                     />
 
+                    {search && (
+                        <button
+                            type="button"
+                            className="doctor-search-clear"
+                            onClick={() =>
+                                setSearch("")
+                            }
+                            aria-label="Clear search"
+                        >
+                            ×
+                        </button>
+                    )}
+
                 </div>
+
 
                 <select
                     value={specialization}
@@ -255,22 +289,55 @@ function PatientDoctors() {
                             </option>
                         )
                     )}
+
                 </select>
 
+                {(search ||
+                    specialization) && (
+                        <button
+                            type="button"
+                            className="clear-doctor-filters"
+                            onClick={
+                                clearFilters
+                            }
+                        >
+                            Clear
+                        </button>
+                    )}
+
             </div>
 
-            <div className="doctor-results-info">
-                Showing{" "}
-                <strong>
-                    {filteredDoctors.length}
-                </strong>{" "}
-                doctor
-                {filteredDoctors.length !== 1
-                    ? "s"
-                    : ""}
+
+            {/* RESULT SUMMARY */}
+
+            <div className="doctor-results-bar">
+
+                <div>
+                    <strong>
+                        {filteredDoctors.length}
+                    </strong>{" "}
+                    doctor
+                    {filteredDoctors.length !==
+                        1
+                        ? "s"
+                        : ""}{" "}
+                    available
+                </div>
+
+                {specialization && (
+                    <span className="active-specialization">
+                        {specialization}
+                    </span>
+                )}
+
             </div>
 
-            {filteredDoctors.length === 0 ? (
+
+            {/* DOCTORS */}
+
+            {filteredDoctors.length ===
+                0 ? (
+
                 <div className="patient-doctors-empty">
 
                     <div className="empty-icon">
@@ -282,25 +349,27 @@ function PatientDoctors() {
                     </h2>
 
                     <p>
-                        Try another doctor name
-                        or specialization.
+                        We couldn't find a doctor
+                        matching your search.
                     </p>
 
                     {(search ||
                         specialization) && (
                             <button
+                                type="button"
                                 className="secondary-btn"
-                                onClick={() => {
-                                    setSearch("");
-                                    setSpecialization("");
-                                }}
+                                onClick={
+                                    clearFilters
+                                }
                             >
                                 Clear Filters
                             </button>
                         )}
 
                 </div>
+
             ) : (
+
                 <div className="patient-doctors-grid">
 
                     {filteredDoctors.map(
@@ -319,9 +388,11 @@ function PatientDoctors() {
                                 "available";
 
                             return (
-                                <div
+                                <article
                                     className="patient-doctor-card"
-                                    key={doctor.id}
+                                    key={
+                                        doctor.id
+                                    }
                                 >
 
                                     <div className="patient-doctor-top">
@@ -336,11 +407,14 @@ function PatientDoctors() {
                                                     : "unavailable"
                                                 }`}
                                         >
+                                            <span className="availability-dot"></span>
+
                                             {doctor.availability ||
                                                 "Not specified"}
                                         </span>
 
                                     </div>
+
 
                                     <div className="patient-doctor-info">
 
@@ -357,6 +431,17 @@ function PatientDoctors() {
 
                                     </div>
 
+
+                                    <div className="doctor-rating-row">
+
+                                        <span>
+                                            <FaStar />
+                                            Trusted Specialist
+                                        </span>
+
+                                    </div>
+
+
                                     <div className="patient-doctor-stats">
 
                                         <div>
@@ -365,7 +450,7 @@ function PatientDoctors() {
                                             </strong>
 
                                             <span>
-                                                Years
+                                                Years Experience
                                             </span>
                                         </div>
 
@@ -383,23 +468,33 @@ function PatientDoctors() {
 
                                     </div>
 
+
                                     <div className="patient-doctor-contact">
 
                                         {doctor.email && (
                                             <div>
-                                                ✉{" "}
-                                                {doctor.email}
+                                                ✉
+                                                <span>
+                                                    {
+                                                        doctor.email
+                                                    }
+                                                </span>
                                             </div>
                                         )}
 
                                         {doctor.phone && (
                                             <div>
-                                                ☎{" "}
-                                                {doctor.phone}
+                                                ☎
+                                                <span>
+                                                    {
+                                                        doctor.phone
+                                                    }
+                                                </span>
                                             </div>
                                         )}
 
                                     </div>
+
 
                                     <button
                                         type="button"
@@ -410,15 +505,17 @@ function PatientDoctors() {
                                             )
                                         }
                                     >
+                                        <FaCalendarCheck />
                                         Book Appointment
                                     </button>
 
-                                </div>
+                                </article>
                             );
                         }
                     )}
 
                 </div>
+
             )}
 
         </div>
