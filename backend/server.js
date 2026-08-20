@@ -2385,17 +2385,12 @@ app.post(
     } catch (error) {
 
       // -----------------------------------------------------
-      // ROLLBACK EVERYTHING CREATED IN THIS TRANSACTION
+      // ALWAYS ROLLBACK THE TRANSACTION
       // -----------------------------------------------------
 
       try {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
+        await client.query("ROLLBACK");
       } catch (rollbackError) {
-
         console.error(
           "Booking transaction rollback error:",
           rollbackError
@@ -2403,26 +2398,106 @@ app.post(
       }
 
 
+      // -----------------------------------------------------
+      // LOG COMPLETE ERROR
+      // -----------------------------------------------------
+
       console.error(
         "BOOK APPOINTMENT ERROR:",
         error
       );
 
       console.error(
-        error.stack
+        "ERROR CODE:",
+        error.code
       );
 
+      console.error(
+        "ERROR DETAIL:",
+        error.detail
+      );
+
+
+      // -----------------------------------------------------
+      // DUPLICATE DOCTOR SLOT
+      // PostgreSQL unique constraint
+      // -----------------------------------------------------
+
+      if (error.code === "23505") {
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This doctor is already booked for the selected date and time.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // FOREIGN KEY ERROR
+      // -----------------------------------------------------
+
+      if (error.code === "23503") {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Unable to create the appointment because related data is missing.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // INVALID DATA TYPE
+      // -----------------------------------------------------
+
+      if (error.code === "22P02") {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid appointment data. Please check the selected details.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // NOT NULL / REQUIRED FIELD ERROR
+      // -----------------------------------------------------
+
+      if (error.code === "23502") {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Some required appointment information is missing.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CHECK CONSTRAINT ERROR
+      // -----------------------------------------------------
+
+      if (error.code === "23514") {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "The appointment details are not valid.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // DEFAULT SERVER ERROR
+      // -----------------------------------------------------
 
       return res.status(500).json({
         success: false,
         message:
-          "Unable to book appointment.",
+          "Unable to book appointment. Please try again.",
       });
-
-
-    } finally {
-
-      client.release();
     }
   }
 );
