@@ -2682,28 +2682,28 @@ app.put(
       const appointmentResult =
         await client.query(
           `
-          SELECT
-            a.id,
-            a.patient_name,
-            a.doctor_name,
-            a.appointment_date,
-            a.appointment_time,
-            a.status,
+    SELECT
+      a.id,
+      a.patient_name,
+      a.doctor_name,
+      a.appointment_date,
+      a.appointment_time,
+      a.status,
 
-            b.id AS bill_id,
-            b.payment_status,
-            b.status AS bill_status
+      b.id AS bill_id,
+      b.payment_status,
+      b.status AS bill_status
 
-          FROM appointments a
+    FROM appointments a
 
-          LEFT JOIN bills b
-            ON b.appointment_id = a.id
+    LEFT JOIN bills b
+      ON b.appointment_id = a.id
 
-          WHERE a.id = $1
-          AND a.patient_name = $2
+    WHERE a.id = $1
+    AND a.patient_name = $2
 
-          FOR UPDATE
-          `,
+    FOR UPDATE OF a
+    `,
           [
             id,
             patientName,
@@ -3051,7 +3051,7 @@ app.put(
           WHERE a.id = $1
           AND a.patient_name = $2
 
-          FOR UPDATE
+          FOR UPDATE OF a
           `,
           [
             id,
