@@ -120,6 +120,58 @@ app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"))
 );
+// =========================================================
+// PROFILE IMAGE ROUTE
+// Reliable profile image delivery
+// =========================================================
+
+app.get(
+  "/api/profile-image/:filename",
+  async (req, res) => {
+    try {
+      const filename = path.basename(
+        req.params.filename
+      );
+
+      if (!filename) {
+        return res.status(400).json({
+          message: "Invalid image filename.",
+        });
+      }
+
+      const filePath = path.join(
+        uploadPath,
+        filename
+      );
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          message: "Profile image not found.",
+        });
+      }
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=3600"
+      );
+
+      return res.sendFile(
+        filePath
+      );
+
+    } catch (error) {
+      console.error(
+        "Profile image serving error:",
+        error
+      );
+
+      return res.status(500).json({
+        message:
+          "Unable to load profile image.",
+      });
+    }
+  }
+);
 
 app.get("/", (req, res) => {
   res.send("Backend is Running");
