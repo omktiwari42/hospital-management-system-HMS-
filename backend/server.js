@@ -2702,7 +2702,7 @@ app.put(
     WHERE a.id = $1
     AND a.patient_name = $2
 
-    FOR UPDATE OF a OF a
+    FOR UPDATE OF a
     `,
           [
             id,
@@ -3051,7 +3051,7 @@ app.put(
           WHERE a.id = $1
           AND a.patient_name = $2
 
-          FOR UPDATE OF a OF a
+          FOR UPDATE OF a
           `,
           [
             id,
