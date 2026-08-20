@@ -58,23 +58,42 @@ export default function PatientAppointments() {
         loadAppointments();
     }, []);
     async function cancelAppointment(id) {
-
-        if (!window.confirm("Cancel this appointment?")) return;
-
-        try {
-
-            await api.put(`/patient/cancel-appointment/${id}`);
-
-            alert("Appointment Cancelled");
-
-            loadAppointments();
-
-        } catch (err) {
-
-            alert("Unable to cancel appointment.");
-
+        if (!window.confirm("Cancel this appointment?")) {
+            return;
         }
 
+        try {
+            const response = await api.put(
+                `/patient/cancel-appointment/${id}`
+            );
+
+            if (response.data?.success) {
+                alert(
+                    response.data.message ||
+                    "Appointment cancelled successfully."
+                );
+
+                await loadAppointments();
+                return;
+            }
+
+            alert(
+                response.data?.message ||
+                "Unable to cancel appointment."
+            );
+
+        } catch (error) {
+            console.error(
+                "CANCEL APPOINTMENT ERROR:",
+                error
+            );
+
+            const message =
+                error.response?.data?.message ||
+                "Unable to cancel appointment.";
+
+            alert(message);
+        }
     }
 
     async function handleRescheduleAppointment() {
