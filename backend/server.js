@@ -2916,6 +2916,480 @@ app.put(
     }
   }
 );
+// =========================================================
+// PATIENT RESCHEDULE APPOINTMENT
+// Secure + transactional
+// =========================================================
+
+app.put(
+  "/api/patient/reschedule-appointment/:id",
+  authenticateToken,
+  async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+      const { id } = req.params;
+
+      const {
+        appointment_date,
+        appointment_time,
+      } = req.body;
+
+      const userPhone =
+        String(req.user.phone || "").trim();
+
+
+      // -----------------------------------------------------
+      // VALIDATION
+      // -----------------------------------------------------
+
+      if (!id) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Appointment ID is required.",
+        });
+      }
+
+
+      if (
+        !appointment_date ||
+        !appointment_time
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "New appointment date and time are required.",
+        });
+      }
+
+
+      if (!userPhone) {
+
+        return res.status(401).json({
+          success: false,
+          message:
+            "Unable to identify the authenticated patient.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // TRANSACTION
+      // -----------------------------------------------------
+
+      await client.query("BEGIN");
+
+
+      // -----------------------------------------------------
+      // FIND PATIENT
+      // -----------------------------------------------------
+
+      const patientResult =
+        await client.query(
+          `
+          SELECT name, phone
+          FROM patients
+          WHERE phone = $1
+          FOR UPDATE
+          `,
+          [userPhone]
+        );
+
+
+      if (
+        patientResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Patient record not found.",
+        });
+      }
+
+
+      const patientName =
+        patientResult.rows[0].name;
+
+
+      // -----------------------------------------------------
+      // FIND APPOINTMENT
+      // AND VERIFY OWNERSHIP
+      // -----------------------------------------------------
+
+      const appointmentResult =
+        await client.query(
+          `
+          SELECT
+            a.id,
+            a.patient_name,
+            a.doctor_name,
+            a.department,
+            a.appointment_date,
+            a.appointment_time,
+            a.reason,
+            a.status,
+
+            b.id AS bill_id,
+            b.payment_status,
+            b.status AS bill_status
+
+          FROM appointments a
+
+          LEFT JOIN bills b
+            ON b.appointment_id = a.id
+
+          WHERE a.id = $1
+          AND a.patient_name = $2
+
+          FOR UPDATE
+          `,
+          [
+            id,
+            patientName,
+          ]
+        );
+
+
+      if (
+        appointmentResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Appointment not found or you are not authorized to reschedule it.",
+        });
+      }
+
+
+      const appointment =
+        appointmentResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // STATUS CHECK
+      // -----------------------------------------------------
+
+      const currentStatus =
+        String(
+          appointment.status || ""
+        ).toLowerCase();
+
+
+      if (
+        currentStatus ===
+        "cancelled"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Cancelled appointments cannot be rescheduled.",
+        });
+      }
+
+
+      if (
+        currentStatus ===
+        "completed"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Completed appointments cannot be rescheduled.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // PAYMENT CHECK
+      // -----------------------------------------------------
+
+      if (
+        String(
+          appointment.payment_status || ""
+        ).toLowerCase() === "paid" ||
+
+        String(
+          appointment.bill_status || ""
+        ).toLowerCase() === "paid"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Paid appointments cannot be rescheduled. Please contact support.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // PREVENT PAST DATE
+      // -----------------------------------------------------
+
+      const selectedDateTime =
+        new Date(
+          `${appointment_date}T${appointment_time}`
+        );
+
+      if (
+        Number.isNaN(
+          selectedDateTime.getTime()
+        )
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid appointment date or time.",
+        });
+      }
+
+
+      if (
+        selectedDateTime <=
+        new Date()
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please select a future date and time.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CHECK DOCTOR SLOT
+      // -----------------------------------------------------
+
+      const doctorSlot =
+        await client.query(
+          `
+          SELECT id
+          FROM appointments
+          WHERE doctor_name = $1
+          AND appointment_date = $2
+          AND appointment_time = $3
+          AND id <> $4
+          AND status IN (
+            'Pending',
+            'Scheduled',
+            'Confirmed'
+          )
+          LIMIT 1
+          `,
+          [
+            appointment.doctor_name,
+            appointment_date,
+            appointment_time,
+            id,
+          ]
+        );
+
+
+      if (
+        doctorSlot.rows.length > 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This doctor is already booked for the selected date and time.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // UPDATE APPOINTMENT
+      // -----------------------------------------------------
+
+      const updateResult =
+        await client.query(
+          `
+          UPDATE appointments
+          SET
+            appointment_date = $1,
+            appointment_time = $2,
+            status = 'Pending'
+          WHERE id = $3
+          AND patient_name = $4
+          AND status NOT IN (
+            'Cancelled',
+            'Completed'
+          )
+          RETURNING *
+          `,
+          [
+            appointment_date,
+            appointment_time,
+            id,
+            patientName,
+          ]
+        );
+
+
+      if (
+        updateResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Appointment could not be rescheduled.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // COMMIT
+      // -----------------------------------------------------
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      // -----------------------------------------------------
+      // RESPONSE
+      // -----------------------------------------------------
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Appointment rescheduled successfully.",
+
+        appointment:
+          updateResult.rows[0],
+      });
+
+
+    } catch (error) {
+
+      // -----------------------------------------------------
+      // ROLLBACK
+      // -----------------------------------------------------
+
+      try {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+      } catch (rollbackError) {
+
+        console.error(
+          "Reschedule rollback error:",
+          rollbackError
+        );
+      }
+
+
+      console.error(
+        "RESCHEDULE APPOINTMENT ERROR:",
+        error
+      );
+
+      console.error(
+        "ERROR CODE:",
+        error.code
+      );
+
+      console.error(
+        "ERROR DETAIL:",
+        error.detail
+      );
+
+
+      // -----------------------------------------------------
+      // UNIQUE CONSTRAINT
+      // -----------------------------------------------------
+
+      if (
+        error.code === "23505"
+      ) {
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This doctor is already booked for the selected date and time.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // INVALID DATA
+      // -----------------------------------------------------
+
+      if (
+        error.code === "22P02"
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid appointment date or time.",
+        });
+      }
+
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to reschedule appointment. Please try again.",
+      });
+
+
+    } finally {
+
+      client.release();
+    }
+  }
+);
 app.delete("/api/patient/appointment/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
