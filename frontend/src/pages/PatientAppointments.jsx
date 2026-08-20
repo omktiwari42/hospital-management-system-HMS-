@@ -57,17 +57,100 @@ export default function PatientAppointments() {
     useEffect(() => {
         loadAppointments();
     }, []);
-    async function cancelAppointment(id) {
-        if (!window.confirm("Cancel this appointment?")) {
+    async function cancelAppointment(item) {
+
+        if (!item?.id) {
+            return;
+        }
+
+        const paymentStatus =
+            String(
+                item.payment_status || ""
+            ).trim().toLowerCase();
+
+        const isPaid =
+            paymentStatus === "paid" ||
+            paymentStatus === "success" ||
+            item.payment_status === true;
+
+        // -----------------------------------------------------
+        // PAID APPOINTMENT -> REFUND + CANCEL
+        // -----------------------------------------------------
+
+        if (isPaid) {
+
+            const amount =
+                Number(item.amount || 0);
+
+            const confirmed =
+                window.confirm(
+                    `This appointment is already paid.\n\nRefund amount: ₹${amount.toLocaleString("en-IN")}\n\nDo you want to cancel the appointment and request a refund?`
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+
+                const response =
+                    await api.post(
+                        `/patient/refund-appointment/${item.id}`
+                    );
+
+                if (response.data?.success) {
+
+                    alert(
+                        response.data.message ||
+                        "Payment refunded and appointment cancelled successfully."
+                    );
+
+                    await loadAppointments();
+                    return;
+                }
+
+                alert(
+                    response.data?.message ||
+                    "Unable to process refund."
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "REFUND APPOINTMENT ERROR:",
+                    error
+                );
+
+                alert(
+                    error.response?.data?.message ||
+                    "Unable to process refund."
+                );
+            }
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // UNPAID APPOINTMENT -> NORMAL CANCEL
+        // -----------------------------------------------------
+
+        if (
+            !window.confirm(
+                "Are you sure you want to cancel this appointment?"
+            )
+        ) {
             return;
         }
 
         try {
-            const response = await api.put(
-                `/patient/cancel-appointment/${id}`
-            );
+
+            const response =
+                await api.put(
+                    `/patient/cancel-appointment/${item.id}`
+                );
 
             if (response.data?.success) {
+
                 alert(
                     response.data.message ||
                     "Appointment cancelled successfully."
@@ -83,16 +166,16 @@ export default function PatientAppointments() {
             );
 
         } catch (error) {
+
             console.error(
                 "CANCEL APPOINTMENT ERROR:",
                 error
             );
 
-            const message =
+            alert(
                 error.response?.data?.message ||
-                "Unable to cancel appointment.";
-
-            alert(message);
+                "Unable to cancel appointment."
+            );
         }
     }
 
@@ -1408,17 +1491,17 @@ export default function PatientAppointments() {
                                     item.status !== "Completed" && (
 
                                         <button
-
+                                            type="button"
                                             className="cancel-btn"
-
                                             onClick={() =>
-                                                cancelAppointment(item.id)
+                                                cancelAppointment(item)
                                             }
-
                                         >
-
-                                            ❌ Cancel
-
+                                            {String(
+                                                item.payment_status || ""
+                                            ).toLowerCase() === "paid"
+                                                ? "↩️ Cancel & Refund"
+                                                : "❌ Cancel"}
                                         </button>
 
                                     )}

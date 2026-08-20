@@ -1738,7 +1738,342 @@ app.post(
   }
 );
 
+// =========================================================
+// PATIENT REFUND + CANCEL PAID APPOINTMENT
+// =========================================================
 
+app.post(
+  "/api/patient/refund-appointment/:id",
+  authenticateToken,
+  async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+      const { id } = req.params;
+
+      const userPhone =
+        String(req.user.phone || "").trim();
+
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Appointment ID is required.",
+        });
+      }
+
+
+      if (!userPhone) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Authenticated patient could not be identified.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // FIND PATIENT
+      // -----------------------------------------------------
+
+      const patientResult =
+        await client.query(
+          `
+          SELECT name
+          FROM patients
+          WHERE phone = $1
+          `,
+          [userPhone]
+        );
+
+
+      if (patientResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Patient record not found.",
+        });
+      }
+
+
+      const patientName =
+        patientResult.rows[0].name;
+
+
+      // -----------------------------------------------------
+      // GET APPOINTMENT + BILL
+      // -----------------------------------------------------
+
+      const appointmentResult =
+        await client.query(
+          `
+          SELECT
+            a.id,
+            a.patient_name,
+            a.doctor_name,
+            a.status,
+
+            b.id AS bill_id,
+            b.amount,
+            b.payment_status,
+            b.status AS bill_status,
+            b.transaction_id
+
+          FROM appointments a
+
+          LEFT JOIN bills b
+            ON b.appointment_id = a.id
+
+          WHERE a.id = $1
+          AND a.patient_name = $2
+
+          `,
+          [
+            id,
+            patientName,
+          ]
+        );
+
+
+      if (
+        appointmentResult.rows.length === 0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Appointment not found or you are not authorized to refund it.",
+        });
+      }
+
+
+      const appointment =
+        appointmentResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // CHECK BILL
+      // -----------------------------------------------------
+
+      if (!appointment.bill_id) {
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Payment bill not found.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CHECK PAYMENT
+      // -----------------------------------------------------
+
+      const paymentStatus =
+        String(
+          appointment.payment_status || ""
+        ).toLowerCase();
+
+      const billStatus =
+        String(
+          appointment.bill_status || ""
+        ).toLowerCase();
+
+
+      if (
+        paymentStatus !== "paid" &&
+        billStatus !== "paid"
+      ) {
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This appointment does not have a completed payment.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // PREVENT DUPLICATE REFUND
+      // -----------------------------------------------------
+
+      if (
+        paymentStatus === "refunded" ||
+        billStatus === "refunded"
+      ) {
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This appointment has already been refunded.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // REQUIRE RAZORPAY PAYMENT ID
+      // -----------------------------------------------------
+
+      if (
+        !appointment.transaction_id ||
+        !String(
+          appointment.transaction_id
+        ).startsWith("pay_")
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "A valid Razorpay payment ID was not found for this appointment.",
+        });
+      }
+
+
+      const refundAmount =
+        Math.round(
+          Number(
+            appointment.amount
+          ) * 100
+        );
+
+
+      if (
+        !Number.isFinite(
+          refundAmount
+        ) ||
+        refundAmount <= 0
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid refund amount.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CREATE RAZORPAY REFUND
+      // -----------------------------------------------------
+
+      const refund =
+        await razorpay.payments.refund(
+          appointment.transaction_id,
+          {
+            amount:
+              refundAmount,
+
+            speed:
+              "normal",
+
+            notes: {
+              appointment_id:
+                String(id),
+
+              patient:
+                String(patientName),
+            },
+          }
+        );
+
+
+      // -----------------------------------------------------
+      // UPDATE DATABASE AFTER SUCCESSFUL REFUND
+      // -----------------------------------------------------
+
+      await client.query(
+        "BEGIN"
+      );
+
+
+      await client.query(
+        `
+        UPDATE bills
+        SET
+          status = 'Refunded',
+          payment_status = 'Refunded'
+        WHERE id = $1
+        `,
+        [
+          appointment.bill_id,
+        ]
+      );
+
+
+      await client.query(
+        `
+        UPDATE appointments
+        SET status = 'Cancelled'
+        WHERE id = $1
+        AND patient_name = $2
+        `,
+        [
+          id,
+          patientName,
+        ]
+      );
+
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Payment refunded and appointment cancelled successfully.",
+
+        refundId:
+          refund.id,
+
+        amount:
+          Number(
+            appointment.amount
+          ),
+      });
+
+
+    } catch (error) {
+
+      try {
+        await client.query(
+          "ROLLBACK"
+        );
+      } catch (rollbackError) {
+        console.error(
+          "Refund rollback error:",
+          rollbackError
+        );
+      }
+
+
+      console.error(
+        "REFUND APPOINTMENT ERROR:",
+        error
+      );
+
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error?.error?.description ||
+          error?.description ||
+          error?.message ||
+          "Unable to process refund.",
+      });
+
+
+    } finally {
+
+      client.release();
+    }
+  }
+);
 // =========================================================
 // ROLLBACK UNPAID PAYMENT
 // =========================================================
