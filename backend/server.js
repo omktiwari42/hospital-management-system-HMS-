@@ -2131,30 +2131,199 @@ app.get("/api/patient/bills", authenticateToken, async (req, res) => {
 
   }
 });
-app.put("/api/patient/cancel-appointment/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
+// =========================================================
+// PATIENT CANCEL APPOINTMENT
+// =========================================================
 
-    await pool.query(
-      `UPDATE appointments
-       SET status = 'Cancelled'
-       WHERE id = $1`,
-      [id]
-    );
+app.put(
+  "/api/patient/cancel-appointment/:id",
+  authenticateToken,
+  async (req, res) => {
 
-    res.json({
-      success: true,
-      message: "Appointment cancelled successfully"
-    });
+    const client =
+      await pool.connect();
 
-  } catch (err) {
-    console.error(err);
+    try {
 
-    res.status(500).json({
-      message: "Server Error"
-    });
+      const {
+        id,
+      } = req.params;
+
+
+      await client.query(
+        "BEGIN"
+      );
+
+
+      // -----------------------------------------------------
+      // FIND APPOINTMENT + PAYMENT STATUS
+      // -----------------------------------------------------
+
+      const appointmentResult =
+        await client.query(
+          `
+          SELECT
+            a.id,
+            a.status,
+            b.id AS bill_id,
+            b.payment_status,
+            b.status AS bill_status
+          FROM appointments a
+          LEFT JOIN bills b
+            ON b.appointment_id = a.id
+          WHERE a.id = $1
+          FOR UPDATE
+          `,
+          [id]
+        );
+
+
+      if (
+        appointmentResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Appointment not found.",
+        });
+      }
+
+
+      const appointment =
+        appointmentResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // DON'T CANCEL ALREADY CANCELLED
+      // -----------------------------------------------------
+
+      if (
+        String(
+          appointment.status
+        ).toLowerCase() === "cancelled"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Appointment is already cancelled.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // PAID APPOINTMENT
+      // -----------------------------------------------------
+
+      if (
+        String(
+          appointment.payment_status
+        ).toLowerCase() === "paid" ||
+        String(
+          appointment.bill_status
+        ).toLowerCase() === "paid"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This appointment has already been paid. Refund is required before cancellation.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CANCEL APPOINTMENT
+      // -----------------------------------------------------
+
+      await client.query(
+        `
+        UPDATE appointments
+        SET status = 'Cancelled'
+        WHERE id = $1
+        `,
+        [id]
+      );
+
+
+      // -----------------------------------------------------
+      // CANCEL UNPAID BILL
+      // -----------------------------------------------------
+
+      if (appointment.bill_id) {
+
+        await client.query(
+          `
+          UPDATE bills
+          SET
+            status = 'Cancelled',
+            payment_status = 'Cancelled'
+          WHERE id = $1
+          AND LOWER(COALESCE(payment_status, '')) <> 'paid'
+          `,
+          [appointment.bill_id]
+        );
+      }
+
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Appointment and unpaid bill cancelled successfully.",
+      });
+
+
+    } catch (error) {
+
+      try {
+        await client.query(
+          "ROLLBACK"
+        );
+      } catch (rollbackError) {
+        console.error(
+          "Cancellation rollback error:",
+          rollbackError
+        );
+      }
+
+
+      console.error(
+        "Cancel appointment error:",
+        error
+      );
+
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to cancel appointment.",
+      });
+
+
+    } finally {
+
+      client.release();
+    }
   }
-});
+);
 app.delete("/api/patient/appointment/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
