@@ -21505,3 +21505,276 @@ body.dark-mode small {
     min-height: 38px !important;
   }
 }
+
+/* =========================================================
+   RESCHEDULE MODAL
+========================================================= */
+
+.reschedule-modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15,
+      23,
+      42,
+      .55);
+
+  backdrop-filter: blur(5px);
+}
+
+.reschedule-modal {
+  width: min(100%,
+      480px);
+
+  background: #ffffff;
+
+  border-radius: 20px;
+
+  padding: 26px;
+
+  box-shadow:
+    0 25px 70px rgba(15,
+      23,
+      42,
+      .22);
+}
+
+.reschedule-modal-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 22px;
+}
+
+.reschedule-modal-header span {
+  color: #64748b;
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+.reschedule-modal-header h2 {
+  margin: 4px 0 0;
+
+  color: #172033;
+
+  font-size: 22px;
+}
+
+.reschedule-close-btn {
+  width: 34px;
+  height: 34px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background: #f1f5f9;
+
+  color: #475569;
+
+  font-size: 22px;
+
+  cursor: pointer;
+}
+
+.reschedule-doctor {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding: 15px;
+
+  margin-bottom: 20px;
+
+  border-radius: 14px;
+
+  background: #f8fafc;
+}
+
+.reschedule-doctor strong {
+  color: #172033;
+
+  font-size: 15px;
+}
+
+.reschedule-doctor span {
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+.reschedule-form {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 16px;
+}
+
+.reschedule-field {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.reschedule-field label {
+  color: #334155;
+
+  font-size: 13px;
+
+  font-weight: 700;
+}
+
+.reschedule-field input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 12px 13px;
+
+  border:
+    1px solid #dbe3ee;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  outline: none;
+}
+
+.reschedule-field input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37,
+      99,
+      235,
+      .10);
+}
+
+.reschedule-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+.reschedule-cancel-btn,
+.reschedule-confirm-btn {
+  min-height: 44px;
+
+  padding: 0 18px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.reschedule-cancel-btn {
+  border:
+    1px solid #dbe3ee;
+
+  background: #ffffff;
+
+  color: #475569;
+}
+
+.reschedule-confirm-btn {
+  border: 0;
+
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+.reschedule-confirm-btn:disabled,
+.reschedule-cancel-btn:disabled {
+  opacity: .55;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+body.dark-mode .reschedule-modal {
+  background: #111827;
+}
+
+body.dark-mode .reschedule-modal-header h2,
+body.dark-mode .reschedule-doctor strong {
+  color: #f8fafc;
+}
+
+body.dark-mode .reschedule-doctor {
+  background: #1e293b;
+}
+
+body.dark-mode .reschedule-doctor span,
+body.dark-mode .reschedule-modal-header span {
+  color: #94a3b8;
+}
+
+body.dark-mode .reschedule-field label {
+  color: #cbd5e1;
+}
+
+body.dark-mode .reschedule-field input {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+body.dark-mode .reschedule-close-btn,
+body.dark-mode .reschedule-cancel-btn {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+
+@media (max-width: 600px) {
+
+  .reschedule-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reschedule-actions {
+    flex-direction: column-reverse;
+  }
+
+  .reschedule-cancel-btn,
+  .reschedule-confirm-btn {
+    width: 100%;
+  }
+}

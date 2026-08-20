@@ -19,6 +19,12 @@ export default function PatientAppointments() {
 
     const [showInvoice, setShowInvoice] = useState(false);
     const [invoiceData, setInvoiceData] = useState(null);
+
+    const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTime, setRescheduleTime] = useState("");
+    const [rescheduling, setRescheduling] = useState(false);
+
     const navigate = useNavigate();
 
     const totalAppointments = appointments.length;
@@ -69,6 +75,78 @@ export default function PatientAppointments() {
 
         }
 
+    }
+
+    async function handleRescheduleAppointment() {
+
+        if (!rescheduleAppointment) {
+            return;
+        }
+
+        if (!rescheduleDate || !rescheduleTime) {
+            alert("Please select a new date and time.");
+            return;
+        }
+
+        setRescheduling(true);
+
+        try {
+
+            const response = await api.put(
+                `/patient/reschedule-appointment/${rescheduleAppointment.id}`,
+                {
+                    appointment_date: rescheduleDate,
+                    appointment_time: rescheduleTime,
+                }
+            );
+
+            if (response.data?.success) {
+                alert("Appointment rescheduled successfully.");
+
+                setRescheduleAppointment(null);
+                setRescheduleDate("");
+                setRescheduleTime("");
+
+                await loadAppointments();
+            }
+
+        } catch (err) {
+
+            console.error(
+                "RESCHEDULE ERROR:",
+                err
+            );
+
+            alert(
+                err.response?.data?.message ||
+                "Unable to reschedule appointment."
+            );
+
+        } finally {
+            setRescheduling(false);
+        }
+    }
+
+    function openReschedule(item) {
+
+        const existingTime =
+            String(item.appointment_time || "")
+                .slice(0, 5);
+
+        setRescheduleAppointment(item);
+        setRescheduleDate(item.appointment_date || "");
+        setRescheduleTime(existingTime);
+    }
+
+    function closeReschedule() {
+
+        if (rescheduling) {
+            return;
+        }
+
+        setRescheduleAppointment(null);
+        setRescheduleDate("");
+        setRescheduleTime("");
     }
 
     async function loadAppointments() {
@@ -1280,6 +1358,19 @@ export default function PatientAppointments() {
                                     </button>
 
                                 )}
+                                {item.status !== "Cancelled" &&
+                                    item.status !== "Completed" &&
+                                    String(item.payment_status || "").toLowerCase() !== "paid" && (
+                                        <button
+                                            type="button"
+                                            className="reschedule-btn"
+                                            onClick={() => openReschedule(item)}
+                                            disabled={rescheduling}
+                                        >
+                                            🔄 Reschedule
+                                        </button>
+                                    )}
+
                                 <button
                                     className="calendar-btn"
                                     onClick={() => downloadCalendar(item)}
@@ -1450,6 +1541,152 @@ export default function PatientAppointments() {
                 </div>
 
             )}
+            {rescheduleAppointment && (
+
+                <div className="reschedule-modal-overlay">
+
+                    <div className="reschedule-modal">
+
+                        <div className="reschedule-modal-header">
+
+                            <div>
+                                <span>Appointment Management</span>
+
+                                <h2>
+                                    Reschedule Appointment
+                                </h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="reschedule-close-btn"
+                                onClick={closeReschedule}
+                                disabled={rescheduling}
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
+                        <div className="reschedule-doctor-card">
+
+                            <div className="reschedule-doctor-avatar">
+                                {rescheduleAppointment.doctor_name
+                                    ? rescheduleAppointment.doctor_name
+                                        .charAt(0)
+                                        .toUpperCase()
+                                    : "D"}
+                            </div>
+
+                            <div>
+                                <strong>
+                                    Dr. {rescheduleAppointment.doctor_name}
+                                </strong>
+
+                                <span>
+                                    {rescheduleAppointment.department}
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div className="reschedule-current-time">
+                            <span>Current schedule</span>
+
+                            <strong>
+                                {formatAppointmentDate(
+                                    rescheduleAppointment.appointment_date
+                                )}
+                                {" • "}
+                                {formatAppointmentTime(
+                                    rescheduleAppointment.appointment_time
+                                )}
+                            </strong>
+                        </div>
+
+                        <div className="reschedule-form-grid">
+
+                            <div className="reschedule-field">
+                                <label htmlFor="reschedule-date">
+                                    New Date
+                                </label>
+
+                                <input
+                                    id="reschedule-date"
+                                    type="date"
+                                    value={rescheduleDate}
+                                    min={
+                                        new Date()
+                                            .toISOString()
+                                            .split("T")[0]
+                                    }
+                                    onChange={(e) =>
+                                        setRescheduleDate(e.target.value)
+                                    }
+                                    disabled={rescheduling}
+                                />
+                            </div>
+
+                            <div className="reschedule-field">
+                                <label htmlFor="reschedule-time">
+                                    New Time
+                                </label>
+
+                                <input
+                                    id="reschedule-time"
+                                    type="time"
+                                    value={rescheduleTime}
+                                    onChange={(e) =>
+                                        setRescheduleTime(e.target.value)
+                                    }
+                                    disabled={rescheduling}
+                                />
+                            </div>
+
+                        </div>
+
+                        <div className="reschedule-info-box">
+                            <span>💡</span>
+
+                            <p>
+                                Your doctor and payment remain unchanged. Only the
+                                appointment date and time will be updated.
+                            </p>
+                        </div>
+
+                        <div className="reschedule-actions">
+
+                            <button
+                                type="button"
+                                className="reschedule-cancel-btn"
+                                onClick={closeReschedule}
+                                disabled={rescheduling}
+                            >
+                                Close
+                            </button>
+
+                            <button
+                                type="button"
+                                className="reschedule-confirm-btn"
+                                onClick={handleRescheduleAppointment}
+                                disabled={
+                                    rescheduling ||
+                                    !rescheduleDate ||
+                                    !rescheduleTime
+                                }
+                            >
+                                {rescheduling
+                                    ? "Rescheduling..."
+                                    : "Confirm Reschedule"}
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
+
             {showInvoice && invoiceData && (
 
                 <div className="invoice-overlay">
