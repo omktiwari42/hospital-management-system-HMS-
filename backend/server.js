@@ -2605,6 +2605,11 @@ app.get("/api/patient/bills", authenticateToken, async (req, res) => {
 // PATIENT CANCEL APPOINTMENT
 // =========================================================
 
+// =========================================================
+// PATIENT CANCEL APPOINTMENT
+// Secure + transactional
+// =========================================================
+
 app.put(
   "/api/patient/cancel-appointment/:id",
   authenticateToken,
@@ -2633,7 +2638,7 @@ app.put(
         return res.status(401).json({
           success: false,
           message:
-            "Unable to identify the authenticated patient.",
+            "Authenticated patient could not be identified.",
         });
       }
 
@@ -2642,13 +2647,16 @@ app.put(
 
 
       // -----------------------------------------------------
-      // GET AUTHENTICATED PATIENT
+      // FIND PATIENT
       // -----------------------------------------------------
 
       const patientResult =
         await client.query(
           `
-          SELECT name, phone
+          SELECT
+            id,
+            name,
+            phone
           FROM patients
           WHERE phone = $1
           FOR UPDATE
@@ -2669,41 +2677,44 @@ app.put(
       }
 
 
+      const patient =
+        patientResult.rows[0];
+
       const patientName =
-        patientResult.rows[0].name;
+        patient.name;
 
 
       // -----------------------------------------------------
-      // FIND APPOINTMENT
-      // IMPORTANT:
-      // Appointment must belong to this patient.
+      // FIND APPOINTMENT + BILL
+      // Lock ONLY appointment row.
       // -----------------------------------------------------
 
       const appointmentResult =
         await client.query(
           `
-    SELECT
-      a.id,
-      a.patient_name,
-      a.doctor_name,
-      a.appointment_date,
-      a.appointment_time,
-      a.status,
+          SELECT
+            a.id,
+            a.patient_name,
+            a.doctor_name,
+            a.department,
+            a.appointment_date,
+            a.appointment_time,
+            a.status,
 
-      b.id AS bill_id,
-      b.payment_status,
-      b.status AS bill_status
+            b.id AS bill_id,
+            b.payment_status,
+            b.status AS bill_status
 
-    FROM appointments a
+          FROM appointments a
 
-    LEFT JOIN bills b
-      ON b.appointment_id = a.id
+          LEFT JOIN bills b
+            ON b.appointment_id = a.id
 
-    WHERE a.id = $1
-    AND a.patient_name = $2
+          WHERE a.id = $1
+          AND a.patient_name = $2
 
-    FOR UPDATE OF a
-    `,
+          FOR UPDATE OF a
+          `,
           [
             id,
             patientName,
@@ -2711,20 +2722,14 @@ app.put(
         );
 
 
-      // -----------------------------------------------------
-      // APPOINTMENT NOT FOUND / NOT OWNED
-      // -----------------------------------------------------
-
-      if (
-        appointmentResult.rows.length === 0
-      ) {
+      if (appointmentResult.rows.length === 0) {
 
         await client.query("ROLLBACK");
 
         return res.status(404).json({
           success: false,
           message:
-            "Appointment not found or you are not authorized to cancel it.",
+            "Appointment not found or it does not belong to you.",
         });
       }
 
@@ -2739,7 +2744,7 @@ app.put(
 
       if (
         String(
-          appointment.status
+          appointment.status || ""
         ).toLowerCase() === "cancelled"
       ) {
 
@@ -2748,18 +2753,18 @@ app.put(
         return res.status(409).json({
           success: false,
           message:
-            "Appointment is already cancelled.",
+            "This appointment is already cancelled.",
         });
       }
 
 
       // -----------------------------------------------------
-      // COMPLETED APPOINTMENT
+      // COMPLETED
       // -----------------------------------------------------
 
       if (
         String(
-          appointment.status
+          appointment.status || ""
         ).toLowerCase() === "completed"
       ) {
 
@@ -2774,25 +2779,36 @@ app.put(
 
 
       // -----------------------------------------------------
-      // PAID APPOINTMENT
+      // PAYMENT STATUS
+      // -----------------------------------------------------
+
+      const paymentStatus =
+        String(
+          appointment.payment_status || ""
+        ).trim().toLowerCase();
+
+      const billStatus =
+        String(
+          appointment.bill_status || ""
+        ).trim().toLowerCase();
+
+
+      // -----------------------------------------------------
+      // PAID
       // -----------------------------------------------------
 
       if (
-        String(
-          appointment.payment_status || ""
-        ).toLowerCase() === "paid" ||
-
-        String(
-          appointment.bill_status || ""
-        ).toLowerCase() === "paid"
+        paymentStatus === "paid" ||
+        billStatus === "paid"
       ) {
 
         await client.query("ROLLBACK");
 
         return res.status(409).json({
           success: false,
+          code: "PAYMENT_ALREADY_PAID",
           message:
-            "This appointment has already been paid. A refund is required before cancellation.",
+            "This appointment has already been paid and cannot be cancelled directly. A refund is required.",
         });
       }
 
@@ -2808,9 +2824,11 @@ app.put(
           SET status = 'Cancelled'
           WHERE id = $1
           AND patient_name = $2
-          AND status NOT IN (
-            'Cancelled',
-            'Completed'
+          AND LOWER(
+            COALESCE(status, '')
+          ) NOT IN (
+            'cancelled',
+            'completed'
           )
           RETURNING id
           `,
@@ -2821,16 +2839,15 @@ app.put(
         );
 
 
-      if (
-        cancelResult.rows.length === 0
-      ) {
+      if (cancelResult.rows.length === 0) {
 
         await client.query("ROLLBACK");
 
         return res.status(409).json({
           success: false,
+          code: "CANCELLATION_NOT_APPLIED",
           message:
-            "Appointment could not be cancelled.",
+            "The appointment could not be cancelled because its status changed. Please refresh the page and try again.",
         });
       }
 
@@ -2864,19 +2881,21 @@ app.put(
       await client.query("COMMIT");
 
 
+      // -----------------------------------------------------
+      // SUCCESS
+      // -----------------------------------------------------
+
       return res.status(200).json({
         success: true,
         message:
-          "Appointment and unpaid bill cancelled successfully.",
+          "Appointment cancelled successfully.",
       });
 
 
     } catch (error) {
 
       try {
-        await client.query(
-          "ROLLBACK"
-        );
+        await client.query("ROLLBACK");
       } catch (rollbackError) {
         console.error(
           "Cancellation rollback error:",
@@ -2886,21 +2905,19 @@ app.put(
 
 
       console.error(
-        "Cancel appointment error:",
+        "CANCEL APPOINTMENT ERROR:",
         error
       );
 
+      console.error(
+        "ERROR CODE:",
+        error.code
+      );
 
-      // PostgreSQL foreign-key / constraint issue
-      if (
-        error.code === "23503"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Unable to cancel this appointment because related data is missing.",
-        });
-      }
+      console.error(
+        "ERROR DETAIL:",
+        error.detail
+      );
 
 
       return res.status(500).json({
