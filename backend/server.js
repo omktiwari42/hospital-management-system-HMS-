@@ -812,16 +812,68 @@ app.delete("/api/bills/:id", authenticateToken, async (req, res) => {
 =========================== */
 
 app.post("/api/send-otp", async (req, res) => {
-
-
   try {
-    const { phone, turnstileToken } = req.body;
+    let { phone, turnstileToken } = req.body;
+
+    console.log("========== SEND OTP ==========");
+    console.log("PHONE RECEIVED:", phone);
+    console.log("TURNSTILE TOKEN:", !!turnstileToken);
+
+    // -----------------------------
+    // PHONE NORMALIZATION
+    // -----------------------------
+    phone = String(phone || "").trim();
+
+    // If frontend sends only 10 digits
+    if (/^\d{10}$/.test(phone)) {
+      phone = "+91" + phone;
+    }
+
+    // Remove spaces, brackets, hyphens
+    phone = phone.replace(/[\s()-]/g, "");
+
+    console.log("NORMALIZED PHONE:", phone);
+
+    // -----------------------------
+    // PHONE VALIDATION
+    // -----------------------------
+    const phoneRegex = /^\+\d{10,15}$/;
+
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid phone number format",
+      });
+    }
+
+    // -----------------------------
+    // CLOUDFLARE TURNSTILE
+    // -----------------------------
+    if (!turnstileToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Please complete Cloudflare verification.",
+      });
+    }
+
+    if (!process.env.TURNSTILE_SECRET_KEY) {
+      console.error(
+        "TURNSTILE_SECRET_KEY is missing from backend environment."
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Server Turnstile configuration is missing.",
+      });
+    }
+
     const verifyResponse = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type":
+            "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           secret: process.env.TURNSTILE_SECRET_KEY,
@@ -830,31 +882,39 @@ app.post("/api/send-otp", async (req, res) => {
       }
     );
 
-
     const verifyResult = await verifyResponse.json();
+
+    console.log(
+      "TURNSTILE RESULT:",
+      verifyResult
+    );
 
     if (!verifyResult.success) {
       return res.status(400).json({
-        message: "Cloudflare verification failed",
+        success: false,
+        message: "Cloudflare verification failed.",
+        errors: verifyResult["error-codes"] || [],
       });
     }
 
-    if (!phone) {
-      return res.status(400).json({
-        message: "Phone Number Required",
+    // -----------------------------
+    // CHECK USER
+    // -----------------------------
+    const userResult = await pool.query(
+      "SELECT id, phone, full_name, role FROM users WHERE phone = $1",
+      [phone]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this phone number.",
       });
     }
 
-    const phoneRegex =
-      /^\+\d{10,15}$/;
-
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({
-        message:
-          "Invalid Phone Number Format",
-      });
-    }
-
+    // -----------------------------
+    // GENERATE OTP
+    // -----------------------------
     const otp = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
@@ -862,59 +922,108 @@ app.post("/api/send-otp", async (req, res) => {
     otpStore[phone] = otp;
 
     console.log(
-      `OTP for ${phone}: ${otp}`
+      `OTP GENERATED FOR ${phone}: ${otp}`
     );
 
-    res.json({
-      message:
-        "OTP Sent Successfully",
+    // -----------------------------
+    // TEMPORARY OTP RESPONSE
+    // -----------------------------
+    // IMPORTANT:
+    // This does NOT send an SMS.
+    // It stores the OTP on the backend.
+    // For development, OTP is returned here.
+    //
+    // Remove `otp` later when real SMS
+    // service is connected.
+    // -----------------------------
 
+    return res.status(200).json({
+      success: true,
+      message: "OTP generated successfully.",
+      phone,
+      otp,
     });
-  } catch (error) {
-    console.log(error);
 
-    res.status(500).json({
-      message: "Server Error",
+  } catch (error) {
+    console.error(
+      "SEND OTP ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to send OTP.",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
     });
   }
 });
 
 app.post("/api/verify-otp", async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    let { phone, otp } = req.body;
 
+    phone = String(phone || "").trim();
+    otp = String(otp || "").trim();
+
+    if (/^\d{10}$/.test(phone)) {
+      phone = "+91" + phone;
+    }
+
+    phone = phone.replace(/[\s()-]/g, "");
+
+    console.log("========== VERIFY OTP ==========");
     console.log("PHONE:", phone);
     console.log("OTP RECEIVED:", otp);
     console.log("OTP STORED:", otpStore[phone]);
 
     if (!phone || !otp) {
       return res.status(400).json({
-        message: "Phone and OTP Required",
+        success: false,
+        message: "Phone and OTP are required.",
       });
     }
 
-    if (otpStore[phone] !== otp) {
+    if (!otpStore[phone]) {
       return res.status(401).json({
-        message: "Invalid OTP",
+        success: false,
+        message:
+          "OTP expired or was not generated. Please request a new OTP.",
       });
     }
 
+    if (String(otpStore[phone]) !== otp) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid OTP.",
+      });
+    }
+
+    // OTP is correct
     delete otpStore[phone];
 
-    // Fetch user from database
+    // -----------------------------
+    // FETCH USER
+    // -----------------------------
     const result = await pool.query(
-      `SELECT * FROM users WHERE phone = $1`,
+      "SELECT * FROM users WHERE phone = $1",
       [phone]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: "User not found",
+        success: false,
+        message: "User not found.",
       });
     }
 
     const user = result.rows[0];
 
+    // -----------------------------
+    // JWT
+    // -----------------------------
     const token = jwt.sign(
       {
         id: user.id,
@@ -928,7 +1037,8 @@ app.post("/api/verify-otp", async (req, res) => {
       }
     );
 
-    res.json({
+    return res.status(200).json({
+      success: true,
       token,
       role: user.role,
       full_name: user.full_name,
@@ -936,9 +1046,13 @@ app.post("/api/verify-otp", async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.error(
+      "VERIFY OTP ERROR:",
+      error
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       message: "Server Error",
     });
   }
