@@ -1,6 +1,7 @@
 import {
     useState,
     useEffect,
+    useRef,
 } from "react";
 
 import {
@@ -23,10 +24,21 @@ export default function BookAppointment() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    /*
+     * Prevents rollback after Razorpay has successfully
+     * completed payment.
+     */
+    const paymentCompletedRef = useRef(false);
 
-    /* =========================
+    /*
+     * Prevents multiple rollback requests.
+     */
+    const rollbackStartedRef = useRef(false);
+
+
+    /* =========================================================
        STATE
-    ========================= */
+    ========================================================= */
 
     const [loading, setLoading] =
         useState(true);
@@ -65,9 +77,9 @@ export default function BookAppointment() {
     });
 
 
-    /* =========================
+    /* =========================================================
        LOAD DATA
-    ========================= */
+    ========================================================= */
 
     useEffect(() => {
         loadData();
@@ -100,9 +112,9 @@ export default function BookAppointment() {
             setDoctors(doctorsData);
 
 
-            /* =========================
+            /* =================================================
                RESTORE SELECTED DOCTOR
-            ========================= */
+            ================================================= */
 
             const passedDoctorId =
                 location.state?.doctorId;
@@ -154,14 +166,13 @@ export default function BookAppointment() {
         } finally {
 
             setLoading(false);
-
         }
     }
 
 
-    /* =========================
+    /* =========================================================
        SELECT DOCTOR
-    ========================= */
+    ========================================================= */
 
     function selectDoctor(doctor) {
 
@@ -196,9 +207,9 @@ export default function BookAppointment() {
     }
 
 
-    /* =========================
+    /* =========================================================
        FORM CHANGE
-    ========================= */
+    ========================================================= */
 
     function handleChange(e) {
 
@@ -214,28 +225,27 @@ export default function BookAppointment() {
     }
 
 
-    /* =========================
+    /* =========================================================
        GO BACK TO DOCTORS
-    ========================= */
+    ========================================================= */
 
     function goBackToDoctors() {
 
-        /*
-         * Direct route first.
-         * This does not depend on browser
-         * history.
-         */
         navigate(
             "/patient-doctors"
         );
     }
 
 
-    /* =========================
-       CLEAR
-    ========================= */
+    /* =========================================================
+       CLEAR FORM
+    ========================================================= */
 
     function clearForm() {
+
+        if (booking) {
+            return;
+        }
 
         setSelectedDoctor(null);
 
@@ -251,9 +261,74 @@ export default function BookAppointment() {
     }
 
 
-    /* =========================
+    /* =========================================================
+       ROLLBACK UNPAID APPOINTMENT
+       
+       IMPORTANT:
+       Only unpaid records are rolled back.
+       A successful payment is NEVER rolled back.
+    ========================================================= */
+
+    async function rollbackPayment(billId) {
+
+        if (!billId) {
+            console.warn(
+                "Rollback skipped: billId missing."
+            );
+
+            return;
+        }
+
+        if (paymentCompletedRef.current) {
+            console.log(
+                "Rollback skipped: payment already completed."
+            );
+
+            return;
+        }
+
+        if (rollbackStartedRef.current) {
+            console.log(
+                "Rollback already in progress."
+            );
+
+            return;
+        }
+
+        rollbackStartedRef.current = true;
+
+        try {
+
+            const rollbackResponse =
+                await api.delete(
+                    `/payment/rollback/${billId}`
+                );
+
+            console.log(
+                "Payment rollback completed:",
+                rollbackResponse.data
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Payment rollback failed:",
+                error
+            );
+
+            /*
+             * Do not throw here.
+             *
+             * The original payment error/cancellation
+             * should remain the main user-facing message.
+             */
+        }
+    }
+
+
+    /* =========================================================
        BOOK APPOINTMENT
-    ========================= */
+    ========================================================= */
 
     async function bookAppointment(e) {
 
@@ -263,6 +338,10 @@ export default function BookAppointment() {
             return;
         }
 
+
+        /* =====================================================
+           VALIDATION
+        ===================================================== */
 
         if (!form.doctor_name) {
 
@@ -329,10 +408,16 @@ export default function BookAppointment() {
 
             setBooking(true);
 
+            /*
+             * Reset payment guards for this booking.
+             */
+            paymentCompletedRef.current = false;
+            rollbackStartedRef.current = false;
 
-            /* =========================
+
+            /* =================================================
                DATE
-            ========================= */
+            ================================================= */
 
             const appointment_date =
                 appointmentDateTime
@@ -340,9 +425,9 @@ export default function BookAppointment() {
                     .split("T")[0];
 
 
-            /* =========================
+            /* =================================================
                TIME
-            ========================= */
+            ================================================= */
 
             const appointment_time =
                 appointmentDateTime.toLocaleTimeString(
@@ -355,9 +440,9 @@ export default function BookAppointment() {
                 );
 
 
-            /* =========================
+            /* =================================================
                CREATE APPOINTMENT
-            ========================= */
+            ================================================= */
 
             const response =
                 await api.post(
@@ -379,23 +464,79 @@ export default function BookAppointment() {
                 );
 
 
-            /* =========================
-               CREATE RAZORPAY ORDER
-            ========================= */
+            /*
+             * Make sure backend returned the bill ID.
+             *
+             * Without this ID rollback is impossible.
+             */
+            const billId =
+                response.data?.billId;
 
-            const order =
-                await api.post(
-                    "/create-order",
-                    {
-                        amount:
-                            response.data.amount,
-                    }
+            if (!billId) {
+
+                console.error(
+                    "Booking response did not contain billId:",
+                    response.data
                 );
 
+                throw new Error(
+                    "Payment reference was not created. Please try again."
+                );
+            }
 
-            /* =========================
-               RAZORPAY
-            ========================= */
+
+            /* =================================================
+               CREATE RAZORPAY ORDER
+            ================================================= */
+
+            let order;
+
+            try {
+
+                order =
+                    await api.post(
+                        "/create-order",
+                        {
+                            amount:
+                                response.data.amount,
+                        }
+                    );
+
+            } catch (orderError) {
+
+                console.error(
+                    "Razorpay order creation failed:",
+                    orderError
+                );
+
+                /*
+                 * Appointment/bill already exists.
+                 * Since Razorpay order was not created,
+                 * safely remove the unpaid records.
+                 */
+                await rollbackPayment(
+                    billId
+                );
+
+                throw orderError;
+            }
+
+
+            if (!order?.data?.id) {
+
+                await rollbackPayment(
+                    billId
+                );
+
+                throw new Error(
+                    "Unable to create payment order."
+                );
+            }
+
+
+            /* =================================================
+               RAZORPAY OPTIONS
+            ================================================= */
 
             const options = {
 
@@ -419,10 +560,24 @@ export default function BookAppointment() {
                     order.data.id,
 
 
+                /* =================================================
+                   SUCCESS
+                ================================================= */
+
                 handler:
                     async function (
                         payment
                     ) {
+
+                        /*
+                         * Mark this immediately.
+                         *
+                         * This prevents ondismiss from
+                         * accidentally rolling back a
+                         * successfully paid appointment.
+                         */
+                        paymentCompletedRef.current =
+                            true;
 
                         try {
 
@@ -440,7 +595,7 @@ export default function BookAppointment() {
                                             payment.razorpay_signature,
 
                                         billId:
-                                            response.data.billId,
+                                            billId,
                                     }
                                 );
 
@@ -478,6 +633,7 @@ export default function BookAppointment() {
 
                             }, 1500);
 
+
                         } catch (error) {
 
                             console.error(
@@ -485,17 +641,34 @@ export default function BookAppointment() {
                                 error
                             );
 
+                            /*
+                             * IMPORTANT:
+                             *
+                             * Do NOT rollback here.
+                             *
+                             * Razorpay payment may already
+                             * have succeeded even if our
+                             * verification request failed.
+                             *
+                             * The backend verification flow
+                             * should be investigated separately.
+                             */
+
                             setBooking(false);
 
                             alert(
                                 error.response
                                     ?.data
                                     ?.message ||
-                                "Payment verification failed."
+                                "Payment verification failed. Please contact support if the amount was deducted."
                             );
                         }
                     },
 
+
+                /* =================================================
+                   CUSTOMER DETAILS
+                ================================================= */
 
                 prefill: {
 
@@ -514,22 +687,61 @@ export default function BookAppointment() {
                 },
 
 
+                /* =================================================
+                   THEME
+                ================================================= */
+
                 theme: {
                     color:
                         "#2563eb",
                 },
 
 
+                /* =================================================
+                   MODAL
+                ================================================= */
+
                 modal: {
 
-                    ondismiss: () => {
+                    ondismiss:
+                        async () => {
 
-                        setBooking(false);
+                            /*
+                             * If payment succeeded,
+                             * never rollback.
+                             */
+                            if (
+                                paymentCompletedRef.current
+                            ) {
 
-                    },
+                                setBooking(
+                                    false
+                                );
+
+                                return;
+                            }
+
+
+                            await rollbackPayment(
+                                billId
+                            );
+
+
+                            setBooking(
+                                false
+                            );
+
+                            alert(
+                                "Payment cancelled. Your appointment was not booked."
+                            );
+                        },
                 },
             };
 
+
+            /* =================================================
+               CREATE RAZORPAY INSTANCE
+            ================================================= */
 
             const razorpay =
                 new window.Razorpay(
@@ -537,28 +749,51 @@ export default function BookAppointment() {
                 );
 
 
+            /* =================================================
+               PAYMENT FAILED
+            ================================================= */
+
             razorpay.on(
                 "payment.failed",
-                (paymentError) => {
+                async (paymentError) => {
 
                     console.error(
                         "Payment failed:",
                         paymentError
                     );
 
-                    setBooking(false);
+
+                    /*
+                     * Payment did not complete,
+                     * so remove the pending appointment
+                     * and bill.
+                     */
+                    await rollbackPayment(
+                        billId
+                    );
+
+
+                    setBooking(
+                        false
+                    );
+
 
                     alert(
                         paymentError
                             ?.error
                             ?.description ||
-                        "Payment failed. Please try again."
+                        "Payment failed. Your appointment was not booked."
                     );
                 }
             );
 
 
+            /* =================================================
+               OPEN RAZORPAY
+            ================================================= */
+
             razorpay.open();
+
 
         } catch (error) {
 
@@ -587,6 +822,7 @@ export default function BookAppointment() {
                     error.response
                         ?.data
                         ?.message ||
+                    error.message ||
                     "Failed to book appointment."
                 );
             }
@@ -596,20 +832,21 @@ export default function BookAppointment() {
     }
 
 
-    /* =========================
+    /* =========================================================
        LOADING
-    ========================= */
+    ========================================================= */
 
     if (loading) {
+
         return (
             <BookAppointmentSkeleton />
         );
     }
 
 
-    /* =========================
+    /* =========================================================
        UI
-    ========================= */
+    ========================================================= */
 
     return (
 
@@ -617,7 +854,9 @@ export default function BookAppointment() {
 
             <div className="book-appointment-page">
 
-                {/* HEADER */}
+                {/* =================================================
+                   HEADER
+                ================================================= */}
 
                 <div className="book-appointment-header">
 
@@ -645,6 +884,7 @@ export default function BookAppointment() {
                         onClick={
                             goBackToDoctors
                         }
+                        disabled={booking}
                     >
                         ← Back to Doctors
                     </button>
@@ -652,7 +892,9 @@ export default function BookAppointment() {
                 </div>
 
 
-                {/* SELECTED DOCTOR */}
+                {/* =================================================
+                   SELECTED DOCTOR
+                ================================================= */}
 
                 {selectedDoctor && (
 
@@ -661,6 +903,7 @@ export default function BookAppointment() {
                         <div className="selected-doctor-icon">
                             🩺
                         </div>
+
 
                         <div className="selected-doctor-info">
 
@@ -681,9 +924,11 @@ export default function BookAppointment() {
 
                         </div>
 
+
                         <div className="selected-doctor-meta">
 
                             <div>
+
                                 <span>
                                     Fee
                                 </span>
@@ -695,9 +940,12 @@ export default function BookAppointment() {
                                         "—"
                                     }
                                 </strong>
+
                             </div>
 
+
                             <div>
+
                                 <span>
                                     Experience
                                 </span>
@@ -709,6 +957,7 @@ export default function BookAppointment() {
                                     }{" "}
                                     Years
                                 </strong>
+
                             </div>
 
                         </div>
@@ -718,7 +967,9 @@ export default function BookAppointment() {
                 )}
 
 
-                {/* FORM */}
+                {/* =================================================
+                   FORM
+                ================================================= */}
 
                 <form
                     className="appointment-form"
@@ -990,7 +1241,7 @@ export default function BookAppointment() {
                             }
                         >
                             {booking
-                                ? "Processing..."
+                                ? "Processing Payment..."
                                 : "Book Appointment & Pay"}
                         </button>
 
@@ -999,7 +1250,9 @@ export default function BookAppointment() {
                 </form>
 
 
-                {/* EXISTING APPOINTMENT POPUP */}
+                {/* =================================================
+                   EXISTING APPOINTMENT POPUP
+                ================================================= */}
 
                 {showAppointmentPopup && (
 
@@ -1020,6 +1273,7 @@ export default function BookAppointment() {
                                     popupMessage
                                 }
                             </p>
+
 
                             <div className="popup-buttons">
 
@@ -1062,7 +1316,9 @@ export default function BookAppointment() {
                 )}
 
 
-                {/* PAYMENT SUCCESS */}
+                {/* =================================================
+                   PAYMENT SUCCESS
+                ================================================= */}
 
                 {paymentSuccess && (
 

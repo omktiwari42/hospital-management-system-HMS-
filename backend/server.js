@@ -1581,6 +1581,118 @@ app.post(
     }
   }
 );
+app.post(
+  "/api/verify-payment",
+  authenticateToken,
+  async (req, res) => {
+
+    // YOUR EXISTING VERIFY-PAYMENT CODE
+    // ...
+    
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// =========================================================
+// ROLLBACK UNPAID APPOINTMENT
+// =========================================================
+
+app.delete(
+  "/api/payment/rollback/:billId",
+  authenticateToken,
+  async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+      const { billId } = req.params;
+
+      await client.query("BEGIN");
+
+      const billResult = await client.query(
+        `
+        SELECT appointment_id, payment_status, status
+        FROM bills
+        WHERE id = $1
+        FOR UPDATE
+        `,
+        [billId]
+      );
+
+      if (billResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          success: false,
+          message: "Bill not found",
+        });
+      }
+
+      const bill = billResult.rows[0];
+
+      if (
+        String(bill.payment_status).toLowerCase() === "paid" ||
+        String(bill.status).toLowerCase() === "paid"
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          success: false,
+          message: "Paid appointment cannot be rolled back.",
+        });
+      }
+
+      const appointmentId = bill.appointment_id;
+
+      // Delete unpaid bill
+      await client.query(
+        `
+        DELETE FROM bills
+        WHERE id = $1
+        `,
+        [billId]
+      );
+
+      // Delete associated appointment
+      if (appointmentId) {
+        await client.query(
+          `
+          DELETE FROM appointments
+          WHERE id = $1
+          AND status IN ('Pending', 'Scheduled')
+          `,
+          [appointmentId]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      return res.json({
+        success: true,
+        message: "Unpaid appointment and bill rolled back successfully.",
+      });
+
+    } catch (error) {
+      await client.query("ROLLBACK");
+
+      console.error(
+        "Payment rollback error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Payment rollback failed.",
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
 app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;
