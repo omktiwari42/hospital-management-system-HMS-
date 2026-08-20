@@ -1466,39 +1466,89 @@ app.delete(
 
   }
 );
-app.post("/api/create-order", authenticateToken, async (req, res) => {
-  try {
-    const { amount } = req.body;
+// =========================================================
+// RAZORPAY CREATE ORDER
+// =========================================================
 
-    const options = {
-      amount: Number(amount) * 100,
-      currency: "INR",
-      receipt: "receipt_" + Date.now(),
-    };
+app.post(
+  "/api/create-order",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { amount } = req.body;
 
-    const order = await razorpay.orders.create(options);
+      const numericAmount = Number(amount);
 
-    res.json(order);
-  } catch (err) {
-    console.log(err);
+      if (
+        !Number.isFinite(numericAmount) ||
+        numericAmount <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment amount.",
+        });
+      }
 
-    res.status(500).json({
-      message: "Failed to create Razorpay order",
-    });
+      const options = {
+        amount: Math.round(numericAmount * 100),
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+      };
+
+      const order =
+        await razorpay.orders.create(options);
+
+      return res.status(200).json(order);
+
+    } catch (error) {
+      console.error(
+        "Razorpay order creation error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to create Razorpay order.",
+      });
+    }
   }
-});
+);
+
+
+// =========================================================
+// RAZORPAY VERIFY PAYMENT
+// =========================================================
+
 app.post(
   "/api/verify-payment",
   authenticateToken,
   async (req, res) => {
-    const client = await pool.connect();
+
+    const client =
+      await pool.connect();
+
     try {
+
       const {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
         billId,
       } = req.body;
+
+      if (
+        !razorpay_order_id ||
+        !razorpay_payment_id ||
+        !razorpay_signature ||
+        !billId
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Incomplete payment verification data.",
+        });
+      }
 
       const generatedSignature =
         crypto
@@ -1507,9 +1557,7 @@ app.post(
             process.env.RAZORPAY_KEY_SECRET
           )
           .update(
-            razorpay_order_id +
-            "|" +
-            razorpay_payment_id
+            `${razorpay_order_id}|${razorpay_payment_id}`
           )
           .digest("hex");
 
@@ -1519,76 +1567,119 @@ app.post(
       ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid payment signature",
+          message:
+            "Invalid payment signature.",
         });
       }
 
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
-      // Update bill
-      const billResult = await client.query(
-        `UPDATE bills
-          SET
+      const billResult =
+        await client.query(
+          `
+          SELECT
+            id,
+            appointment_id,
+            payment_status,
+            status
+          FROM bills
+          WHERE id = $1
+          FOR UPDATE
+          `,
+          [billId]
+        );
+
+      if (
+        billResult.rows.length === 0
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          success: false,
+          message: "Bill not found.",
+        });
+      }
+
+      const bill =
+        billResult.rows[0];
+
+      if (
+        String(
+          bill.payment_status
+        ).toLowerCase() === "paid" ||
+        String(
+          bill.status
+        ).toLowerCase() === "paid"
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This bill has already been paid.",
+        });
+      }
+
+      await client.query(
+        `
+        UPDATE bills
+        SET
           status = 'Paid',
           payment_status = 'Paid',
           payment_method = 'Online',
           payment_date = NOW(),
           transaction_id = $1
-          WHERE id = $2
-          RETURNING appointment_id`,
+        WHERE id = $2
+        `,
         [
           razorpay_payment_id,
           billId,
         ]
       );
 
-      if (billResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({
-          success: false,
-          message: "Bill not found",
-        });
-      }
-
-      // Update appointment status to Confirmed
-      const appointmentId = billResult.rows[0].appointment_id;
-      if (appointmentId) {
+      if (bill.appointment_id) {
         await client.query(
-          `UPDATE appointments
-            SET status = 'Confirmed'
-            WHERE id = $1`,
-          [appointmentId]
+          `
+          UPDATE appointments
+          SET status = 'Confirmed'
+          WHERE id = $1
+          `,
+          [
+            bill.appointment_id,
+          ]
         );
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
 
-      res.json({
+      return res.status(200).json({
         success: true,
-        message: "Payment verified successfully",
+        message:
+          "Payment verified successfully.",
       });
+
     } catch (error) {
-      await client.query('ROLLBACK');
-      console.error("Payment verification error:", error);
 
-      res.status(500).json({
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error(
+          "Payment rollback after verification error:",
+          rollbackError
+        );
+      }
+
+      console.error(
+        "Payment verification error:",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: "Payment verification failed",
-        error: error.message
+        message:
+          "Payment verification failed.",
       });
-    } finally {
-      client.release();
-    }
-  }
-);
-app.post(
-  "/api/verify-payment",
-  authenticateToken,
-  async (req, res) => {
 
-    // YOUR EXISTING VERIFY-PAYMENT CODE
-    // ...
-    
     } finally {
       client.release();
     }
@@ -1597,56 +1688,81 @@ app.post(
 
 
 // =========================================================
-// ROLLBACK UNPAID APPOINTMENT
+// ROLLBACK UNPAID PAYMENT
 // =========================================================
 
 app.delete(
   "/api/payment/rollback/:billId",
   authenticateToken,
   async (req, res) => {
-    const client = await pool.connect();
+
+    const client =
+      await pool.connect();
 
     try {
+
       const { billId } = req.params;
+
+      if (!billId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Bill ID is required.",
+        });
+      }
 
       await client.query("BEGIN");
 
-      const billResult = await client.query(
-        `
-        SELECT appointment_id, payment_status, status
-        FROM bills
-        WHERE id = $1
-        FOR UPDATE
-        `,
-        [billId]
-      );
+      const billResult =
+        await client.query(
+          `
+          SELECT
+            id,
+            appointment_id,
+            payment_status,
+            status
+          FROM bills
+          WHERE id = $1
+          FOR UPDATE
+          `,
+          [billId]
+        );
 
-      if (billResult.rows.length === 0) {
+      if (
+        billResult.rows.length === 0
+      ) {
         await client.query("ROLLBACK");
 
         return res.status(404).json({
           success: false,
-          message: "Bill not found",
+          message:
+            "Bill not found or already removed.",
         });
       }
 
-      const bill = billResult.rows[0];
+      const bill =
+        billResult.rows[0];
 
       if (
-        String(bill.payment_status).toLowerCase() === "paid" ||
-        String(bill.status).toLowerCase() === "paid"
+        String(
+          bill.payment_status
+        ).toLowerCase() === "paid" ||
+        String(
+          bill.status
+        ).toLowerCase() === "paid"
       ) {
         await client.query("ROLLBACK");
 
         return res.status(409).json({
           success: false,
-          message: "Paid appointment cannot be rolled back.",
+          message:
+            "Paid appointment cannot be rolled back.",
         });
       }
 
-      const appointmentId = bill.appointment_id;
+      const appointmentId =
+        bill.appointment_id;
 
-      // Delete unpaid bill
       await client.query(
         `
         DELETE FROM bills
@@ -1655,13 +1771,15 @@ app.delete(
         [billId]
       );
 
-      // Delete associated appointment
       if (appointmentId) {
         await client.query(
           `
           DELETE FROM appointments
           WHERE id = $1
-          AND status IN ('Pending', 'Scheduled')
+          AND status IN (
+            'Pending',
+            'Scheduled'
+          )
           `,
           [appointmentId]
         );
@@ -1669,13 +1787,22 @@ app.delete(
 
       await client.query("COMMIT");
 
-      return res.json({
+      return res.status(200).json({
         success: true,
-        message: "Unpaid appointment and bill rolled back successfully.",
+        message:
+          "Unpaid appointment and bill rolled back successfully.",
       });
 
     } catch (error) {
-      await client.query("ROLLBACK");
+
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error(
+          "Rollback transaction error:",
+          rollbackError
+        );
+      }
 
       console.error(
         "Payment rollback error:",
@@ -1684,7 +1811,8 @@ app.delete(
 
       return res.status(500).json({
         success: false,
-        message: "Payment rollback failed.",
+        message:
+          "Payment rollback failed.",
       });
 
     } finally {
@@ -1692,7 +1820,6 @@ app.delete(
     }
   }
 );
-
 app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;
