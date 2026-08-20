@@ -1921,168 +1921,511 @@ app.get("/api/patient-dashboard", authenticateToken, async (req, res) => {
     });
   }
 });
+// =========================================================
+// PATIENT BOOK APPOINTMENT
+// Transactional appointment + bill creation
+// =========================================================
 
-app.post("/api/patient/book-appointment", authenticateToken, async (req, res) => {
-  try {
-    const phone = req.user.phone;
+app.post(
+  "/api/patient/book-appointment",
+  authenticateToken,
+  async (req, res) => {
 
-    const {
-      doctor_name,
-      department,
-      appointment_date,
-      appointment_time,
-      reason,
-    } = req.body;
-    const doctor = await pool.query(
-      "SELECT fees, specialization FROM doctors WHERE name = $1",
-      [doctor_name]
-    );
+    const client = await pool.connect();
 
-    if (doctor.rows.length === 0) {
-      return res.status(404).json({
-        message: "Doctor not found",
-      });
-    }
+    try {
 
-    const doctorFees = doctor.rows[0].fees;
+      const phone = req.user.phone;
+
+      const {
+        doctor_name,
+        department,
+        appointment_date,
+        appointment_time,
+        reason,
+      } = req.body;
 
 
-    const userResult = await pool.query(
-      "SELECT full_name, phone FROM users WHERE id = $1",
-      [req.user.id]
-    );
+      // -----------------------------------------------------
+      // VALIDATION
+      // -----------------------------------------------------
 
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+      if (
+        !doctor_name ||
+        !department ||
+        !appointment_date ||
+        !appointment_time ||
+        !reason
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "All appointment details are required.",
+        });
+      }
 
-    const user = userResult.rows[0];
 
-    // Find patient
-    let patientResult = await pool.query(
-      "SELECT * FROM patients WHERE phone = $1",
-      [user.phone]
-    );
+      // -----------------------------------------------------
+      // START TRANSACTION
+      // -----------------------------------------------------
 
-    // Create patient automatically if missing
-    if (patientResult.rows.length === 0) {
-      patientResult = await pool.query(
-        `INSERT INTO patients (name, phone, age)
-         VALUES ($1, $2, 18)
-         RETURNING *`,
-        [user.full_name, user.phone]
+      await client.query("BEGIN");
+
+
+      // -----------------------------------------------------
+      // FIND DOCTOR
+      // -----------------------------------------------------
+
+      const doctorResult =
+        await client.query(
+          `
+          SELECT
+            id,
+            fees,
+            specialization
+          FROM doctors
+          WHERE name = $1
+          `,
+          [doctor_name]
+        );
+
+
+      if (
+        doctorResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message: "Doctor not found.",
+        });
+      }
+
+
+      const doctor =
+        doctorResult.rows[0];
+
+
+      const doctorFees =
+        Number(doctor.fees);
+
+
+      if (
+        !Number.isFinite(doctorFees) ||
+        doctorFees <= 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid consultation fee.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // FIND USER
+      // -----------------------------------------------------
+
+      const userResult =
+        await client.query(
+          `
+          SELECT
+            id,
+            full_name,
+            phone,
+            role
+          FROM users
+          WHERE id = $1
+          `,
+          [req.user.id]
+        );
+
+
+      if (
+        userResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message: "User not found.",
+        });
+      }
+
+
+      const user =
+        userResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // FIND PATIENT
+      // -----------------------------------------------------
+
+      let patientResult =
+        await client.query(
+          `
+          SELECT *
+          FROM patients
+          WHERE phone = $1
+          `,
+          [user.phone]
+        );
+
+
+      // -----------------------------------------------------
+      // CREATE PATIENT IF MISSING
+      // -----------------------------------------------------
+
+      if (
+        patientResult.rows.length === 0
+      ) {
+
+        patientResult =
+          await client.query(
+            `
+            INSERT INTO patients
+            (
+              name,
+              phone,
+              age
+            )
+            VALUES
+            (
+              $1,
+              $2,
+              $3
+            )
+            RETURNING *
+            `,
+            [
+              user.full_name,
+              user.phone,
+              18,
+            ]
+          );
+      }
+
+
+      const patientName =
+        patientResult.rows[0].name;
+
+
+      // -----------------------------------------------------
+      // CHECK PATIENT ACTIVE APPOINTMENT
+      // -----------------------------------------------------
+
+      const existingAppointment =
+        await client.query(
+          `
+          SELECT
+            id,
+            doctor_name,
+            appointment_date,
+            appointment_time,
+            status
+          FROM appointments
+          WHERE patient_name = $1
+          AND status IN (
+            'Pending',
+            'Scheduled',
+            'Confirmed'
+          )
+          `,
+          [patientName]
+        );
+
+
+      if (
+        existingAppointment.rows.length > 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "You already have an active appointment. Please complete or cancel it before booking another appointment.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CHECK DOCTOR SLOT
+      // Prevent two appointments for same doctor/time.
+      // -----------------------------------------------------
+
+      const doctorSlot =
+        await client.query(
+          `
+          SELECT id
+          FROM appointments
+          WHERE doctor_name = $1
+          AND appointment_date = $2
+          AND appointment_time = $3
+          AND status IN (
+            'Pending',
+            'Scheduled',
+            'Confirmed'
+          )
+          LIMIT 1
+          `,
+          [
+            doctor_name,
+            appointment_date,
+            appointment_time,
+          ]
+        );
+
+
+      if (
+        doctorSlot.rows.length > 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This doctor is already booked for the selected date and time.",
+        });
+      }
+
+
+      // -----------------------------------------------------
+      // CREATE APPOINTMENT
+      // -----------------------------------------------------
+
+      const appointmentResult =
+        await client.query(
+          `
+          INSERT INTO appointments
+          (
+            patient_name,
+            doctor_name,
+            department,
+            appointment_date,
+            appointment_time,
+            reason,
+            status
+          )
+          VALUES
+          (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7
+          )
+          RETURNING *
+          `,
+          [
+            patientName,
+            doctor_name,
+            department,
+            appointment_date,
+            appointment_time,
+            reason,
+            "Pending",
+          ]
+        );
+
+
+      const appointment =
+        appointmentResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // CREATE PENDING BILL
+      // -----------------------------------------------------
+
+      const billResult =
+        await client.query(
+          `
+          INSERT INTO bills
+          (
+            appointment_id,
+            patient_name,
+            amount,
+            status,
+            payment_status
+          )
+          VALUES
+          (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5
+          )
+          RETURNING *
+          `,
+          [
+            appointment.id,
+            patientName,
+            doctorFees,
+            "Pending",
+            "Pending",
+          ]
+        );
+
+
+      const bill =
+        billResult.rows[0];
+
+
+      // -----------------------------------------------------
+      // COMMIT
+      // -----------------------------------------------------
+
+      await client.query(
+        "COMMIT"
       );
-    }
 
-    const patientName = patientResult.rows[0].name;
-    // Check if patient already has an active appointment
-    const existingAppointment = await pool.query(
-      `
-  SELECT *
-  FROM appointments
-  WHERE patient_name = $1
-  AND status IN ('Pending', 'Scheduled')
-  `,
-      [patientName]
-    );
 
-    if (existingAppointment.rows.length > 0) {
-      return res.status(400).json({
+      // -----------------------------------------------------
+      // NOTIFICATIONS
+      // Do these AFTER COMMIT.
+      // A notification failure must not destroy
+      // an already-created appointment/bill.
+      // -----------------------------------------------------
+
+      try {
+
+        await createNotification(
+          req.user.id,
+          "Appointment Booked",
+          `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
+          "appointment"
+        );
+
+
+        sendNotificationEvent({
+          title:
+            "Appointment Booked",
+          message:
+            `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
+          type:
+            "appointment",
+          unread:
+            true,
+          created_at:
+            new Date(),
+        });
+
+
+        await createNotification(
+          req.user.id,
+          "Bill Generated",
+          `A bill of ₹${doctorFees} has been generated for your appointment.`,
+          "payment"
+        );
+
+
+        sendNotificationEvent({
+          title:
+            "Bill Generated",
+          message:
+            `A bill of ₹${doctorFees} has been generated for your appointment.`,
+          type:
+            "payment",
+          unread:
+            true,
+          created_at:
+            new Date(),
+        });
+
+      } catch (notificationError) {
+
+        console.error(
+          "Appointment notification error:",
+          notificationError
+        );
+
+      }
+
+
+      // -----------------------------------------------------
+      // RESPONSE
+      // -----------------------------------------------------
+
+      return res.status(201).json({
+        success: true,
+
         message:
-          "You already have a pending appointment. Please complete or cancel it before booking another appointment.",
+          "Appointment booked successfully.",
+
+        amount:
+          doctorFees,
+
+        appointmentId:
+          appointment.id,
+
+        billId:
+          bill.id,
       });
+
+
+    } catch (error) {
+
+      // -----------------------------------------------------
+      // ROLLBACK EVERYTHING CREATED IN THIS TRANSACTION
+      // -----------------------------------------------------
+
+      try {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+      } catch (rollbackError) {
+
+        console.error(
+          "Booking transaction rollback error:",
+          rollbackError
+        );
+      }
+
+
+      console.error(
+        "BOOK APPOINTMENT ERROR:",
+        error
+      );
+
+      console.error(
+        error.stack
+      );
+
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to book appointment.",
+      });
+
+
+    } finally {
+
+      client.release();
     }
-    const appointment = await pool.query(
-      `INSERT INTO appointments
-      (
-        patient_name,
-        doctor_name,
-        department,
-        appointment_date,
-        appointment_time,
-        reason,
-        status
-      )
-      VALUES
-      ($1,$2,$3,$4,$5,$6,$7)
-      RETURNING *`,
-      [
-        patientName,
-        doctor_name,
-        department,
-        appointment_date,
-        appointment_time,
-        reason,
-        "Pending",
-      ]
-    );
-    const bill = await pool.query(
-      `INSERT INTO bills
-      (
-        appointment_id,
-        patient_name,
-        amount,
-        status,
-        payment_status
-      )
-      VALUES
-      ($1,$2,$3,$4,$5)
-      RETURNING *`,
-      [
-        appointment.rows[0].id,
-        patientName,
-        doctorFees,
-        "Pending",
-        "Pending",
-      ]
-    );
-    await createNotification(
-      req.user.id,
-      "Appointment Booked",
-      `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
-      "appointment"
-    );
-    sendNotificationEvent({
-      title: "Appointment Booked",
-      message: `Your appointment with Dr. ${doctor_name} has been booked successfully.`,
-      type: "appointment",
-      unread: true,
-      created_at: new Date(),
-    });
-    await createNotification(
-      req.user.id,
-      "Bill Generated",
-      `A bill of ₹${doctorFees} has been generated for your appointment.`,
-      "payment"
-    );
-    sendNotificationEvent({
-      title: "Bill Generated",
-      message: `A bill of ₹${doctorFees} has been generated for your appointment.`,
-      type: "payment",
-      unread: true,
-      created_at: new Date(),
-    });
-
-    res.json({
-      success: true,
-      message: "Appointment booked successfully",
-      amount: doctorFees,
-      appointmentId: appointment.rows[0].id,
-      billId: bill.rows[0].id,
-    });
-
-  } catch (error) {
-    console.error("BOOK APPOINTMENT ERROR:");
-    console.error(error);
-    console.error(error.stack);
-
-    res.status(500).json({
-      message: error.message,
-    });
   }
-});
+);
 app.get("/api/patient/appointments", authenticateToken, async (req, res) => {
   try {
     const phone = req.user.phone;
